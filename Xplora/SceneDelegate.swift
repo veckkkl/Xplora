@@ -35,11 +35,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let placesRepo: PlacesRepo = PlacesRepoImpl(storage: storage)
         let settingsRepo: SettingsRepo = SettingsRepoImpl(storage: storage)
         let markersRepo: CountryVisitMarkersRepo = CountryVisitMarkersRepoImpl()
+        let notesRepo: NotesRepo = NotesRepoImpl()
 
         locator.register(TripsRepo.self, instance: tripsRepo)
         locator.register(PlacesRepo.self, instance: placesRepo)
         locator.register(SettingsRepo.self, instance: settingsRepo)
         locator.register(CountryVisitMarkersRepo.self, instance: markersRepo)
+        locator.register(NotesRepo.self, instance: notesRepo)
 
         // Services
         let locationService: LocationService = LocationServiceImpl()
@@ -67,6 +69,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         locator.register(GetTripsTimelineUseCase.self, instance: getTripsTimelineUseCase)
         locator.register(AddVisitedPlaceUseCase.self, instance: addVisitedPlaceUseCase)
         locator.register(GetCountryVisitMarkersUseCase.self, instance: getCountryVisitMarkersUseCase)
+
+        let getNoteUseCase: GetNoteUseCase = GetNoteUseCaseImpl(notesRepo: notesRepo)
+        let saveNoteUseCase: SaveNoteUseCase = SaveNoteUseCaseImpl(notesRepo: notesRepo)
+        let deleteNoteUseCase: DeleteNoteUseCase = DeleteNoteUseCaseImpl(notesRepo: notesRepo)
+
+        locator.register(GetNoteUseCase.self, instance: getNoteUseCase)
+        locator.register(SaveNoteUseCase.self, instance: saveNoteUseCase)
+        locator.register(DeleteNoteUseCase.self, instance: deleteNoteUseCase)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -93,5 +103,4 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // to restore the scene back to its current state.
     }
 }
-
 

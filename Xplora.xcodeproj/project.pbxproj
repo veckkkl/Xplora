@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3AEF16DB2F3D2F5800E92278 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = F1A2B3C4D5E6F7890ABCDEF2 /* SnapKit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3A06902F2ECBA4DF00D85EB2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -65,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3AEF16DB2F3D2F5800E92278 /* SnapKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -210,7 +215,7 @@
 			mainGroup = 3A06900F2ECBA4DD00D85EB2;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				F1A2B3C4D5E6F7890ABCDEF1 /* SnapKit */,
+				F1A2B3C4D5E6F7890ABCDEF1 /* XCRemoteSwiftPackageReference "SnapKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3A0690192ECBA4DE00D85EB2 /* Products */;
@@ -223,25 +228,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		F1A2B3C4D5E6F7890ABCDEF1 /* SnapKit */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.7.1;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		F1A2B3C4D5E6F7890ABCDEF2 /* SnapKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F1A2B3C4D5E6F7890ABCDEF1 /* SnapKit */;
-			productName = SnapKit;
-		};
-/* End XCSwiftPackageProductDependency section */
 
 /* Begin PBXResourcesBuildPhase section */
 		3A0690162ECBA4DE00D85EB2 /* Resources */ = {
@@ -594,6 +580,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F1A2B3C4D5E6F7890ABCDEF1 /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.7.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F1A2B3C4D5E6F7890ABCDEF2 /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F1A2B3C4D5E6F7890ABCDEF1 /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3A0690102ECBA4DD00D85EB2 /* Project object */;
 }

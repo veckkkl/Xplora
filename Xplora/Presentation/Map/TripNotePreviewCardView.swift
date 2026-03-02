@@ -19,8 +19,8 @@ final class TripNotePreviewCardView: UIView {
     private let shadowContainer = UIView()
     private let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial))
     private let glassOverlayView = UIView()
-    private let collageView = TripPhotosCollageView()
-    private var collageRatioConstraint: Constraint?
+    private let collageView = TripPhotoCollageView()
+    private var collageHeightConstraint: Constraint?
     private var collageZeroConstraint: Constraint?
     private var collageTopConstraint: Constraint?
     private var collageLeadingConstraint: Constraint?
@@ -29,13 +29,17 @@ final class TripNotePreviewCardView: UIView {
     private var infoLeadingConstraint: Constraint?
     private var infoTrailingConstraint: Constraint?
     private var infoBottomConstraint: Constraint?
+    private let titleRow = UIStackView()
     private let titleLabel = UILabel()
+    private let bookmarkImageView = UIImageView()
     private let dateLabel = UILabel()
     private let placeCapsule = UIView()
     private let placeIcon = UIImageView()
     private let placeLabel = UILabel()
     private let previewLabel = UILabel()
     private var style: Style = .overlay
+    private var currentPhotoURLs: [URL] = []
+    private var currentCollageHorizontalInset: CGFloat = 0
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -51,16 +55,19 @@ final class TripNotePreviewCardView: UIView {
 
     func configure(with viewModel: TripNotePreviewViewModel) {
         titleLabel.text = viewModel.title
+        bookmarkImageView.isHidden = !viewModel.isBookmarked
         dateLabel.text = viewModel.dateRange
         previewLabel.text = viewModel.textPreview
-        collageView.configure(images: viewModel.photos)
-        let hasPhotos = !viewModel.photos.isEmpty
+        currentPhotoURLs = viewModel.photoURLs
+        collageView.configure(urls: viewModel.photoURLs, mode: .preview)
+        let hasPhotos = !viewModel.photoURLs.isEmpty
         collageView.isHidden = !hasPhotos
         if hasPhotos {
             collageZeroConstraint?.deactivate()
-            collageRatioConstraint?.activate()
+            collageHeightConstraint?.activate()
+            updateCollageHeightIfNeeded()
         } else {
-            collageRatioConstraint?.deactivate()
+            collageHeightConstraint?.deactivate()
             collageZeroConstraint?.activate()
         }
         if let placeTitle = viewModel.placeTitle, !placeTitle.isEmpty {
@@ -120,9 +127,15 @@ final class TripNotePreviewCardView: UIView {
         }
     }
 
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        updateCollageHeightIfNeeded()
+    }
+
 
     private func setupView() {
         backgroundColor = .clear
+        collageView.layer.cornerRadius = 12
         setupShadowContainer()
         setupBlurView()
         setupLabels()
@@ -136,7 +149,6 @@ final class TripNotePreviewCardView: UIView {
 
         activateConstraints(infoStack: infoStack)
 
-        // TODO: Вариант 2 с прокруткой карты
 
     }
 
@@ -159,9 +171,20 @@ final class TripNotePreviewCardView: UIView {
     }
 
     private func setupLabels() {
+        titleRow.axis = .horizontal
+        titleRow.alignment = .center
+        titleRow.spacing = 8
+
         titleLabel.font = UIFont.systemFont(ofSize: 28, weight: .bold)
         titleLabel.textColor = .label
         titleLabel.numberOfLines = 2
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        bookmarkImageView.image = UIImage(systemName: "bookmark.fill")
+        bookmarkImageView.tintColor = .systemOrange
+        bookmarkImageView.contentMode = .scaleAspectFit
+        bookmarkImageView.isHidden = true
+        bookmarkImageView.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         dateLabel.font = UIFont.systemFont(ofSize: 12, weight: .bold)
         dateLabel.textColor = .secondaryLabel
@@ -191,7 +214,14 @@ final class TripNotePreviewCardView: UIView {
     }
 
     private func buildInfoStack() -> UIStackView {
-        let infoStack = UIStackView(arrangedSubviews: [titleLabel, dateLabel, placeCapsule, previewLabel])
+        titleRow.addArrangedSubview(titleLabel)
+        titleRow.addArrangedSubview(bookmarkImageView)
+
+        bookmarkImageView.snp.makeConstraints { make in
+            make.size.equalTo(CGSize(width: 18, height: 18))
+        }
+
+        let infoStack = UIStackView(arrangedSubviews: [titleRow, dateLabel, placeCapsule, previewLabel])
         infoStack.axis = .vertical
         infoStack.spacing = 8
         return infoStack
@@ -214,7 +244,7 @@ final class TripNotePreviewCardView: UIView {
             collageTopConstraint = make.top.equalToSuperview().constraint
             collageLeadingConstraint = make.leading.equalToSuperview().constraint
             collageTrailingConstraint = make.trailing.equalToSuperview().constraint
-            collageRatioConstraint = make.height.equalTo(collageView.snp.width).multipliedBy(193.0 / 258.0).constraint
+            collageHeightConstraint = make.height.equalTo(0).constraint
             collageZeroConstraint = make.height.equalTo(0).constraint
         }
         collageZeroConstraint?.deactivate()
@@ -250,10 +280,19 @@ final class TripNotePreviewCardView: UIView {
         collageTopConstraint?.update(offset: collageTop)
         collageLeadingConstraint?.update(offset: collageSide)
         collageTrailingConstraint?.update(offset: -collageSide)
+        currentCollageHorizontalInset = collageSide
         infoTopConstraint?.update(offset: infoTop)
         infoLeadingConstraint?.update(offset: infoSide)
         infoTrailingConstraint?.update(offset: -infoSide)
         infoBottomConstraint?.update(offset: -infoBottom)
         layoutIfNeeded()
+    }
+
+    private func updateCollageHeightIfNeeded() {
+        guard !currentPhotoURLs.isEmpty else { return }
+        let availableWidth = bounds.width - (currentCollageHorizontalInset * 2)
+        guard availableWidth > 0 else { return }
+        let height = collageView.preferredHeight(forWidth: availableWidth)
+        collageHeightConstraint?.update(offset: height)
     }
 }

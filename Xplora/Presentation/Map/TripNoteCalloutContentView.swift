@@ -7,13 +7,16 @@ import SnapKit
 import UIKit
 
 final class TripNoteCalloutContentView: UIView {
-    private let collageView = TripPhotosCollageView()
-    private var collageRatioConstraint: Constraint?
+    private let collageView = TripPhotoCollageView()
+    private var collageHeightConstraint: Constraint?
     private var collageZeroConstraint: Constraint?
     private var collageTopConstraint: Constraint?
     private var infoTopConstraint: Constraint?
+    private var currentPhotoURLs: [URL] = []
 
+    private let titleRow = UIStackView()
     private let titleLabel = UILabel()
+    private let bookmarkImageView = UIImageView()
     private let dateLabel = UILabel()
     private let placeCapsule = UIView()
     private let placeIcon = UIImageView()
@@ -36,18 +39,21 @@ final class TripNoteCalloutContentView: UIView {
 
     func configure(with viewModel: TripNotePreviewViewModel) {
         titleLabel.text = viewModel.title
+        bookmarkImageView.isHidden = !viewModel.isBookmarked
         dateLabel.text = viewModel.dateRange
         previewLabel.text = viewModel.textPreview
 
-        let hasPhotos = !viewModel.photos.isEmpty
+        currentPhotoURLs = viewModel.photoURLs
+        let hasPhotos = !viewModel.photoURLs.isEmpty
         collageView.isHidden = !hasPhotos
-        collageView.configure(images: viewModel.photos)
+        collageView.configure(urls: viewModel.photoURLs, mode: .preview)
 
         if hasPhotos {
             collageZeroConstraint?.deactivate()
-            collageRatioConstraint?.activate()
+            collageHeightConstraint?.activate()
+            updateCollageHeightIfNeeded()
         } else {
-            collageRatioConstraint?.deactivate()
+            collageHeightConstraint?.deactivate()
             collageZeroConstraint?.activate()
         }
         collageTopConstraint?.update(offset: hasPhotos ? 0 : 8)
@@ -61,15 +67,31 @@ final class TripNoteCalloutContentView: UIView {
         }
     }
 
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        updateCollageHeightIfNeeded()
+    }
+
     private func setupView() {
         backgroundColor = .clear
 
         collageView.layer.cornerRadius = 12
         collageView.clipsToBounds = true
 
+        titleRow.axis = .horizontal
+        titleRow.alignment = .center
+        titleRow.spacing = 6
+
         titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         titleLabel.textColor = .label
         titleLabel.numberOfLines = 2
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        bookmarkImageView.image = UIImage(systemName: "bookmark.fill")
+        bookmarkImageView.tintColor = .systemOrange
+        bookmarkImageView.contentMode = .scaleAspectFit
+        bookmarkImageView.isHidden = true
+        bookmarkImageView.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         dateLabel.font = UIFont.systemFont(ofSize: 12, weight: .bold)
         dateLabel.textColor = .secondaryLabel
@@ -97,7 +119,9 @@ final class TripNoteCalloutContentView: UIView {
 
         infoStack.axis = .vertical
         infoStack.spacing = 4
-        infoStack.addArrangedSubview(titleLabel)
+        titleRow.addArrangedSubview(titleLabel)
+        titleRow.addArrangedSubview(bookmarkImageView)
+        infoStack.addArrangedSubview(titleRow)
         infoStack.addArrangedSubview(dateLabel)
         infoStack.addArrangedSubview(placeCapsule)
         infoStack.addArrangedSubview(previewLabel)
@@ -105,13 +129,17 @@ final class TripNoteCalloutContentView: UIView {
         placeCapsule.addSubview(placeIcon)
         placeCapsule.addSubview(placeLabel)
 
+        bookmarkImageView.snp.makeConstraints { make in
+            make.size.equalTo(CGSize(width: 16, height: 16))
+        }
+
         addSubview(collageView)
         addSubview(infoStack)
 
         collageView.snp.makeConstraints { make in
             collageTopConstraint = make.top.equalToSuperview().constraint
             make.leading.trailing.equalToSuperview()
-            collageRatioConstraint = make.height.equalTo(collageView.snp.width).multipliedBy(193.0 / 258.0).constraint
+            collageHeightConstraint = make.height.equalTo(0).constraint
             collageZeroConstraint = make.height.equalTo(0).constraint
         }
         collageZeroConstraint?.deactivate()
@@ -135,5 +163,13 @@ final class TripNoteCalloutContentView: UIView {
             make.top.equalToSuperview().offset(8)
             make.bottom.equalToSuperview().offset(-8)
         }
+    }
+
+    private func updateCollageHeightIfNeeded() {
+        guard !currentPhotoURLs.isEmpty else { return }
+        let availableWidth = bounds.width
+        guard availableWidth > 0 else { return }
+        let height = collageView.preferredHeight(forWidth: availableWidth)
+        collageHeightConstraint?.update(offset: height)
     }
 }
