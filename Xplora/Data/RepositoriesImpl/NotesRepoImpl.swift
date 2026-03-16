@@ -90,6 +90,12 @@ private enum SampleNoteFactory {
             updatedAt: parisDate,
             city: "Paris",
             country: "France",
+            location: NoteLocation(
+                placeName: "La Fromagerie Goncourt",
+                address: "Rue Oberkampf, Paris, France",
+                latitude: parisCoordinate.latitude,
+                longitude: parisCoordinate.longitude
+            ),
             isBookmarked: false,
             dateRangeText: "14 aug 2024 - 17 aug 2024",
             headerTitle: nil
@@ -105,6 +111,12 @@ private enum SampleNoteFactory {
             updatedAt: barcelonaDate,
             city: "Barcelona",
             country: "Spain",
+            location: NoteLocation(
+                placeName: "La Fromagerie Goncourt",
+                address: "Barcelona, Spain",
+                latitude: barcelonaCoordinate.latitude,
+                longitude: barcelonaCoordinate.longitude
+            ),
             isBookmarked: false,
             dateRangeText: "13 sep 2021 - 20 sep 2021",
             headerTitle: nil

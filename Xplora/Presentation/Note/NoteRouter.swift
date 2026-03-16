@@ -22,6 +22,7 @@ final class NoteRouterImpl: NoteRouter {
 
     func showNote(noteId: String?, coordinate: LocationCoordinate?, output: NoteModuleOutput?) {
         let viewController = builder.build(noteId: noteId, coordinate: coordinate, output: output, router: self)
+        viewController.hidesBottomBarWhenPushed = true
         navigationController.pushViewController(viewController, animated: true)
     }
 

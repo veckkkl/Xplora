@@ -16,8 +16,10 @@ struct NoteViewState: Equatable {
     let title: String
     let placeTitle: String
     let text: String
-    let locationText: String
+    let locationTitle: String
+    let locationSubtitle: String
     let hasLocation: Bool
+    let locationCoordinate: LocationCoordinate?
     let dateText: String
     let isSaveEnabled: Bool
     let isDeleteVisible: Bool
@@ -41,6 +43,7 @@ protocol NoteViewModelInput: AnyObject {
     func didToggleBookmark()
     func didTapSearch()
     func didRemovePhoto(at index: Int)
+    func didSelectLocation(placeName: String, address: String?, latitude: Double, longitude: Double)
     func didRemoveLocation()
     func didUpdateDateRangeText(_ text: String)
 }
@@ -220,9 +223,24 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         publish()
     }
 
+    func didSelectLocation(placeName: String, address: String?, latitude: Double, longitude: Double) {
+        guard var current = draft else { return }
+        let trimmedName = placeName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
+        let trimmedAddress = address?.trimmingCharacters(in: .whitespacesAndNewlines)
+        current.location = NoteLocation(
+            placeName: trimmedName,
+            address: (trimmedAddress?.isEmpty ?? true) ? nil : trimmedAddress,
+            latitude: latitude,
+            longitude: longitude
+        )
+        draft = current
+        publish()
+    }
+
     func didRemoveLocation() {
         guard var current = draft else { return }
-        current.title = nil
+        current.location = nil
         draft = current
         publish()
     }
@@ -267,6 +285,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
             updatedAt: now,
             city: nil,
             country: nil,
+            location: nil,
             isBookmarked: false,
             dateRangeText: nil,
             headerTitle: nil
@@ -286,8 +305,12 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
             title: current.title ?? "",
             placeTitle: formatHeaderTitle(for: current),
             text: current.text,
-            locationText: formatLocationText(for: current),
-            hasLocation: hasPlaceTitle(for: current),
+            locationTitle: current.location?.placeName ?? "",
+            locationSubtitle: current.location?.address ?? "",
+            hasLocation: current.location != nil,
+            locationCoordinate: current.location.map {
+                LocationCoordinate(latitude: $0.latitude, longitude: $0.longitude)
+            },
             dateText: formatDateText(for: current),
             isSaveEnabled: isSaveEnabled(for: current),
             isDeleteVisible: originalNote != nil,
@@ -316,20 +339,6 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         return original != note
     }
 
-    private func formatLocationText(for note: Note) -> String {
-        let trimmed = (note.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmed.isEmpty {
-            return trimmed
-        }
-        if let city = note.city, let country = note.country {
-            return "\(city), \(country)"
-        }
-        if let country = note.country {
-            return country
-        }
-        return ""
-    }
-
     private func formatHeaderTitle(for note: Note) -> String {
         if let override = note.headerTitle, !override.isEmpty {
             return override
@@ -341,11 +350,6 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
             return country
         }
         return "Untitled"
-    }
-
-    private func hasPlaceTitle(for note: Note) -> Bool {
-        let trimmed = (note.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        return !trimmed.isEmpty
     }
 
     private func formatDateText(for note: Note) -> String {

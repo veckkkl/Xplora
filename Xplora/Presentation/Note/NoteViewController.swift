@@ -3,6 +3,7 @@
 //  Xplora
 //
 
+import MapKit
 import SnapKit
 import UIKit
 
@@ -13,12 +14,8 @@ final class NoteViewController: UIViewController {
     private let contentView = UIView()
     private let stackView = UIStackView()
 
-    private let photoCollageView = TripPhotoCollageView()
-    private var photoCollageHeightConstraint: Constraint?
-    private let locationPillView = UIView()
-    private let locationIconView = UIImageView()
-    private let locationLabel = UILabel()
-    private let locationRemoveButton = UIButton(type: .system)
+    private let photoSectionView = NotePhotoSectionView()
+    private let locationSectionView = NoteLocationSectionView()
     private let placeTitleRow = UIStackView()
     private let placeTitleLabel = UILabel()
     private let placeTitleBookmarkImageView = UIImageView()
@@ -40,14 +37,12 @@ final class NoteViewController: UIViewController {
     private var searchContainerBottomConstraint: Constraint?
 
     private var keyboardObserverTokens: [NSObjectProtocol] = []
-    private var photoURLs: [URL] = []
     private var lastState: NoteViewState?
     private var currentSearchQuery: String = ""
     private var isBoldTyping = false
     private var pendingStartDate: Date?
     private var searchMatches: [NSRange] = []
     private var currentMatchIndex: Int = 0
-    private var pendingSearchAfterEdit = false
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "d MMM yyyy"
@@ -73,6 +68,7 @@ final class NoteViewController: UIViewController {
         view.backgroundColor = .systemBackground
         title = nil
         configureNavigationBar()
+        configureBackButton()
         setupLayout()
         setupActions()
         bindViewModel()
@@ -91,45 +87,22 @@ final class NoteViewController: UIViewController {
         navigationController?.navigationBar.isTranslucent = true
     }
 
+    private func configureBackButton() {
+        let backImage = UIImage(systemName: "chevron.backward")
+        navigationItem.hidesBackButton = true
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            image: backImage,
+            style: .plain,
+            target: self,
+            action: #selector(didTapBack)
+        )
+    }
+
     private func setupLayout() {
         stackView.axis = .vertical
         stackView.spacing = 10
         stackView.alignment = .fill
         stackView.distribution = .fill
-
-        locationPillView.backgroundColor = .secondarySystemBackground
-        locationPillView.layer.cornerRadius = 12
-        locationPillView.clipsToBounds = true
-        locationPillView.addSubview(locationIconView)
-        locationPillView.addSubview(locationLabel)
-        locationPillView.addSubview(locationRemoveButton)
-
-        locationIconView.image = UIImage(systemName: "mappin.and.ellipse")
-        locationIconView.tintColor = .secondaryLabel
-
-        locationLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        locationLabel.textColor = .secondaryLabel
-
-        locationLabel.snp.makeConstraints { make in
-            make.top.bottom.equalToSuperview().inset(6)
-            make.leading.equalTo(locationIconView.snp.trailing).offset(8)
-            make.trailing.equalToSuperview().inset(12)
-        }
-
-        locationIconView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().inset(12)
-            make.centerY.equalToSuperview()
-            make.size.equalTo(CGSize(width: 16, height: 16))
-        }
-
-        locationRemoveButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
-        locationRemoveButton.tintColor = UIColor.black.withAlphaComponent(0.55)
-        locationRemoveButton.addTarget(self, action: #selector(didTapRemoveLocation), for: .touchUpInside)
-        locationRemoveButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(10)
-            make.centerY.equalToSuperview()
-            make.size.equalTo(CGSize(width: 18, height: 18))
-        }
 
         placeTitleRow.axis = .horizontal
         placeTitleRow.alignment = .center
@@ -193,17 +166,13 @@ final class NoteViewController: UIViewController {
         placeTitleRow.addArrangedSubview(placeTitleBookmarkImageView)
         stackView.addArrangedSubview(placeTitleRow)
         stackView.addArrangedSubview(headerTitleTextField)
-        stackView.addArrangedSubview(photoCollageView)
-        stackView.addArrangedSubview(locationPillView)
+        stackView.addArrangedSubview(photoSectionView)
+        stackView.addArrangedSubview(locationSectionView)
         stackView.addArrangedSubview(titleTextField)
         stackView.addArrangedSubview(separatorAboveDate)
         stackView.addArrangedSubview(dateLabel)
         stackView.addArrangedSubview(separatorAboveText)
         stackView.addArrangedSubview(textView)
-
-        photoCollageView.snp.makeConstraints { make in
-            photoCollageHeightConstraint = make.height.equalTo(0).constraint
-        }
 
         placeTitleBookmarkImageView.snp.makeConstraints { make in
             make.size.equalTo(CGSize(width: 20, height: 20))
@@ -246,7 +215,20 @@ final class NoteViewController: UIViewController {
     private func setupActions() {
         titleTextField.addTarget(self, action: #selector(titleDidChange), for: .editingChanged)
         headerTitleTextField.addTarget(self, action: #selector(headerTitleDidChange), for: .editingChanged)
-        locationPillView.isUserInteractionEnabled = true
+
+        photoSectionView.onRemovePhoto = { [weak self] index in
+            self?.viewModel.didRemovePhoto(at: index)
+        }
+        locationSectionView.onAddTapped = { [weak self] in
+            self?.presentLocationSearch()
+        }
+        locationSectionView.onOpenTapped = { [weak self] in
+            self?.openCurrentLocationInMaps()
+        }
+        locationSectionView.onRemoveTapped = { [weak self] in
+            self?.viewModel.didRemoveLocation()
+        }
+
         let dateTap = UITapGestureRecognizer(target: self, action: #selector(didTapDate))
         dateLabel.isUserInteractionEnabled = true
         dateLabel.addGestureRecognizer(dateTap)
@@ -332,8 +314,6 @@ final class NoteViewController: UIViewController {
         viewModel.onSearchRequested = { [weak self] in
             guard let self else { return }
             if let state = self.lastState, state.mode == .edit {
-                self.pendingSearchAfterEdit = true
-                self.confirmExitEditIfNeeded()
                 return
             }
             self.openSearchUI()
@@ -347,11 +327,6 @@ final class NoteViewController: UIViewController {
             queue: .main
         ) { [weak self] notification in
             self?.handleKeyboard(notification: notification, showing: true)
-            guard let self else { return }
-            if self.searchBar.searchTextField.isFirstResponder {
-                self.searchBar.searchTextField.inputAccessoryView = self.keyboardToolbar
-                self.searchBar.searchTextField.reloadInputViews()
-            }
         }
         let willHide = NotificationCenter.default.addObserver(
             forName: UIResponder.keyboardWillHideNotification,
@@ -359,9 +334,6 @@ final class NoteViewController: UIViewController {
             queue: .main
         ) { [weak self] notification in
             self?.handleKeyboard(notification: notification, showing: false)
-            guard let self else { return }
-            self.searchBar.searchTextField.inputAccessoryView = nil
-            self.searchBar.searchTextField.reloadInputViews()
         }
         keyboardObserverTokens = [willShow, willHide]
     }
@@ -399,27 +371,15 @@ final class NoteViewController: UIViewController {
             headerTitleTextField.text = state.placeTitle
         }
         dateLabel.text = state.dateText
-        locationLabel.text = state.locationText
-
-        photoURLs = state.photoURLs
-        photoCollageView.isHidden = photoURLs.isEmpty
-        if !photoCollageView.isHidden {
-            photoCollageView.configure(urls: photoURLs, showRemoveButton: state.mode == .edit)
-            view.layoutIfNeeded()
-            let width = photoCollageView.bounds.width > 0 ? photoCollageView.bounds.width : (view.bounds.width - 40)
-            let height = photoCollageView.preferredHeight(forWidth: width)
-            photoCollageHeightConstraint?.update(offset: height)
-        } else {
-            photoCollageHeightConstraint?.update(offset: 0)
-        }
-        photoCollageView.onPhotoRemove = { [weak self] index in
-            guard let self else { return }
-            guard state.mode == .edit else { return }
-            self.viewModel.didRemovePhoto(at: index)
-        }
-
-        locationPillView.isHidden = !state.hasLocation
-        locationRemoveButton.isHidden = state.mode != .edit
+        photoSectionView.configure(.init(photoURLs: state.photoURLs, isEditing: state.mode == .edit))
+        locationSectionView.configure(
+            .init(
+                mode: state.mode == .edit ? .edit : .view,
+                hasLocation: state.hasLocation,
+                title: state.locationTitle,
+                subtitle: state.locationSubtitle
+            )
+        )
 
         let isEditing = state.mode == .edit
         titleTextField.isHidden = true
@@ -430,11 +390,6 @@ final class NoteViewController: UIViewController {
 
         if isEditing, !searchContainerView.isHidden {
             didTapSearchDone()
-        }
-
-        if !isEditing, pendingSearchAfterEdit {
-            pendingSearchAfterEdit = false
-            openSearchUI()
         }
 
         separatorAboveDate.isHidden = !isEditing
@@ -464,8 +419,7 @@ final class NoteViewController: UIViewController {
     }
 
     private func updateNavigationItems(state: NoteViewState) {
-        let editTitle = state.mode == .edit ? "Done" : "Edit"
-        let editButton = UIBarButtonItem(title: editTitle, style: .plain, target: self, action: #selector(didTapEditToggle))
+        let editButton = UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(didTapEdit))
 
         let bookmarkTitle = state.isBookmarked ? "Remove Bookmark" : "Add Bookmark"
         let bookmarkImageName = state.isBookmarked ? "bookmark.fill" : "bookmark"
@@ -481,7 +435,7 @@ final class NoteViewController: UIViewController {
         let searchAction = UIAction(title: "Find in Note", image: UIImage(systemName: "magnifyingglass")) { [weak self] _ in
             self?.viewModel.didTapSearch()
         }
-        searchAction.attributes = state.canSearch ? [] : [.disabled]
+        searchAction.attributes = (state.canSearch && state.mode != .edit) ? [] : [.disabled]
 
         let deleteAction = UIAction(title: "Delete Note", image: UIImage(systemName: "trash"), attributes: [.destructive]) { [weak self] _ in
             self?.confirmDelete()
@@ -501,7 +455,7 @@ final class NoteViewController: UIViewController {
 
     private func makeSystemCheckmarkButton() -> UIBarButtonItem {
         let image = UIImage(systemName: "checkmark") ?? UIImage()
-        let button = UIButton.systemButton(with: image, target: self, action: #selector(didTapEditToggle))
+        let button = UIButton.systemButton(with: image, target: self, action: #selector(didTapSave))
         button.tintColor = .systemBlue
         return UIBarButtonItem(customView: button)
     }
@@ -535,11 +489,9 @@ final class NoteViewController: UIViewController {
                 message: "You have unsaved changes.",
                 preferredStyle: .alert
             )
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
-                self?.pendingSearchAfterEdit = false
-            })
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
             alert.addAction(UIAlertAction(title: "Discard", style: .destructive) { [weak self] _ in
-                self?.viewModel.didTapCancelEdit()
+                self?.exitScreen()
             })
             let saveAction = UIAlertAction(title: "Save", style: .default) { [weak self] _ in
                 self?.viewModel.didTapSave()
@@ -548,7 +500,7 @@ final class NoteViewController: UIViewController {
             alert.addAction(saveAction)
             present(alert, animated: true)
         } else {
-            viewModel.didTapCancelEdit()
+            exitScreen()
         }
     }
 
@@ -607,16 +559,27 @@ final class NoteViewController: UIViewController {
         textView.becomeFirstResponder()
     }
 
-    @objc private func didTapEditToggle() {
-        guard let state = lastState else { return }
-        if state.mode == .edit {
-            confirmExitEditIfNeeded()
-        } else {
-            if !searchContainerView.isHidden {
-                didTapSearchDone()
-            }
-            viewModel.didTapEdit()
+    @objc private func didTapEdit() {
+        if !searchContainerView.isHidden {
+            didTapSearchDone()
         }
+        viewModel.didTapEdit()
+    }
+
+    @objc private func didTapSave() {
+        viewModel.didTapSave()
+    }
+
+    @objc private func didTapBack() {
+        guard let state = lastState else {
+            exitScreen()
+            return
+        }
+        guard state.mode == .edit, state.hasUnsavedChanges else {
+            exitScreen()
+            return
+        }
+        confirmExitEditIfNeeded()
     }
 
     @objc private func didTapDate() {
@@ -689,18 +652,53 @@ final class NoteViewController: UIViewController {
         }
     }
 
-    @objc private func didTapRemoveLocation() {
-        guard let state = lastState, state.mode == .edit else { return }
-        viewModel.didRemoveLocation()
+    private func openCurrentLocationInMaps() {
+        guard let state = lastState else { return }
+        guard state.hasLocation, let coordinate = state.locationCoordinate else { return }
+        let mapCoordinate = CLLocationCoordinate2D(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: mapCoordinate))
+        mapItem.name = state.locationTitle
+        MKMapItem.openMaps(with: [mapItem], launchOptions: nil)
     }
 
-    @objc private func didTapLocationPill() {}
+    private func presentLocationSearch() {
+        let controller = LocationSearchViewController()
+        controller.onLocationSelected = { [weak self] mapItem, completion in
+            guard let self else { return }
+            let placeName = self.resolvedPlaceName(mapItem: mapItem, completion: completion)
+            let address = self.resolvedAddress(mapItem: mapItem, completion: completion)
+            let coordinate = mapItem.placemark.coordinate
+            self.viewModel.didSelectLocation(
+                placeName: placeName,
+                address: address,
+                latitude: coordinate.latitude,
+                longitude: coordinate.longitude
+            )
+        }
+        controller.modalPresentationStyle = .pageSheet
+        present(controller, animated: true)
+    }
+
+    private func resolvedPlaceName(mapItem: MKMapItem, completion: MKLocalSearchCompletion) -> String {
+        let mapName = (mapItem.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !mapName.isEmpty {
+            return mapName
+        }
+        return completion.title.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func resolvedAddress(mapItem: MKMapItem, completion: MKLocalSearchCompletion) -> String? {
+        let completionSubtitle = completion.subtitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !completionSubtitle.isEmpty {
+            return completionSubtitle
+        }
+        let placemarkTitle = (mapItem.placemark.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return placemarkTitle.isEmpty ? nil : placemarkTitle
+    }
 
     @objc private func didTapSearchDone() {
         searchContainerView.isHidden = true
         searchBar.searchTextField.resignFirstResponder()
-        searchBar.searchTextField.inputAccessoryView = nil
-        searchBar.searchTextField.reloadInputViews()
         if let state = lastState {
             applySearchHighlight(text: state.text, query: "")
         }
@@ -736,10 +734,16 @@ final class NoteViewController: UIViewController {
             setupSearchBar()
         }
         searchContainerView.isHidden = false
-        searchBar.searchTextField.inputAccessoryView = keyboardToolbar
-        searchBar.searchTextField.reloadInputViews()
         searchBar.searchTextField.becomeFirstResponder()
         updateSearchNavigationButtons()
+    }
+
+    private func exitScreen() {
+        if let navigationController, navigationController.viewControllers.count > 1 {
+            navigationController.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
     }
 
 }

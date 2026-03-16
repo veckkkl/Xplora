@@ -7,6 +7,13 @@
 
 import Foundation
 
+struct NoteLocation: Codable, Equatable {
+    var placeName: String
+    var address: String?
+    var latitude: Double
+    var longitude: Double
+}
+
 struct Note: Identifiable, Equatable {
     let id: String
     let coordinate: LocationCoordinate
@@ -17,6 +24,7 @@ struct Note: Identifiable, Equatable {
     var updatedAt: Date
     var city: String?
     var country: String?
+    var location: NoteLocation?
     var isBookmarked: Bool
     var dateRangeText: String?
     var headerTitle: String?
