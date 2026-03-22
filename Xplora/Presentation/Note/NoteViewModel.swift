@@ -124,6 +124,11 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
 
     func didTapSave() {
         guard var current = draft else { return }
+        if originalNote != nil && !hasUnsavedChanges(current) {
+            mode = .view
+            publish()
+            return
+        }
         guard isSaveEnabled(for: current) else { return }
 
         isLoading = true
