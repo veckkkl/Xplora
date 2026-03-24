@@ -72,10 +72,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         locator.register(GetCountryVisitMarkersUseCase.self, instance: getCountryVisitMarkersUseCase)
 
         let getNoteUseCase: GetNoteUseCase = GetNoteUseCaseImpl(notesRepo: notesRepo)
+        let getAllNotesUseCase: GetAllNotesUseCase = GetAllNotesUseCaseImpl(notesRepo: notesRepo)
         let saveNoteUseCase: SaveNoteUseCase = SaveNoteUseCaseImpl(notesRepo: notesRepo)
         let deleteNoteUseCase: DeleteNoteUseCase = DeleteNoteUseCaseImpl(notesRepo: notesRepo)
 
         locator.register(GetNoteUseCase.self, instance: getNoteUseCase)
+        locator.register(GetAllNotesUseCase.self, instance: getAllNotesUseCase)
         locator.register(SaveNoteUseCase.self, instance: saveNoteUseCase)
         locator.register(DeleteNoteUseCase.self, instance: deleteNoteUseCase)
     }

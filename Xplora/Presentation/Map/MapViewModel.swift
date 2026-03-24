@@ -5,12 +5,12 @@
 
 import Foundation
 import MapKit
-import UIKit
 
 @MainActor
 protocol MapViewModelInput: AnyObject {
     func viewDidLoad()
     func didTapAddNote()
+    func didTapNotes()
     func didSelectMarker(_ marker: CountryVisitMarker)
     func previewModel(for marker: CountryVisitMarker) -> TripNotePreviewViewModel
     func refreshMarkers()
@@ -25,6 +25,7 @@ protocol MapViewModelOutput: AnyObject {
 
 enum MapRoute {
     case addNote
+    case showNotes
     case showCountryFirstNote(countryCode: String, noteId: String?, coordinate: LocationCoordinate)
 }
 
@@ -62,6 +63,10 @@ final class MapViewModel: MapViewModelInput, MapViewModelOutput {
         onRoute?(.addNote)
     }
 
+    func didTapNotes() {
+        onRoute?(.showNotes)
+    }
+
     func didSelectMarker(_ marker: CountryVisitMarker) {
         let coordinate = LocationCoordinate(latitude: marker.coordinate.latitude, longitude: marker.coordinate.longitude)
         onRoute?(.showCountryFirstNote(countryCode: marker.countryCode, noteId: marker.firstNoteId, coordinate: coordinate))
@@ -72,43 +77,15 @@ final class MapViewModel: MapViewModelInput, MapViewModelOutput {
         return TripNotePreviewViewModel(
             title: marker.title,
             dateRange: marker.dateRangeText,
-            photoURLs: note?.photoURLs ?? makeMockPhotoURLs(),
+            photoURLs: note?.photoURLs ?? [],
             isBookmarked: note?.isBookmarked ?? false,
-            placeTitle: note?.title ?? "La Fromagerie Goncourt",
-            textPreview: note?.text ?? "A rainy afternoon turned into a perfect evening. We found a tiny café, tried local cheese, and watched the city lights reflect on the wet streets."
+            placeTitle: note?.title ?? marker.title,
+            textPreview: note?.text ?? "Open note to see details."
         )
     }
 
     func refreshMarkers() {
         loadMarkers()
-    }
-
-    private func makeMockPhotoURLs() -> [URL] {
-        let colors: [UIColor] = [
-            UIColor.systemOrange,
-            UIColor.systemPink,
-            UIColor.systemBlue
-        ]
-        let tempDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("map_preview_photos", isDirectory: true)
-        if !FileManager.default.fileExists(atPath: tempDirectory.path) {
-            try? FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
-        }
-
-        return colors.enumerated().compactMap { index, color in
-            let fileURL = tempDirectory.appendingPathComponent("preview_\(index).png")
-            if FileManager.default.fileExists(atPath: fileURL.path) {
-                return fileURL
-            }
-
-            let renderer = UIGraphicsImageRenderer(size: CGSize(width: 600, height: 600))
-            let image = renderer.image { context in
-                color.setFill()
-                context.fill(CGRect(origin: .zero, size: CGSize(width: 600, height: 600)))
-            }
-            guard let data = image.pngData() else { return nil }
-            try? data.write(to: fileURL)
-            return fileURL
-        }
     }
 
     private func loadMarkers() {

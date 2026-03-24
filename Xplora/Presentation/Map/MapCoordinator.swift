@@ -49,6 +49,8 @@ final class MapCoordinator {
         switch route {
         case .addNote:
             showAddNote()
+        case .showNotes:
+            showNotes()
         case .showCountryFirstNote(_, let noteId, let coordinate):
             showCountryFirstNote(noteId: noteId, coordinate: coordinate)
         }
@@ -71,6 +73,24 @@ final class MapCoordinator {
 
     private func showCountryFirstNote(noteId: String?, coordinate: LocationCoordinate) {
         noteRouter?.showNote(noteId: noteId, coordinate: coordinate, output: self)
+    }
+
+    private func showNotes() {
+        let getAllNotesUseCase: GetAllNotesUseCase = locator.resolve(GetAllNotesUseCase.self)
+        let notesViewModel = NotesListViewModel(getAllNotesUseCase: getAllNotesUseCase)
+        let notesViewController = NotesListViewController(viewModel: notesViewModel)
+
+        notesViewModel.onRoute = { [weak self] route in
+            guard let self, let noteRouter = self.noteRouter else { return }
+            switch route {
+            case .addNew:
+                noteRouter.showNote(noteId: nil, coordinate: nil, output: self)
+            case .open(let noteId):
+                noteRouter.showNote(noteId: noteId, coordinate: nil, output: self)
+            }
+        }
+
+        navigationController.pushViewController(notesViewController, animated: true)
     }
 }
 

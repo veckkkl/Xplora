@@ -11,8 +11,9 @@ final class MapViewController: UIViewController {
     private let viewModel: MapViewModelInput & MapViewModelOutput
 
     private let mapView = MKMapView()
-    private let addNoteButton = UIButton(type: .system)
-    private let addNoteContainer = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
+    private let actionsContainer = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
+    private let notesButton = UIButton(type: .system)
+    private let addButton = UIButton(type: .system)
     private var didSetInitialCamera = false
 
     init(viewModel: MapViewModelInput & MapViewModelOutput) {
@@ -28,7 +29,7 @@ final class MapViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         setupMapView()
-        setupAddNoteButton()
+        setupActionButtons()
         bindViewModel()
         viewModel.viewDidLoad()
     }
@@ -69,32 +70,63 @@ final class MapViewController: UIViewController {
         }
     }
 
-    private func setupAddNoteButton() {
-        addNoteContainer.clipsToBounds = true
-        addNoteContainer.layer.cornerRadius = 16
-        view.addSubview(addNoteContainer)
+    private func setupActionButtons() {
+        actionsContainer.clipsToBounds = true
+        actionsContainer.layer.cornerRadius = 16
+        actionsContainer.layer.cornerCurve = .continuous
+        view.addSubview(actionsContainer)
 
-        var configuration = UIButton.Configuration.tinted()
-        configuration.title = "Add a note to my trip"
-        configuration.baseForegroundColor = .systemBlue
-        configuration.baseBackgroundColor = UIColor.systemBlue.withAlphaComponent(0.22)
-        configuration.cornerStyle = .medium
-        configuration.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
-        addNoteButton.configuration = configuration
-        addNoteButton.addTarget(self, action: #selector(didTapAddNote), for: .touchUpInside)
-        addNoteContainer.contentView.addSubview(addNoteButton)
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.alignment = .fill
+        stack.distribution = .fill
+        stack.spacing = 6
+        actionsContainer.contentView.addSubview(stack)
 
-        addNoteContainer.snp.makeConstraints { make in
+        var notesConfiguration = UIButton.Configuration.tinted()
+        notesConfiguration.title = "Notes"
+        notesConfiguration.image = UIImage(systemName: "note.text")
+        notesConfiguration.imagePadding = 6
+        notesConfiguration.baseForegroundColor = .systemBlue
+        notesConfiguration.baseBackgroundColor = UIColor.systemBlue.withAlphaComponent(0.22)
+        notesConfiguration.cornerStyle = .medium
+        notesConfiguration.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 14, bottom: 10, trailing: 14)
+        notesButton.configuration = notesConfiguration
+        notesButton.setPreferredSymbolConfiguration(
+            UIImage.SymbolConfiguration(pointSize: 15, weight: .semibold),
+            forImageIn: .normal
+        )
+        notesButton.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+        notesButton.addTarget(self, action: #selector(didTapNotes), for: .touchUpInside)
+
+        var addConfiguration = UIButton.Configuration.tinted()
+        addConfiguration.image = UIImage(systemName: "plus")
+        addConfiguration.baseForegroundColor = .systemBlue
+        addConfiguration.baseBackgroundColor = UIColor.systemBlue.withAlphaComponent(0.22)
+        addConfiguration.cornerStyle = .medium
+        addConfiguration.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)
+        addButton.configuration = addConfiguration
+        addButton.setPreferredSymbolConfiguration(
+            UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold),
+            forImageIn: .normal
+        )
+        addButton.addTarget(self, action: #selector(didTapAddNote), for: .touchUpInside)
+
+        stack.addArrangedSubview(notesButton)
+        stack.addArrangedSubview(addButton)
+
+        actionsContainer.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(8)
             make.centerX.equalToSuperview()
             make.width.lessThanOrEqualToSuperview().inset(16)
         }
 
-        addNoteButton.snp.makeConstraints { make in
-            make.top.equalTo(addNoteContainer.contentView.snp.top).offset(6)
-            make.bottom.equalTo(addNoteContainer.contentView.snp.bottom).offset(-6)
-            make.leading.equalTo(addNoteContainer.contentView.snp.leading).offset(8)
-            make.trailing.equalTo(addNoteContainer.contentView.snp.trailing).offset(-8)
+        stack.snp.makeConstraints { make in
+            make.edges.equalTo(actionsContainer.contentView).inset(8)
+        }
+
+        addButton.snp.makeConstraints { make in
+            make.width.equalTo(40)
         }
     }
 
@@ -135,6 +167,10 @@ final class MapViewController: UIViewController {
 
     @objc private func didTapAddNote() {
         viewModel.didTapAddNote()
+    }
+
+    @objc private func didTapNotes() {
+        viewModel.didTapNotes()
     }
 }
 
