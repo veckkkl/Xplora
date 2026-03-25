@@ -13,7 +13,11 @@ final class NotePhotoSectionView: UIView {
     }
 
     var onRemovePhoto: ((Int) -> Void)?
+    var onAddPhoto: (() -> Void)?
 
+    private let headerView = UIView()
+    private let titleLabel = UILabel()
+    private let addButton = UIButton(type: .system)
     private let collageView = TripPhotoCollageView()
     private var collageHeightConstraint: Constraint?
     private var currentState = State(photoURLs: [], isEditing: false)
@@ -29,9 +33,12 @@ final class NotePhotoSectionView: UIView {
 
     func configure(_ state: State) {
         currentState = state
-        isHidden = state.photoURLs.isEmpty
+        let hasPhotos = !state.photoURLs.isEmpty
+        isHidden = !state.isEditing && !hasPhotos
+        addButton.isHidden = !state.isEditing
+        collageView.isHidden = !hasPhotos
 
-        guard !state.photoURLs.isEmpty else {
+        guard hasPhotos else {
             collageHeightConstraint?.update(offset: 0)
             return
         }
@@ -53,15 +60,46 @@ final class NotePhotoSectionView: UIView {
     }
 
     private func setupLayout() {
+        titleLabel.text = "Photos"
+        titleLabel.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+        titleLabel.textColor = .secondaryLabel
+
+        addButton.setImage(UIImage(systemName: "plus.circle.fill"), for: .normal)
+        addButton.tintColor = .systemBlue
+        addButton.addTarget(self, action: #selector(didTapAddPhoto), for: .touchUpInside)
+
+        addSubview(headerView)
         addSubview(collageView)
+        headerView.addSubview(titleLabel)
+        headerView.addSubview(addButton)
+
+        headerView.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview()
+            make.height.equalTo(28)
+        }
+
+        titleLabel.snp.makeConstraints { make in
+            make.leading.centerY.equalToSuperview()
+        }
+
+        addButton.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.trailing.equalToSuperview()
+            make.width.height.equalTo(28)
+        }
 
         collageView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.top.equalTo(headerView.snp.bottom).offset(8)
+            make.leading.trailing.bottom.equalToSuperview()
             collageHeightConstraint = make.height.equalTo(0).constraint
         }
 
         collageView.onPhotoRemove = { [weak self] index in
             self?.onRemovePhoto?(index)
         }
+    }
+
+    @objc private func didTapAddPhoto() {
+        onAddPhoto?()
     }
 }

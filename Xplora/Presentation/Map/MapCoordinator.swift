@@ -37,10 +37,12 @@ final class MapCoordinator {
 
         let saveNoteUseCase: SaveNoteUseCase = locator.resolve(SaveNoteUseCase.self)
         let deleteNoteUseCase: DeleteNoteUseCase = locator.resolve(DeleteNoteUseCase.self)
+        let notePhotoStorage: NotePhotoStorage = locator.resolve(NotePhotoStorage.self)
         let noteBuilder = NoteModuleBuilder(
             getNoteUseCase: getNoteUseCase,
             saveNoteUseCase: saveNoteUseCase,
-            deleteNoteUseCase: deleteNoteUseCase
+            deleteNoteUseCase: deleteNoteUseCase,
+            notePhotoStorage: notePhotoStorage
         )
         noteRouter = NoteRouterImpl(navigationController: navigationController, builder: noteBuilder)
     }
