@@ -83,13 +83,19 @@ struct Note: Identifiable, Equatable {
         get {
             photos
                 .sorted { $0.orderIndex < $1.orderIndex }
-                .map { URL(fileURLWithPath: $0.localPath) }
+                .map { photo in
+                    if photo.localPath.hasPrefix("/") {
+                        return URL(fileURLWithPath: photo.localPath)
+                    }
+                    return Note.applicationSupportDirectoryURL()
+                        .appendingPathComponent(photo.localPath, isDirectory: false)
+                }
         }
         set {
             photos = newValue.enumerated().map { index, url in
                 NotePhoto(
                     id: UUID().uuidString,
-                    localPath: url.path,
+                    localPath: Note.localPath(from: url),
                     createdAt: Date(),
                     orderIndex: index
                 )
@@ -115,5 +121,19 @@ struct Note: Identifiable, Equatable {
         set {
             location.country = newValue?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         }
+    }
+
+    private static func applicationSupportDirectoryURL() -> URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+    }
+
+    private static func localPath(from url: URL) -> String {
+        let absolutePath = url.path
+        let prefix = applicationSupportDirectoryURL().path + "/"
+        if absolutePath.hasPrefix(prefix) {
+            return String(absolutePath.dropFirst(prefix.count))
+        }
+        return absolutePath
     }
 }

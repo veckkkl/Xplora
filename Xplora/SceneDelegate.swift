@@ -37,12 +37,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let settingsRepo: SettingsRepo = SettingsRepoImpl(storage: storage)
         let markersRepo: CountryVisitMarkersRepo = CountryVisitMarkersRepoImpl()
         let notesRepo: NotesRepo = NotesRepoImpl(coreDataStack: coreDataStack)
+        let notePhotoStorage: NotePhotoStorage = NotePhotoStorageImpl()
 
         locator.register(TripsRepo.self, instance: tripsRepo)
         locator.register(PlacesRepo.self, instance: placesRepo)
         locator.register(SettingsRepo.self, instance: settingsRepo)
         locator.register(CountryVisitMarkersRepo.self, instance: markersRepo)
         locator.register(NotesRepo.self, instance: notesRepo)
+        locator.register(NotePhotoStorage.self, instance: notePhotoStorage)
 
         // Services
         let locationService: LocationService = LocationServiceImpl()

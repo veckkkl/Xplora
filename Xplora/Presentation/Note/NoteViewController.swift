@@ -4,6 +4,7 @@
 //
 
 import MapKit
+import PhotosUI
 import SnapKit
 import UIKit
 
@@ -165,10 +166,9 @@ final class NoteViewController: UIViewController {
         placeTitleRow.addArrangedSubview(placeTitleLabel)
         placeTitleRow.addArrangedSubview(placeTitleBookmarkImageView)
         stackView.addArrangedSubview(placeTitleRow)
-        stackView.addArrangedSubview(headerTitleTextField)
+        stackView.addArrangedSubview(titleTextField)
         stackView.addArrangedSubview(photoSectionView)
         stackView.addArrangedSubview(locationSectionView)
-        stackView.addArrangedSubview(titleTextField)
         stackView.addArrangedSubview(separatorAboveDate)
         stackView.addArrangedSubview(dateLabel)
         stackView.addArrangedSubview(separatorAboveText)
@@ -214,10 +214,12 @@ final class NoteViewController: UIViewController {
 
     private func setupActions() {
         titleTextField.addTarget(self, action: #selector(titleDidChange), for: .editingChanged)
-        headerTitleTextField.addTarget(self, action: #selector(headerTitleDidChange), for: .editingChanged)
 
         photoSectionView.onRemovePhoto = { [weak self] index in
             self?.viewModel.didRemovePhoto(at: index)
+        }
+        photoSectionView.onAddPhoto = { [weak self] in
+            self?.viewModel.didTapAddPhoto()
         }
         locationSectionView.onAddTapped = { [weak self] in
             self?.presentLocationSearch()
@@ -318,6 +320,9 @@ final class NoteViewController: UIViewController {
             }
             self.openSearchUI()
         }
+        viewModel.onPhotoSourceRequested = { [weak self] in
+            self?.presentPhotoSourcePicker()
+        }
     }
 
     private func setupKeyboardHandling() {
@@ -365,11 +370,9 @@ final class NoteViewController: UIViewController {
             titleTextField.text = state.title
         }
 
-        placeTitleLabel.text = state.placeTitle
+        let trimmedTitle = state.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        placeTitleLabel.text = trimmedTitle.isEmpty ? state.placeTitle : trimmedTitle
         placeTitleBookmarkImageView.isHidden = !state.isBookmarked
-        if headerTitleTextField.text != state.placeTitle, !headerTitleTextField.isFirstResponder {
-            headerTitleTextField.text = state.placeTitle
-        }
         dateLabel.text = state.dateText
         photoSectionView.configure(.init(photoURLs: state.photoURLs, isEditing: state.mode == .edit))
         locationSectionView.configure(
@@ -382,11 +385,11 @@ final class NoteViewController: UIViewController {
         )
 
         let isEditing = state.mode == .edit
-        titleTextField.isHidden = true
-        titleTextField.isEnabled = false
+        titleTextField.isHidden = !isEditing
+        titleTextField.isEnabled = isEditing
         placeTitleRow.isHidden = isEditing
-        headerTitleTextField.isHidden = !isEditing
-        headerTitleTextField.isEnabled = isEditing
+        headerTitleTextField.isHidden = true
+        headerTitleTextField.isEnabled = false
 
         if isEditing, !searchContainerView.isHidden {
             didTapSearchDone()
@@ -446,17 +449,20 @@ final class NoteViewController: UIViewController {
         let menuButton = UIBarButtonItem(image: UIImage(systemName: "line.3.horizontal.decrease"), menu: menu)
 
         if state.mode == .edit {
-            let doneButton = makeSystemCheckmarkButton()
+            let doneButton = makeSystemCheckmarkButton(
+                isEnabled: state.isSaveEnabled || (state.isDeleteVisible && !state.hasUnsavedChanges)
+            )
             navigationItem.rightBarButtonItems = [doneButton, menuButton]
         } else {
             navigationItem.rightBarButtonItems = [menuButton, editButton]
         }
     }
 
-    private func makeSystemCheckmarkButton() -> UIBarButtonItem {
+    private func makeSystemCheckmarkButton(isEnabled: Bool) -> UIBarButtonItem {
         let image = UIImage(systemName: "checkmark") ?? UIImage()
         let button = UIButton.systemButton(with: image, target: self, action: #selector(didTapSave))
-        button.tintColor = .systemBlue
+        button.isEnabled = isEnabled
+        button.tintColor = isEnabled ? .systemBlue : .tertiaryLabel
         return UIBarButtonItem(customView: button)
     }
 
@@ -491,6 +497,7 @@ final class NoteViewController: UIViewController {
             )
             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
             alert.addAction(UIAlertAction(title: "Discard", style: .destructive) { [weak self] _ in
+                self?.viewModel.didDiscardChangesBeforeClose()
                 self?.exitScreen()
             })
             let saveAction = UIAlertAction(title: "Save", style: .default) { [weak self] _ in
@@ -661,6 +668,51 @@ final class NoteViewController: UIViewController {
         MKMapItem.openMaps(with: [mapItem], launchOptions: nil)
     }
 
+    private func presentPhotoSourcePicker() {
+        let alert = UIAlertController(title: "Add Photo", message: nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Camera", style: .default) { [weak self] _ in
+            self?.presentCameraPicker()
+        })
+        alert.addAction(UIAlertAction(title: "Photo Library", style: .default) { [weak self] _ in
+            self?.presentPhotoLibraryPicker()
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = photoSectionView
+            popover.sourceRect = CGRect(
+                x: photoSectionView.bounds.midX,
+                y: photoSectionView.bounds.midY,
+                width: 1,
+                height: 1
+            )
+        }
+        present(alert, animated: true)
+    }
+
+    private func presentCameraPicker() {
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            showError(message: "Camera is not available on this device.")
+            return
+        }
+
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = self
+        picker.allowsEditing = false
+        present(picker, animated: true)
+    }
+
+    private func presentPhotoLibraryPicker() {
+        var configuration = PHPickerConfiguration(photoLibrary: .shared())
+        configuration.selectionLimit = 0
+        configuration.filter = .images
+
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+
     private func presentLocationSearch() {
         let controller = LocationSearchViewController()
         controller.onLocationSelected = { [weak self] mapItem, completion in
@@ -767,17 +819,44 @@ extension NoteViewController: UISearchBarDelegate {
     }
 }
 
+extension NoteViewController: PHPickerViewControllerDelegate {
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        picker.dismiss(animated: true)
 
-private extension NoteViewController {
-    func loadImages(from urls: [URL]) -> [UIImage] {
-        urls.compactMap { url in
-            if url.isFileURL {
-                return UIImage(contentsOfFile: url.path)
+        guard !results.isEmpty else { return }
+
+        let group = DispatchGroup()
+        let lock = NSLock()
+        var images: [UIImage] = []
+
+        for result in results {
+            let provider = result.itemProvider
+            guard provider.canLoadObject(ofClass: UIImage.self) else { continue }
+            group.enter()
+            provider.loadObject(ofClass: UIImage.self) { object, _ in
+                defer { group.leave() }
+                guard let image = object as? UIImage else { return }
+                lock.lock()
+                images.append(image)
+                lock.unlock()
             }
-            if let data = try? Data(contentsOf: url) {
-                return UIImage(data: data)
-            }
-            return nil
         }
+
+        group.notify(queue: .main) { [weak self] in
+            self?.viewModel.didAddPhotos(images)
+        }
+    }
+}
+
+extension NoteViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
+    }
+
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true)
+
+        guard let image = info[.originalImage] as? UIImage else { return }
+        viewModel.didAddPhotos([image])
     }
 }
