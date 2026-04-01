@@ -8,9 +8,11 @@ import Foundation
 struct NotesListItemViewState: Equatable {
     let id: String
     let title: String
-    let subtitle: String
+    let textPreview: String
     let dateText: String
+    let locationChipText: String?
     let isBookmarked: Bool
+    let photoURLs: [URL]
 }
 
 struct NotesListViewState: Equatable {
@@ -93,12 +95,12 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
         let items = notes.map { note in
             NotesListItemViewState(
                 id: note.id,
-                title: note.title?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
-                    ? (note.title ?? "")
-                    : note.location.placeName,
-                subtitle: note.text.trimmingCharacters(in: .whitespacesAndNewlines),
-                dateText: Self.dateFormatter.string(from: note.updatedAt),
-                isBookmarked: note.isBookmarked
+                title: NotePresentationFactory.title(for: note),
+                textPreview: NotePresentationFactory.textPreview(for: note),
+                dateText: NotePresentationFactory.formattedDateRange(for: note),
+                locationChipText: NotePresentationFactory.locationChipText(for: note),
+                isBookmarked: note.isBookmarked,
+                photoURLs: note.photoURLs
             )
         }
 
@@ -110,11 +112,4 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
             )
         )
     }
-
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter
-    }()
 }

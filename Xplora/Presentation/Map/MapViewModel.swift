@@ -74,13 +74,20 @@ final class MapViewModel: MapViewModelInput, MapViewModelOutput {
 
     func previewModel(for marker: CountryVisitMarker) -> TripNotePreviewViewModel {
         let note = marker.firstNoteId.flatMap { cachedNotesById[$0] }
+        let formattedDateRange = note.map { NotePresentationFactory.formattedDateRange(for: $0) } ?? marker.dateRangeText
         return TripNotePreviewViewModel(
-            title: marker.title,
-            dateRange: marker.dateRangeText,
+            title: note.map { NotePresentationFactory.title(for: $0) } ?? marker.title,
+            dateRange: formattedDateRange,
             photoURLs: note?.photoURLs ?? [],
+            photoOverflowCount: NotePresentationFactory.previewOverflowCount(photoCount: note?.photoURLs.count ?? 0),
             isBookmarked: note?.isBookmarked ?? false,
-            placeTitle: note?.title ?? marker.title,
-            textPreview: note?.text ?? "Open note to see details."
+            locationTitle: note.flatMap { NotePresentationFactory.locationTitle(for: $0) },
+            locationSubtitle: note.flatMap { NotePresentationFactory.locationSubtitle(for: $0) },
+            locationChipText: note.flatMap { NotePresentationFactory.locationChipText(for: $0) } ?? marker.title,
+            textPreview: note
+                .map { NotePresentationFactory.textPreview(for: $0) }
+                .flatMap { $0.isEmpty ? nil : $0 }
+                ?? "Open note to see details."
         )
     }
 

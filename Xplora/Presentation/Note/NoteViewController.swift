@@ -4,6 +4,7 @@
 //
 
 import MapKit
+import PhotosUI
 import SnapKit
 import UIKit
 
@@ -20,7 +21,6 @@ final class NoteViewController: UIViewController {
     private let placeTitleLabel = UILabel()
     private let placeTitleBookmarkImageView = UIImageView()
     private let headerTitleTextField = UITextField()
-    private let titleTextField = UITextField()
     private let dateLabel = UILabel()
     private let separatorAboveDate = UIView()
     private let separatorAboveText = UIView()
@@ -40,15 +40,9 @@ final class NoteViewController: UIViewController {
     private var lastState: NoteViewState?
     private var currentSearchQuery: String = ""
     private var isBoldTyping = false
-    private var pendingStartDate: Date?
     private var searchMatches: [NSRange] = []
     private var currentMatchIndex: Int = 0
-    private let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d MMM yyyy"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        return formatter
-    }()
+    private let maxPhotoCount = 10
 
     init(viewModel: NoteViewModelInput & NoteViewModelOutput) {
         self.viewModel = viewModel
@@ -119,16 +113,12 @@ final class NoteViewController: UIViewController {
         placeTitleBookmarkImageView.isHidden = true
         placeTitleBookmarkImageView.setContentCompressionResistancePriority(.required, for: .horizontal)
 
-        headerTitleTextField.placeholder = "Location"
+        headerTitleTextField.placeholder = "Title"
         headerTitleTextField.borderStyle = .none
         headerTitleTextField.backgroundColor = .clear
         headerTitleTextField.font = UIFont.systemFont(ofSize: 28, weight: .bold)
         headerTitleTextField.textColor = .label
-
-        titleTextField.placeholder = "Title"
-        titleTextField.borderStyle = .none
-        titleTextField.backgroundColor = .clear
-        titleTextField.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        headerTitleTextField.isUserInteractionEnabled = true
 
         dateLabel.font = UIFont.systemFont(ofSize: 14, weight: .bold)
         dateLabel.textColor = .secondaryLabel
@@ -168,7 +158,6 @@ final class NoteViewController: UIViewController {
         stackView.addArrangedSubview(headerTitleTextField)
         stackView.addArrangedSubview(photoSectionView)
         stackView.addArrangedSubview(locationSectionView)
-        stackView.addArrangedSubview(titleTextField)
         stackView.addArrangedSubview(separatorAboveDate)
         stackView.addArrangedSubview(dateLabel)
         stackView.addArrangedSubview(separatorAboveText)
@@ -213,11 +202,15 @@ final class NoteViewController: UIViewController {
     }
 
     private func setupActions() {
-        titleTextField.addTarget(self, action: #selector(titleDidChange), for: .editingChanged)
         headerTitleTextField.addTarget(self, action: #selector(headerTitleDidChange), for: .editingChanged)
+        let headerTitleTap = UITapGestureRecognizer(target: self, action: #selector(didTapHeaderTitle))
+        headerTitleTextField.addGestureRecognizer(headerTitleTap)
 
         photoSectionView.onRemovePhoto = { [weak self] index in
             self?.viewModel.didRemovePhoto(at: index)
+        }
+        photoSectionView.onAddPhoto = { [weak self] in
+            self?.viewModel.didTapAddPhoto()
         }
         locationSectionView.onAddTapped = { [weak self] in
             self?.presentLocationSearch()
@@ -318,6 +311,9 @@ final class NoteViewController: UIViewController {
             }
             self.openSearchUI()
         }
+        viewModel.onPhotoSourceRequested = { [weak self] in
+            self?.presentPhotoSourcePicker()
+        }
     }
 
     private func setupKeyboardHandling() {
@@ -359,19 +355,22 @@ final class NoteViewController: UIViewController {
     }
 
     private func apply(state: NoteViewState) {
+        let previousMode = lastState?.mode
         lastState = state
-
-        if titleTextField.text != state.title, !titleTextField.isFirstResponder {
-            titleTextField.text = state.title
-        }
 
         placeTitleLabel.text = state.placeTitle
         placeTitleBookmarkImageView.isHidden = !state.isBookmarked
-        if headerTitleTextField.text != state.placeTitle, !headerTitleTextField.isFirstResponder {
-            headerTitleTextField.text = state.placeTitle
+        if headerTitleTextField.text != state.title, !headerTitleTextField.isFirstResponder {
+            headerTitleTextField.text = state.title
         }
         dateLabel.text = state.dateText
-        photoSectionView.configure(.init(photoURLs: state.photoURLs, isEditing: state.mode == .edit))
+        photoSectionView.configure(
+            .init(
+                photoURLs: state.photoURLs,
+                isEditing: state.mode == .edit,
+                canAddPhoto: state.canAddPhoto
+            )
+        )
         locationSectionView.configure(
             .init(
                 mode: state.mode == .edit ? .edit : .view,
@@ -382,11 +381,16 @@ final class NoteViewController: UIViewController {
         )
 
         let isEditing = state.mode == .edit
-        titleTextField.isHidden = true
-        titleTextField.isEnabled = false
         placeTitleRow.isHidden = isEditing
         headerTitleTextField.isHidden = !isEditing
         headerTitleTextField.isEnabled = isEditing
+        headerTitleTextField.isUserInteractionEnabled = isEditing
+
+        if isEditing, previousMode != .edit {
+            DispatchQueue.main.async { [weak self] in
+                self?.headerTitleTextField.becomeFirstResponder()
+            }
+        }
 
         if isEditing, !searchContainerView.isHidden {
             didTapSearchDone()
@@ -446,18 +450,21 @@ final class NoteViewController: UIViewController {
         let menuButton = UIBarButtonItem(image: UIImage(systemName: "line.3.horizontal.decrease"), menu: menu)
 
         if state.mode == .edit {
-            let doneButton = makeSystemCheckmarkButton()
+            let doneButton = makeSystemCheckmarkButton(isEnabled: state.isSaveEnabled && !state.isLoading)
             navigationItem.rightBarButtonItems = [doneButton, menuButton]
         } else {
             navigationItem.rightBarButtonItems = [menuButton, editButton]
         }
     }
 
-    private func makeSystemCheckmarkButton() -> UIBarButtonItem {
+    private func makeSystemCheckmarkButton(isEnabled: Bool) -> UIBarButtonItem {
         let image = UIImage(systemName: "checkmark") ?? UIImage()
         let button = UIButton.systemButton(with: image, target: self, action: #selector(didTapSave))
-        button.tintColor = .systemBlue
-        return UIBarButtonItem(customView: button)
+        button.isEnabled = isEnabled
+        button.tintColor = isEnabled ? .systemBlue : .tertiaryLabel
+        let item = UIBarButtonItem(customView: button)
+        item.isEnabled = isEnabled
+        return item
     }
 
     private func showError(message: String) {
@@ -546,12 +553,13 @@ final class NoteViewController: UIViewController {
         updateSearchNavigationButtons()
     }
 
-    @objc private func titleDidChange() {
-        viewModel.didChangeTitle(titleTextField.text)
+    @objc private func headerTitleDidChange() {
+        viewModel.didChangeTitle(headerTitleTextField.text)
     }
 
-    @objc private func headerTitleDidChange() {
-        viewModel.didChangeHeaderTitle(headerTitleTextField.text)
+    @objc private func didTapHeaderTitle() {
+        guard let state = lastState, state.mode == .edit else { return }
+        headerTitleTextField.becomeFirstResponder()
     }
 
     @objc private func didTapText() {
@@ -567,6 +575,7 @@ final class NoteViewController: UIViewController {
     }
 
     @objc private func didTapSave() {
+        guard let state = lastState, state.isSaveEnabled else { return }
         viewModel.didTapSave()
     }
 
@@ -584,56 +593,73 @@ final class NoteViewController: UIViewController {
 
     @objc private func didTapDate() {
         guard let state = lastState, state.mode == .edit else { return }
-        let (initialStart, initialEnd) = parseDateRange(from: state.dateText)
+        let today = NoteDateRangeFormatter.today()
+        let normalizedExisting = NoteDateRangeFormatter.normalizedRange(
+            start: state.tripStartDate,
+            end: state.tripEndDate,
+            today: today
+        )
+        let fallbackDate = NoteDateRangeFormatter.normalizedRange(
+            start: state.fallbackDate,
+            end: state.fallbackDate,
+            today: today
+        ).start ?? today
+        let initialStart = normalizedExisting.start ?? normalizedExisting.end ?? fallbackDate
         presentDatePicker(
             title: "From",
-            initialDate: initialStart ?? Date()
+            initialDate: initialStart,
+            maximumDate: today
         ) { [weak self] startDate in
             guard let self else { return }
-            self.pendingStartDate = startDate
+            let normalizedStart = NoteDateRangeFormatter.normalizedRange(
+                start: startDate,
+                end: startDate,
+                today: today
+            ).start ?? today
+            let existingEnd = normalizedExisting.end ?? normalizedStart
+            let initialEnd = max(existingEnd, normalizedStart)
             self.presentDatePicker(
                 title: "To",
-                initialDate: initialEnd ?? startDate,
-                minimumDate: startDate
+                initialDate: initialEnd,
+                minimumDate: normalizedStart,
+                maximumDate: today
             ) { [weak self] endDate in
                 guard let self else { return }
-                let startText = self.dateFormatter.string(from: self.pendingStartDate ?? startDate)
-                let endText = self.dateFormatter.string(from: endDate)
-                let rangeText = "\(startText) - \(endText)"
-                self.viewModel.didUpdateDateRangeText(rangeText.lowercased())
-                self.pendingStartDate = nil
+                let normalizedRange = NoteDateRangeFormatter.normalizedRange(
+                    start: normalizedStart,
+                    end: endDate,
+                    today: today
+                )
+                guard let rangeStart = normalizedRange.start, let rangeEnd = normalizedRange.end else { return }
+                self.viewModel.didUpdateTripDateRange(startDate: rangeStart, endDate: rangeEnd)
             }
         }
     }
 
-    private func presentDatePicker(title: String, initialDate: Date, minimumDate: Date? = nil, onSave: @escaping (Date) -> Void) {
-        let alert = UIAlertController(title: title, message: nil, preferredStyle: .actionSheet)
-        let picker = UIDatePicker()
-        picker.datePickerMode = .date
-        picker.preferredDatePickerStyle = .wheels
-        picker.date = initialDate
-        picker.minimumDate = minimumDate
-
-        alert.view.addSubview(picker)
-        picker.snp.makeConstraints { make in
-            make.top.equalTo(alert.view.snp.top).offset(56)
-            make.leading.trailing.equalTo(alert.view).inset(16)
-            make.bottom.equalTo(alert.view.snp.bottom).offset(-72)
+    private func presentDatePicker(
+        title: String,
+        initialDate: Date,
+        minimumDate: Date? = nil,
+        maximumDate: Date? = nil,
+        onSave: @escaping (Date) -> Void
+    ) {
+        let pickerController = NoteDatePickerSheetViewController(
+            titleText: title,
+            initialDate: initialDate,
+            minimumDate: minimumDate,
+            maximumDate: maximumDate
+        ) { [weak self] selectedDate in
+            self?.dismiss(animated: true)
+            onSave(selectedDate)
         }
-
-        alert.addAction(UIAlertAction(title: "Save", style: .default) { _ in
-            onSave(picker.date)
-        })
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        present(alert, animated: true)
-    }
-
-    private func parseDateRange(from text: String) -> (Date?, Date?) {
-        let parts = text.split(separator: "-").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-        guard parts.count == 2 else { return (nil, nil) }
-        let start = dateFormatter.date(from: parts[0])
-        let end = dateFormatter.date(from: parts[1])
-        return (start, end)
+        let navigationController = UINavigationController(rootViewController: pickerController)
+        navigationController.modalPresentationStyle = .pageSheet
+        if let sheet = navigationController.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+        }
+        present(navigationController, animated: true)
     }
 
     @objc private func didTapFormat() {
@@ -659,6 +685,71 @@ final class NoteViewController: UIViewController {
         let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: mapCoordinate))
         mapItem.name = state.locationTitle
         MKMapItem.openMaps(with: [mapItem], launchOptions: nil)
+    }
+
+    private func presentPhotoSourcePicker() {
+        if let state = lastState, !state.canAddPhoto {
+            showError(message: "You can add up to 10 photos.")
+            return
+        }
+
+        let alert = UIAlertController(title: "Add Photo", message: nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Camera", style: .default) { [weak self] _ in
+            self?.presentCameraPicker()
+        })
+        alert.addAction(UIAlertAction(title: "Photo Library", style: .default) { [weak self] _ in
+            self?.presentPhotoLibraryPicker()
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = photoSectionView
+            popover.sourceRect = CGRect(
+                x: photoSectionView.bounds.midX,
+                y: photoSectionView.bounds.midY,
+                width: 1,
+                height: 1
+            )
+        }
+        present(alert, animated: true)
+    }
+
+    private func presentCameraPicker() {
+        if let state = lastState, !state.canAddPhoto {
+            showError(message: "You can add up to 10 photos.")
+            return
+        }
+
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            showError(message: "Camera is not available on this device.")
+            return
+        }
+
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = self
+        picker.allowsEditing = false
+        present(picker, animated: true)
+    }
+
+    private func presentPhotoLibraryPicker() {
+        guard let state = lastState else { return }
+        let remainingSlots = maxPhotoCount - state.photoURLs.count
+        guard remainingSlots > 0 else {
+            showError(message: "You can add up to \(maxPhotoCount) photos.")
+            return
+        }
+
+        var configuration = PHPickerConfiguration(photoLibrary: .shared())
+        configuration.selectionLimit = state.preselectedAssetIdentifiers.count + remainingSlots
+        configuration.selection = .default
+        configuration.filter = .images
+        configuration.preselectedAssetIdentifiers = state.preselectedAssetIdentifiers
+
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.title = "\(state.photoURLs.count)/\(maxPhotoCount)"
+        picker.delegate = self
+        present(picker, animated: true)
     }
 
     private func presentLocationSearch() {
@@ -767,17 +858,129 @@ extension NoteViewController: UISearchBarDelegate {
     }
 }
 
+extension NoteViewController: PHPickerViewControllerDelegate {
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        picker.dismiss(animated: true)
+        guard !results.isEmpty else { return }
 
-private extension NoteViewController {
-    func loadImages(from urls: [URL]) -> [UIImage] {
-        urls.compactMap { url in
-            if url.isFileURL {
-                return UIImage(contentsOfFile: url.path)
+        let existingAssetIdentifiers = Set(lastState?.preselectedAssetIdentifiers ?? [])
+        let selectedAssetIdentifiers = Set(results.compactMap(\.assetIdentifier))
+
+        let group = DispatchGroup()
+        let lock = NSLock()
+        var pickedPhotos: [NotePickedPhoto] = []
+
+        for result in results {
+            if let assetIdentifier = result.assetIdentifier, existingAssetIdentifiers.contains(assetIdentifier) {
+                continue
             }
-            if let data = try? Data(contentsOf: url) {
-                return UIImage(data: data)
+
+            let provider = result.itemProvider
+            guard provider.canLoadObject(ofClass: UIImage.self) else { continue }
+            group.enter()
+            let assetIdentifier = result.assetIdentifier
+            provider.loadObject(ofClass: UIImage.self) { object, _ in
+                defer { group.leave() }
+                guard let image = object as? UIImage else { return }
+                lock.lock()
+                pickedPhotos.append(NotePickedPhoto(image: image, assetIdentifier: assetIdentifier))
+                lock.unlock()
             }
-            return nil
         }
+
+        group.notify(queue: .main) { [weak self] in
+            self?.viewModel.didCompletePhotoLibrarySelection(
+                selectedAssetIdentifiers: selectedAssetIdentifiers,
+                newlyPickedPhotos: pickedPhotos
+            )
+        }
+    }
+}
+
+extension NoteViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
+    }
+
+    func imagePickerController(
+        _ picker: UIImagePickerController,
+        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
+    ) {
+        picker.dismiss(animated: true)
+        guard let image = info[.originalImage] as? UIImage else { return }
+        viewModel.didAddPhotos([NotePickedPhoto(image: image, assetIdentifier: nil)])
+    }
+}
+
+private final class NoteDatePickerSheetViewController: UIViewController {
+    private let titleText: String
+    private let minimumDate: Date?
+    private let maximumDate: Date?
+    private let onSave: (Date) -> Void
+    private let datePicker = UIDatePicker()
+
+    init(
+        titleText: String,
+        initialDate: Date,
+        minimumDate: Date?,
+        maximumDate: Date?,
+        onSave: @escaping (Date) -> Void
+    ) {
+        self.titleText = titleText
+        self.minimumDate = minimumDate
+        self.maximumDate = maximumDate
+        self.onSave = onSave
+        super.init(nibName: nil, bundle: nil)
+        var clampedDate = initialDate
+        if let minimumDate, clampedDate < minimumDate {
+            clampedDate = minimumDate
+        }
+        if let maximumDate, clampedDate > maximumDate {
+            clampedDate = maximumDate
+        }
+        datePicker.date = clampedDate
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+        title = titleText
+
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            title: "Cancel",
+            style: .plain,
+            target: self,
+            action: #selector(didTapCancel)
+        )
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "Save",
+            style: .done,
+            target: self,
+            action: #selector(didTapSave)
+        )
+
+        datePicker.datePickerMode = .date
+        datePicker.preferredDatePickerStyle = .wheels
+        datePicker.minimumDate = minimumDate
+        datePicker.maximumDate = maximumDate
+
+        view.addSubview(datePicker)
+        datePicker.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview()
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(8)
+            make.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-8)
+        }
+    }
+
+    @objc private func didTapCancel() {
+        dismiss(animated: true)
+    }
+
+    @objc private func didTapSave() {
+        onSave(datePicker.date)
     }
 }

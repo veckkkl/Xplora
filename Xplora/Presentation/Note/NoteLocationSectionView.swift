@@ -23,12 +23,15 @@ final class NoteLocationSectionView: UIView {
     var onOpenTapped: (() -> Void)?
     var onRemoveTapped: (() -> Void)?
 
-    private let pillControl = UIControl()
+    private let cardControl = UIControl()
     private let iconView = UIImageView()
     private let textStack = UIStackView()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
-    private let removeButton = UIButton(type: .system)
+
+    private let removeHitButton = UIButton(type: .custom)
+    private let removeBackgroundView = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterial))
+    private let removeIconView = UIImageView()
 
     private var currentState = State(mode: .view, hasLocation: false, title: "", subtitle: "")
 
@@ -48,7 +51,8 @@ final class NoteLocationSectionView: UIView {
         switch state.mode {
         case .edit:
             isHidden = false
-            removeButton.isHidden = !state.hasLocation
+            removeHitButton.isHidden = !state.hasLocation
+
             if state.hasLocation {
                 titleLabel.text = state.title
                 titleLabel.textColor = .label
@@ -62,7 +66,7 @@ final class NoteLocationSectionView: UIView {
             }
         case .view:
             isHidden = !state.hasLocation
-            removeButton.isHidden = true
+            removeHitButton.isHidden = true
             titleLabel.text = state.title
             titleLabel.textColor = .label
             subtitleLabel.text = state.subtitle
@@ -71,36 +75,50 @@ final class NoteLocationSectionView: UIView {
     }
 
     private func setupLayout() {
-        pillControl.backgroundColor = .secondarySystemBackground
-        pillControl.layer.cornerRadius = 12
-        pillControl.clipsToBounds = true
+        cardControl.backgroundColor = .secondarySystemBackground
+        cardControl.layer.cornerRadius = 12
+        cardControl.layer.cornerCurve = .continuous
+        cardControl.clipsToBounds = true
 
         iconView.image = UIImage(systemName: "mappin.and.ellipse")
         iconView.tintColor = .secondaryLabel
 
         textStack.axis = .vertical
         textStack.spacing = 2
+        textStack.isUserInteractionEnabled = false
 
         titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         titleLabel.numberOfLines = 1
+        titleLabel.isUserInteractionEnabled = false
 
         subtitleLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         subtitleLabel.textColor = .secondaryLabel
         subtitleLabel.numberOfLines = 1
         subtitleLabel.lineBreakMode = .byTruncatingTail
+        subtitleLabel.isUserInteractionEnabled = false
 
-        removeButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
-        removeButton.tintColor = UIColor.black.withAlphaComponent(0.55)
+        removeBackgroundView.clipsToBounds = true
+        removeBackgroundView.layer.cornerRadius = 11
+        removeBackgroundView.layer.cornerCurve = .continuous
+        removeBackgroundView.layer.borderColor = UIColor.separator.withAlphaComponent(0.24).cgColor
+        removeBackgroundView.layer.borderWidth = 0.6
 
-        addSubview(pillControl)
-        pillControl.addSubview(iconView)
-        pillControl.addSubview(textStack)
-        pillControl.addSubview(removeButton)
+        removeIconView.image = UIImage(systemName: "xmark")
+        removeIconView.tintColor = .label
+        removeIconView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 9, weight: .semibold)
+
+        addSubview(cardControl)
+        cardControl.addSubview(iconView)
+        cardControl.addSubview(textStack)
+
+        addSubview(removeHitButton)
+        removeHitButton.addSubview(removeBackgroundView)
+        removeBackgroundView.contentView.addSubview(removeIconView)
 
         textStack.addArrangedSubview(titleLabel)
         textStack.addArrangedSubview(subtitleLabel)
 
-        pillControl.snp.makeConstraints { make in
+        cardControl.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
 
@@ -110,25 +128,34 @@ final class NoteLocationSectionView: UIView {
             make.size.equalTo(CGSize(width: 16, height: 16))
         }
 
-        removeButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(10)
+        removeHitButton.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().inset(8)
             make.centerY.equalToSuperview()
-            make.size.equalTo(CGSize(width: 18, height: 18))
+            make.size.equalTo(CGSize(width: 32, height: 32))
+        }
+
+        removeBackgroundView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.size.equalTo(CGSize(width: 22, height: 22))
+        }
+
+        removeIconView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
         }
 
         textStack.snp.makeConstraints { make in
             make.top.bottom.equalToSuperview().inset(6)
             make.leading.equalTo(iconView.snp.trailing).offset(8)
-            make.trailing.equalTo(removeButton.snp.leading).offset(-8)
+            make.trailing.equalTo(removeHitButton.snp.leading).offset(-6)
         }
     }
 
     private func setupActions() {
-        pillControl.addTarget(self, action: #selector(didTapPill), for: .touchUpInside)
-        removeButton.addTarget(self, action: #selector(didTapRemove), for: .touchUpInside)
+        cardControl.addTarget(self, action: #selector(didTapCard), for: .touchUpInside)
+        removeHitButton.addTarget(self, action: #selector(didTapRemove), for: .touchUpInside)
     }
 
-    @objc private func didTapPill() {
+    @objc private func didTapCard() {
         switch currentState.mode {
         case .edit:
             onAddTapped?()
@@ -139,8 +166,7 @@ final class NoteLocationSectionView: UIView {
     }
 
     @objc private func didTapRemove() {
-        guard currentState.mode == .edit else { return }
-        guard currentState.hasLocation else { return }
+        guard currentState.mode == .edit, currentState.hasLocation else { return }
         onRemoveTapped?()
     }
 }

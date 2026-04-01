@@ -10,9 +10,13 @@ final class TripPhotoCell: UICollectionViewCell {
     static let reuseIdentifier = "TripPhotoCell"
 
     private let imageView = UIImageView()
-    private let removeButton = UIButton(type: .system)
     private let overflowOverlayView = UIView()
     private let overflowLabel = UILabel()
+
+    private let removeHitButton = UIButton(type: .custom)
+    private let removeBackgroundView = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterial))
+    private let removeIconView = UIImageView()
+
     private var onRemove: (() -> Void)?
 
     override init(frame: CGRect) {
@@ -30,6 +34,7 @@ final class TripPhotoCell: UICollectionViewCell {
         imageView.image = nil
         overflowOverlayView.isHidden = true
         overflowLabel.text = nil
+        removeHitButton.isHidden = true
         onRemove = nil
     }
 
@@ -41,7 +46,8 @@ final class TripPhotoCell: UICollectionViewCell {
     ) {
         imageView.image = image
         self.onRemove = onRemove
-        removeButton.isHidden = !showRemoveButton
+        removeHitButton.isHidden = !showRemoveButton
+
         if let overflowCount, overflowCount > 0 {
             overflowLabel.text = "+\(overflowCount)"
             overflowOverlayView.isHidden = false
@@ -53,7 +59,8 @@ final class TripPhotoCell: UICollectionViewCell {
 
     private func setupView() {
         contentView.backgroundColor = .secondarySystemBackground
-        contentView.layer.cornerRadius = 2
+        contentView.layer.cornerRadius = 7
+        contentView.layer.cornerCurve = .continuous
         contentView.clipsToBounds = true
 
         imageView.contentMode = .scaleAspectFill
@@ -64,7 +71,7 @@ final class TripPhotoCell: UICollectionViewCell {
             make.edges.equalToSuperview()
         }
 
-        overflowOverlayView.backgroundColor = UIColor.black.withAlphaComponent(0.28)
+        overflowOverlayView.backgroundColor = UIColor.black.withAlphaComponent(0.34)
         overflowOverlayView.isHidden = true
         contentView.addSubview(overflowOverlayView)
 
@@ -72,7 +79,7 @@ final class TripPhotoCell: UICollectionViewCell {
             make.edges.equalToSuperview()
         }
 
-        overflowLabel.font = UIFont.systemFont(ofSize: 22, weight: .bold)
+        overflowLabel.font = UIFont.systemFont(ofSize: 21, weight: .semibold)
         overflowLabel.textColor = .white
         overflowLabel.textAlignment = .center
         overflowOverlayView.addSubview(overflowLabel)
@@ -81,16 +88,34 @@ final class TripPhotoCell: UICollectionViewCell {
             make.center.equalToSuperview()
         }
 
-        removeButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
-        removeButton.tintColor = UIColor.black.withAlphaComponent(0.55)
-        removeButton.backgroundColor = .clear
-        removeButton.addTarget(self, action: #selector(didTapRemove), for: .touchUpInside)
-        contentView.addSubview(removeButton)
+        removeHitButton.addTarget(self, action: #selector(didTapRemove), for: .touchUpInside)
+        contentView.addSubview(removeHitButton)
 
-        removeButton.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(6)
-            make.trailing.equalToSuperview().offset(-6)
-            make.size.equalTo(CGSize(width: 20, height: 20))
+        removeHitButton.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(4)
+            make.trailing.equalToSuperview().offset(-4)
+            make.size.equalTo(CGSize(width: 34, height: 34))
+        }
+
+        removeBackgroundView.clipsToBounds = true
+        removeBackgroundView.layer.cornerRadius = 12
+        removeBackgroundView.layer.cornerCurve = .continuous
+        removeBackgroundView.layer.borderColor = UIColor.separator.withAlphaComponent(0.26).cgColor
+        removeBackgroundView.layer.borderWidth = 0.6
+        removeHitButton.addSubview(removeBackgroundView)
+
+        removeBackgroundView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.size.equalTo(CGSize(width: 24, height: 24))
+        }
+
+        removeIconView.image = UIImage(systemName: "xmark")
+        removeIconView.tintColor = .label
+        removeIconView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
+        removeBackgroundView.contentView.addSubview(removeIconView)
+
+        removeIconView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
         }
     }
 

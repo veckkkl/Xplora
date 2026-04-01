@@ -10,7 +10,7 @@ import UIKit
 final class NotesListViewController: UIViewController {
     private let viewModel: NotesListViewModelInput & NotesListViewModelOutput
 
-    private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+    private let tableView = UITableView(frame: .zero, style: .plain)
     private let emptyLabel = UILabel()
     private let activityIndicator = UIActivityIndicatorView(style: .medium)
     private var items: [NotesListItemViewState] = []
@@ -46,11 +46,13 @@ final class NotesListViewController: UIViewController {
             action: #selector(didTapAdd)
         )
 
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "NoteCell")
+        tableView.register(NotesListPreviewCell.self, forCellReuseIdentifier: NotesListPreviewCell.reuseIdentifier)
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.rowHeight = 72
-        tableView.tableFooterView = UIView()
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 180
+        tableView.separatorStyle = .none
+        tableView.backgroundColor = .clear
 
         emptyLabel.text = "No notes yet"
         emptyLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
@@ -120,25 +122,14 @@ extension NotesListViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath)
-        let item = items[indexPath.row]
-
-        var content = cell.defaultContentConfiguration()
-        content.text = item.title
-        content.secondaryText = item.subtitle.isEmpty ? item.dateText : "\(item.subtitle) • \(item.dateText)"
-        content.secondaryTextProperties.numberOfLines = 1
-
-        cell.contentConfiguration = content
-        cell.accessoryType = .disclosureIndicator
-
-        if item.isBookmarked {
-            cell.imageView?.image = UIImage(systemName: "bookmark.fill")
-            cell.imageView?.tintColor = .systemOrange
-        } else {
-            cell.imageView?.image = UIImage(systemName: "note.text")
-            cell.imageView?.tintColor = .secondaryLabel
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: NotesListPreviewCell.reuseIdentifier,
+            for: indexPath
+        ) as? NotesListPreviewCell else {
+            return UITableViewCell()
         }
-
+        let item = items[indexPath.row]
+        cell.configure(with: item)
         return cell
     }
 }

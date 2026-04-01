@@ -15,7 +15,8 @@ enum NoteCoreDataMapper {
                     id: photo.id ?? UUID().uuidString,
                     localPath: photo.localPath ?? "",
                     createdAt: photo.createdAt ?? Date(),
-                    orderIndex: Int(photo.orderIndex)
+                    orderIndex: Int(photo.orderIndex),
+                    photoLibraryAssetId: photo.photoLibraryAssetId
                 )
             }
             .sorted { $0.orderIndex < $1.orderIndex }
@@ -26,6 +27,8 @@ enum NoteCoreDataMapper {
             text: managedObject.text ?? "",
             createdAt: managedObject.createdAt ?? Date(),
             updatedAt: managedObject.updatedAt ?? Date(),
+            tripStartDate: managedObject.tripStartDate,
+            tripEndDate: managedObject.tripEndDate,
             isBookmarked: managedObject.isBookmarked,
             location: NoteLocation(
                 placeName: managedObject.placeName ?? "",
@@ -46,6 +49,8 @@ enum NoteCoreDataMapper {
         managedObject.text = note.text
         managedObject.createdAt = note.createdAt
         managedObject.updatedAt = note.updatedAt
+        managedObject.tripStartDate = note.tripStartDate
+        managedObject.tripEndDate = note.tripEndDate
         managedObject.isBookmarked = note.isBookmarked
         managedObject.placeName = note.location.placeName
         managedObject.city = note.location.city
@@ -66,6 +71,7 @@ enum NoteCoreDataMapper {
             managedPhoto.localPath = domainPhoto.localPath
             managedPhoto.createdAt = domainPhoto.createdAt
             managedPhoto.orderIndex = Int32(domainPhoto.orderIndex)
+            managedPhoto.photoLibraryAssetId = domainPhoto.photoLibraryAssetId
             managedPhoto.note = managedObject
             updatedPhotos.insert(managedPhoto)
         }

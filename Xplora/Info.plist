@@ -4,6 +4,10 @@
 <dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We use your location to show your position on the map.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Allow camera access to attach photos to your notes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allow photo library access to attach photos to your notes.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

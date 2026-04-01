@@ -59,7 +59,7 @@ final class TripNoteCalloutContentView: UIView {
         collageTopConstraint?.update(offset: hasPhotos ? 0 : 8)
         infoTopConstraint?.update(offset: hasPhotos ? 8 : 0)
 
-        if let placeTitle = viewModel.placeTitle, !placeTitle.isEmpty {
+        if let placeTitle = viewModel.locationChipText ?? viewModel.placeTitle, !placeTitle.isEmpty {
             placeLabel.text = placeTitle
             placeCapsule.isHidden = false
         } else {

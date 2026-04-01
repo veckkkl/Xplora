@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CryptoKit
 
 struct NoteLocation: Codable, Equatable {
     var placeName: String
@@ -59,6 +60,7 @@ struct NotePhoto: Identifiable, Codable, Equatable {
     var localPath: String
     var createdAt: Date
     var orderIndex: Int
+    var photoLibraryAssetId: String?
 }
 
 struct Note: Identifiable, Equatable {
@@ -67,6 +69,8 @@ struct Note: Identifiable, Equatable {
     var text: String
     var createdAt: Date
     var updatedAt: Date
+    var tripStartDate: Date?
+    var tripEndDate: Date?
     var isBookmarked: Bool
     var location: NoteLocation
     var photos: [NotePhoto]
@@ -86,12 +90,14 @@ struct Note: Identifiable, Equatable {
                 .map { URL(fileURLWithPath: $0.localPath) }
         }
         set {
-            photos = newValue.enumerated().map { index, url in
+            let deduplicated = Note.deduplicatedPhotoURLs(from: newValue)
+            photos = deduplicated.enumerated().map { index, url in
                 NotePhoto(
                     id: UUID().uuidString,
                     localPath: url.path,
                     createdAt: Date(),
-                    orderIndex: index
+                    orderIndex: index,
+                    photoLibraryAssetId: nil
                 )
             }
         }
@@ -115,5 +121,41 @@ struct Note: Identifiable, Equatable {
         set {
             location.country = newValue?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         }
+    }
+
+    private static func deduplicatedPhotoURLs(from urls: [URL]) -> [URL] {
+        var result: [URL] = []
+        var contentFingerprints = Set<String>()
+        var fallbackKeys = Set<String>()
+
+        for url in urls {
+            if let fingerprint = contentFingerprint(for: url) {
+                if contentFingerprints.insert(fingerprint).inserted {
+                    result.append(url)
+                }
+                continue
+            }
+
+            let key = fallbackDedupKey(for: url)
+            if fallbackKeys.insert(key).inserted {
+                result.append(url)
+            }
+        }
+
+        return result
+    }
+
+    private static func contentFingerprint(for url: URL) -> String? {
+        guard url.isFileURL else { return nil }
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        let digest = SHA256.hash(data: data)
+        return digest.map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func fallbackDedupKey(for url: URL) -> String {
+        if url.isFileURL {
+            return url.standardizedFileURL.path
+        }
+        return url.absoluteString
     }
 }

@@ -13,12 +13,14 @@ final class CoreDataStack {
 
     init(inMemory: Bool = false) {
         container = NSPersistentContainer(name: Self.modelName)
+        let description = NSPersistentStoreDescription()
+        description.shouldMigrateStoreAutomatically = true
+        description.shouldInferMappingModelAutomatically = true
 
         if inMemory {
-            let description = NSPersistentStoreDescription()
             description.type = NSInMemoryStoreType
-            container.persistentStoreDescriptions = [description]
         }
+        container.persistentStoreDescriptions = [description]
 
         container.loadPersistentStores { _, error in
             if let error {

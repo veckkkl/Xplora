@@ -6,6 +6,8 @@
         <attribute name="text" optional="NO" attributeType="String" defaultValueString=""/>
         <attribute name="createdAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="updatedAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="tripStartDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="tripEndDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="isBookmarked" optional="NO" attributeType="Boolean" usesScalarValueType="YES" defaultValueString="NO"/>
         <attribute name="placeName" optional="NO" attributeType="String" defaultValueString=""/>
         <attribute name="city" optional="NO" attributeType="String" defaultValueString=""/>
@@ -19,10 +21,11 @@
         <attribute name="localPath" optional="NO" attributeType="String" defaultValueString=""/>
         <attribute name="createdAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="orderIndex" optional="NO" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="photoLibraryAssetId" optional="YES" attributeType="String"/>
         <relationship name="note" optional="NO" maxCount="1" deletionRule="Nullify" destinationEntity="CDNote" inverseName="photos" inverseEntity="CDNote"/>
     </entity>
     <elements>
-        <element name="CDNote" positionX="-63" positionY="-18" width="128" height="239"/>
+        <element name="CDNote" positionX="-63" positionY="-18" width="128" height="269"/>
         <element name="CDNotePhoto" positionX="201" positionY="-18" width="128" height="119"/>
     </elements>
 </model>

@@ -70,7 +70,7 @@ final class TripNotePreviewCardView: UIView {
             collageHeightConstraint?.deactivate()
             collageZeroConstraint?.activate()
         }
-        if let placeTitle = viewModel.placeTitle, !placeTitle.isEmpty {
+        if let placeTitle = viewModel.locationChipText ?? viewModel.placeTitle, !placeTitle.isEmpty {
             placeLabel.text = placeTitle
             placeCapsule.isHidden = false
         } else {
