@@ -71,12 +71,21 @@ final class MapViewModel: MapViewModelInput, MapViewModelOutput {
 
     func previewModel(for marker: CountryVisitMarker) -> TripNotePreviewViewModel {
         let note = marker.firstNoteId.flatMap { cachedNotesById[$0] }
+        let trimmedTitle = note?.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let previewTitle = trimmedTitle.isEmpty ? "Untitled" : trimmedTitle
+        let placeTitle: String?
+        if let note, note.location?.hasDisplayableValue == true {
+            placeTitle = note.location?.placeName
+        } else {
+            placeTitle = nil
+        }
+
         return TripNotePreviewViewModel(
-            title: marker.title,
+            title: previewTitle,
             dateRange: marker.dateRangeText,
             photoURLs: note?.photoURLs ?? [],
             isBookmarked: note?.isBookmarked ?? false,
-            placeTitle: note?.title ?? marker.title,
+            placeTitle: placeTitle,
             textPreview: note?.text ?? "Open note to see details."
         )
     }

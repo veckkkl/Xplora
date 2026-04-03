@@ -110,7 +110,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
     func didChangeHeaderTitle(_ title: String?) {
         guard var current = draft else { return }
         let trimmed = title?.trimmingCharacters(in: .whitespacesAndNewlines)
-        current.headerTitle = (trimmed?.isEmpty ?? true) ? nil : trimmed
+        current.title = (trimmed?.isEmpty ?? true) ? nil : trimmed
         draft = current
         publish()
     }
@@ -343,16 +343,8 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
     }
 
     private func formatHeaderTitle(for note: Note) -> String {
-        if let override = note.headerTitle, !override.isEmpty {
-            return override
-        }
-        if let city = note.city, let country = note.country {
-            return "\(city), \(country)"
-        }
-        if let country = note.country {
-            return country
-        }
-        return "Untitled"
+        let trimmedTitle = note.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmedTitle.isEmpty ? "Untitled" : trimmedTitle
     }
 
     private func parseCityCountry(from address: String?) -> (String, String) {

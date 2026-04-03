@@ -119,7 +119,7 @@ final class NoteViewController: UIViewController {
         placeTitleBookmarkImageView.isHidden = true
         placeTitleBookmarkImageView.setContentCompressionResistancePriority(.required, for: .horizontal)
 
-        headerTitleTextField.placeholder = "Location"
+        headerTitleTextField.placeholder = "Title"
         headerTitleTextField.borderStyle = .none
         headerTitleTextField.backgroundColor = .clear
         headerTitleTextField.font = UIFont.systemFont(ofSize: 28, weight: .bold)
@@ -367,8 +367,8 @@ final class NoteViewController: UIViewController {
 
         placeTitleLabel.text = state.placeTitle
         placeTitleBookmarkImageView.isHidden = !state.isBookmarked
-        if headerTitleTextField.text != state.placeTitle, !headerTitleTextField.isFirstResponder {
-            headerTitleTextField.text = state.placeTitle
+        if headerTitleTextField.text != state.title, !headerTitleTextField.isFirstResponder {
+            headerTitleTextField.text = state.title
         }
         dateLabel.text = state.dateText
         photoSectionView.configure(.init(photoURLs: state.photoURLs, isEditing: state.mode == .edit))
@@ -551,7 +551,7 @@ final class NoteViewController: UIViewController {
     }
 
     @objc private func headerTitleDidChange() {
-        viewModel.didChangeHeaderTitle(headerTitleTextField.text)
+        viewModel.didChangeTitle(headerTitleTextField.text)
     }
 
     @objc private func didTapText() {
