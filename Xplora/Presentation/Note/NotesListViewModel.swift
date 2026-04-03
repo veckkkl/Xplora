@@ -91,12 +91,9 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
 
     private func publish() {
         let items = notes.map { note in
-            let trimmedTitle = note.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            let title = trimmedTitle.isEmpty ? "Untitled" : trimmedTitle
-
             return NotesListItemViewState(
                 id: note.id,
-                title: title,
+                title: NotePresentationTitle.displayTitle(from: note.title),
                 subtitle: note.text.trimmingCharacters(in: .whitespacesAndNewlines),
                 dateText: Self.dateFormatter.string(from: note.updatedAt),
                 isBookmarked: note.isBookmarked

@@ -29,8 +29,7 @@ enum NoteCoreDataMapper {
             isBookmarked: managedObject.isBookmarked,
             location: domainLocation(from: managedObject),
             photos: mappedPhotos,
-            dateRangeText: nil,
-            headerTitle: nil
+            dateRangeText: nil
         )
     }
 

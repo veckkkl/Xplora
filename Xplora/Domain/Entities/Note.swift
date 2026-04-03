@@ -73,7 +73,6 @@ struct Note: Identifiable, Equatable {
 
     // Temporary UI-compatibility fields that are not part of persistence core.
     var dateRangeText: String?
-    var headerTitle: String?
 
     var coordinate: LocationCoordinate? {
         guard let location else { return nil }
