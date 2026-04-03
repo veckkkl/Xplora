@@ -40,7 +40,7 @@ enum NoteCoreDataMapper {
         )
     }
 
-    static func apply(_ note: Note, to managedObject: CDNote, in context: NSManagedObjectContext) {
+    static func upsert(_ note: Note, into managedObject: CDNote, in context: NSManagedObjectContext) {
         managedObject.id = note.id
         managedObject.title = note.title
         managedObject.text = note.text

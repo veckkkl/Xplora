@@ -246,7 +246,10 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
 
     func didRemoveLocation() {
         guard var current = draft else { return }
-        current.location = NoteLocation.emptyPreservingCoordinate(
+        current.location = NoteLocation(
+            placeName: "",
+            city: "",
+            country: "",
             latitude: current.location.latitude,
             longitude: current.location.longitude
         )

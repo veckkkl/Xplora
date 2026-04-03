@@ -33,16 +33,6 @@ struct NoteLocation: Codable, Equatable {
         self.longitude = longitude
     }
 
-    static func emptyPreservingCoordinate(latitude: Double, longitude: Double) -> NoteLocation {
-        NoteLocation(
-            placeName: "",
-            city: "",
-            country: "",
-            latitude: latitude,
-            longitude: longitude
-        )
-    }
-
     // Backward-compatible initializer for existing UI integration.
     init(placeName: String, address: String?, latitude: Double, longitude: Double) {
         let trimmedAddress = address?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
