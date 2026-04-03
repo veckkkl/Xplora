@@ -79,6 +79,7 @@ final class MapCoordinator {
         let getAllNotesUseCase: GetAllNotesUseCase = locator.resolve(GetAllNotesUseCase.self)
         let notesViewModel = NotesListViewModel(getAllNotesUseCase: getAllNotesUseCase)
         let notesViewController = NotesListViewController(viewModel: notesViewModel)
+        notesViewController.hidesBottomBarWhenPushed = true
 
         notesViewModel.onRoute = { [weak self] route in
             guard let self, let noteRouter = self.noteRouter else { return }

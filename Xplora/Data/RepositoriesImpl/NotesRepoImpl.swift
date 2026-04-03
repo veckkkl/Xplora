@@ -39,7 +39,7 @@ final class NotesRepoImpl: NotesRepo {
     func save(note: Note) async throws -> Note {
         try await performInViewContext { context in
             let managedNote = try self.fetchManagedNote(id: note.id, in: context) ?? CDNote(context: context)
-            NoteCoreDataMapper.upsert(note, into: managedNote, in: context)
+            NoteCoreDataMapper.apply(note, to: managedNote, in: context)
 
             if context.hasChanges {
                 try context.save()
@@ -63,9 +63,16 @@ final class NotesRepoImpl: NotesRepo {
     }
 
     private func fetchManagedNote(id: String, in context: NSManagedObjectContext) throws -> CDNote? {
-        let request = CDNote.fetchRequest()
+        guard let objectID = try fetchManagedNoteObjectID(id: id, in: context) else { return nil }
+        return try context.existingObject(with: objectID) as? CDNote
+    }
+
+    private func fetchManagedNoteObjectID(id: String, in context: NSManagedObjectContext) throws -> NSManagedObjectID? {
+        let entityName = CDNote.entity().name ?? "CDNote"
+        let request = NSFetchRequest<NSManagedObjectID>(entityName: entityName)
         request.fetchLimit = 1
         request.predicate = NSPredicate(format: "id == %@", id)
+        request.resultType = .managedObjectIDResultType
         return try context.fetch(request).first
     }
 
