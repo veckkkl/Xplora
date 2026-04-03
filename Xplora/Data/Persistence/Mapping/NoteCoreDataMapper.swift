@@ -38,7 +38,6 @@ enum NoteCoreDataMapper {
                 longitude: managedObject.longitude
             ),
             photos: mappedPhotos,
-            dateRangeText: nil,
             headerTitle: nil
         )
     }

@@ -24,6 +24,7 @@ final class NoteModuleBuilder {
             getNoteUseCase: getNoteUseCase,
             saveNoteUseCase: saveNoteUseCase,
             deleteNoteUseCase: deleteNoteUseCase,
+            photoLibrarySelectionProcessor: NotePhotoLibrarySelectionProcessor(),
             output: output,
             router: router
         )

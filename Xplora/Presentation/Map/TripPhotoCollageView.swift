@@ -23,21 +23,20 @@ final class TripPhotoCollageView: UIView {
     private var displayedItems: [PhotoItem] = []
     private var dataSource: UICollectionViewDiffableDataSource<Section, PhotoItem>?
     private var lastLayoutWidth: CGFloat = 0
-    private let imageCache = NSCache<NSURL, UIImage>()
-    private let imageLoadingQueue = DispatchQueue(label: "TripPhotoCollageView.imageLoading", qos: .userInitiated)
-    private let imageLoadingLock = NSLock()
-    private var imageLoadingCallbacks: [URL: [(UIImage?) -> Void]] = [:]
+    private let imageLoader: TripPhotoImageLoading
 
     var onPhotoTap: ((Int) -> Void)?
     var onPhotoRemove: ((Int) -> Void)?
 
     override init(frame: CGRect) {
+        imageLoader = TripPhotoImageLoader.shared
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
         super.init(frame: frame)
         setupView()
     }
 
     required init?(coder: NSCoder) {
+        imageLoader = TripPhotoImageLoader.shared
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
         super.init(coder: coder)
         setupView()
@@ -110,11 +109,11 @@ final class TripPhotoCollageView: UIView {
                 return UICollectionViewCell()
             }
 
-            let cachedImage = self.imageCache.object(forKey: item.url as NSURL)
+            let cachedImage = self.imageLoader.cachedImage(for: item.url)
             self.configureCell(cell, item: item, image: cachedImage)
 
             if cachedImage == nil {
-                self.requestImage(for: item.url) { [weak self, weak collectionView, weak cell] image in
+                self.imageLoader.loadImage(from: item.url) { [weak self, weak collectionView, weak cell] image in
                     guard let self, let collectionView, let cell else { return }
                     guard let currentIndexPath = collectionView.indexPath(for: cell),
                           self.displayedItems.indices.contains(currentIndexPath.item) else { return }
@@ -144,50 +143,6 @@ final class TripPhotoCollageView: UIView {
                 self?.onPhotoRemove?(item.sourceIndex)
             }
         )
-    }
-
-    private func requestImage(for url: URL, completion: @escaping (UIImage?) -> Void) {
-        if let cachedImage = imageCache.object(forKey: url as NSURL) {
-            completion(cachedImage)
-            return
-        }
-
-        imageLoadingLock.lock()
-        if imageLoadingCallbacks[url] != nil {
-            imageLoadingCallbacks[url]?.append(completion)
-            imageLoadingLock.unlock()
-            return
-        } else {
-            imageLoadingCallbacks[url] = [completion]
-            imageLoadingLock.unlock()
-        }
-
-        imageLoadingQueue.async { [weak self] in
-            guard let self else { return }
-            let image = self.loadImageOffMainThread(from: url)
-            if let image {
-                self.imageCache.setObject(image, forKey: url as NSURL)
-            }
-
-            self.imageLoadingLock.lock()
-            let callbacks = self.imageLoadingCallbacks.removeValue(forKey: url) ?? []
-            self.imageLoadingLock.unlock()
-
-            guard !callbacks.isEmpty else { return }
-            DispatchQueue.main.async {
-                callbacks.forEach { $0(image) }
-            }
-        }
-    }
-
-    private func loadImageOffMainThread(from url: URL) -> UIImage? {
-        if url.isFileURL {
-            return UIImage(contentsOfFile: url.path)
-        }
-        if let data = try? Data(contentsOf: url) {
-            return UIImage(data: data)
-        }
-        return nil
     }
 }
 
