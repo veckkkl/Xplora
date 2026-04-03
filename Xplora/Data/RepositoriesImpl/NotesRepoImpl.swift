@@ -39,7 +39,7 @@ final class NotesRepoImpl: NotesRepo {
     func save(note: Note) async throws -> Note {
         try await performInViewContext { context in
             let managedNote = try self.fetchManagedNote(id: note.id, in: context) ?? CDNote(context: context)
-            NoteCoreDataMapper.upsert(note, into: managedNote, in: context)
+            NoteCoreDataMapper.apply(note, to: managedNote, in: context)
 
             if context.hasChanges {
                 try context.save()
