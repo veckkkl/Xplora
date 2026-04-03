@@ -12,10 +12,7 @@ final class TripPhotoCell: UICollectionViewCell {
     private let imageView = UIImageView()
     private let overflowOverlayView = UIView()
     private let overflowLabel = UILabel()
-
-    private let removeHitButton = UIButton(type: .custom)
-    private let removeBackgroundView = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterial))
-    private let removeIconView = UIImageView()
+    private let removeButton = TripPhotoRemoveButton()
 
     private var onRemove: (() -> Void)?
 
@@ -34,7 +31,7 @@ final class TripPhotoCell: UICollectionViewCell {
         imageView.image = nil
         overflowOverlayView.isHidden = true
         overflowLabel.text = nil
-        removeHitButton.isHidden = true
+        removeButton.isHidden = true
         onRemove = nil
     }
 
@@ -46,7 +43,7 @@ final class TripPhotoCell: UICollectionViewCell {
     ) {
         imageView.image = image
         self.onRemove = onRemove
-        removeHitButton.isHidden = !showRemoveButton
+        removeButton.isHidden = !showRemoveButton
 
         if let overflowCount, overflowCount > 0 {
             overflowLabel.text = "+\(overflowCount)"
@@ -88,38 +85,57 @@ final class TripPhotoCell: UICollectionViewCell {
             make.center.equalToSuperview()
         }
 
-        removeHitButton.addTarget(self, action: #selector(didTapRemove), for: .touchUpInside)
-        contentView.addSubview(removeHitButton)
+        removeButton.addTarget(self, action: #selector(didTapRemove), for: .touchUpInside)
+        contentView.addSubview(removeButton)
 
-        removeHitButton.snp.makeConstraints { make in
+        removeButton.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(4)
             make.trailing.equalToSuperview().offset(-4)
             make.size.equalTo(CGSize(width: 34, height: 34))
-        }
-
-        removeBackgroundView.clipsToBounds = true
-        removeBackgroundView.layer.cornerRadius = 12
-        removeBackgroundView.layer.cornerCurve = .continuous
-        removeBackgroundView.layer.borderColor = UIColor.separator.withAlphaComponent(0.26).cgColor
-        removeBackgroundView.layer.borderWidth = 0.6
-        removeHitButton.addSubview(removeBackgroundView)
-
-        removeBackgroundView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.size.equalTo(CGSize(width: 24, height: 24))
-        }
-
-        removeIconView.image = UIImage(systemName: "xmark")
-        removeIconView.tintColor = .label
-        removeIconView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
-        removeBackgroundView.contentView.addSubview(removeIconView)
-
-        removeIconView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
         }
     }
 
     @objc private func didTapRemove() {
         onRemove?()
+    }
+}
+
+private final class TripPhotoRemoveButton: UIControl {
+    private let backgroundView = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterial))
+    private let iconView = UIImageView()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupView()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupView()
+    }
+
+    private func setupView() {
+        accessibilityLabel = "Remove photo"
+
+        addSubview(backgroundView)
+        backgroundView.clipsToBounds = true
+        backgroundView.layer.cornerRadius = 12
+        backgroundView.layer.cornerCurve = .continuous
+        backgroundView.layer.borderColor = UIColor.separator.withAlphaComponent(0.26).cgColor
+        backgroundView.layer.borderWidth = 0.6
+
+        backgroundView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.size.equalTo(CGSize(width: 24, height: 24))
+        }
+
+        iconView.image = UIImage(systemName: "xmark")
+        iconView.tintColor = .label
+        iconView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
+        backgroundView.contentView.addSubview(iconView)
+
+        iconView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
     }
 }

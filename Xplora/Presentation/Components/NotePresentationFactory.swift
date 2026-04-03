@@ -28,12 +28,14 @@ enum NotePresentationFactory {
     }
 
     static func formattedDateRange(for note: Note) -> String {
-        NoteDateRangeFormatter.displayText(
+        let resolvedRange = NoteDateRangeResolver.effectiveRange(
             tripStartDate: note.tripStartDate,
-            tripEndDate: note.tripEndDate,
-            createdAt: note.createdAt,
-            legacyDateRangeText: note.dateRangeText
+            tripEndDate: note.tripEndDate
         )
+        if let start = resolvedRange.start, let end = resolvedRange.end {
+            return NoteDateRangeFormatter.displayText(startDate: start, endDate: end)
+        }
+        return NoteDateRangeFormatter.displayText(for: note.createdAt)
     }
 
     static func locationTitle(for note: Note) -> String? {

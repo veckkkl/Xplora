@@ -5,6 +5,7 @@
 
 import Foundation
 import CryptoKit
+import PhotosUI
 import UIKit
 
 enum NoteViewMode {
@@ -55,8 +56,8 @@ protocol NoteViewModelInput: AnyObject {
     func didToggleBookmark()
     func didTapSearch()
     func didTapAddPhoto()
-    func didAddPhotos(_ photos: [NotePickedPhoto])
-    func didCompletePhotoLibrarySelection(selectedAssetIdentifiers: Set<String>, newlyPickedPhotos: [NotePickedPhoto])
+    func didCapturePhoto(_ image: UIImage)
+    func didFinishPhotoLibraryPicking(results: [PHPickerResult])
     func didRemovePhoto(at index: Int)
     func didSelectLocation(placeName: String, address: String?, latitude: Double, longitude: Double)
     func didRemoveLocation()
@@ -83,6 +84,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
     private let getNoteUseCase: GetNoteUseCase
     private let saveNoteUseCase: SaveNoteUseCase
     private let deleteNoteUseCase: DeleteNoteUseCase
+    private let photoLibrarySelectionProcessor: NotePhotoLibrarySelectionProcessing
     private weak var output: NoteModuleOutput?
     private weak var router: NoteRouter?
 
@@ -99,6 +101,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         getNoteUseCase: GetNoteUseCase,
         saveNoteUseCase: SaveNoteUseCase,
         deleteNoteUseCase: DeleteNoteUseCase,
+        photoLibrarySelectionProcessor: NotePhotoLibrarySelectionProcessing,
         output: NoteModuleOutput?,
         router: NoteRouter
     ) {
@@ -107,6 +110,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         self.getNoteUseCase = getNoteUseCase
         self.saveNoteUseCase = saveNoteUseCase
         self.deleteNoteUseCase = deleteNoteUseCase
+        self.photoLibrarySelectionProcessor = photoLibrarySelectionProcessor
         self.output = output
         self.router = router
     }
@@ -154,15 +158,12 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         isLoading = true
         publish()
 
-        let normalizedRange = NoteDateRangeFormatter.normalizedRange(
+        let normalizedRange = NoteDateRangeNormalizer.normalizedRange(
             start: current.tripStartDate,
             end: current.tripEndDate
         )
         current.tripStartDate = normalizedRange.start
         current.tripEndDate = normalizedRange.end
-        if normalizedRange.start != nil {
-            current.dateRangeText = nil
-        }
         current.updatedAt = Date()
         Task {
             do {
@@ -269,7 +270,28 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         onPhotoSourceRequested?()
     }
 
-    func didAddPhotos(_ photos: [NotePickedPhoto]) {
+    func didCapturePhoto(_ image: UIImage) {
+        didAddPhotos([NotePickedPhoto(image: image, assetIdentifier: nil)])
+    }
+
+    func didFinishPhotoLibraryPicking(results: [PHPickerResult]) {
+        guard mode == .edit else { return }
+
+        let existingAssetIdentifiers = Set(draft?.photos.compactMap(\.photoLibraryAssetId) ?? [])
+        Task { [weak self] in
+            guard let self else { return }
+            let selectionResult = await self.photoLibrarySelectionProcessor.process(
+                results: results,
+                existingAssetIdentifiers: existingAssetIdentifiers
+            )
+            self.didCompletePhotoLibrarySelection(
+                selectedAssetIdentifiers: selectionResult.selectedAssetIdentifiers,
+                newlyPickedPhotos: selectionResult.newlyPickedPhotos
+            )
+        }
+    }
+
+    private func didAddPhotos(_ photos: [NotePickedPhoto]) {
         guard mode == .edit else { return }
         guard !photos.isEmpty else { return }
         guard var current = draft else { return }
@@ -357,7 +379,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         }
     }
 
-    func didCompletePhotoLibrarySelection(selectedAssetIdentifiers: Set<String>, newlyPickedPhotos: [NotePickedPhoto]) {
+    private func didCompletePhotoLibrarySelection(selectedAssetIdentifiers: Set<String>, newlyPickedPhotos: [NotePickedPhoto]) {
         guard mode == .edit else { return }
         guard var current = draft else { return }
 
@@ -425,10 +447,9 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
 
     func didUpdateTripDateRange(startDate: Date, endDate: Date) {
         guard var current = draft else { return }
-        let normalizedRange = NoteDateRangeFormatter.normalizedRange(start: startDate, end: endDate)
+        let normalizedRange = NoteDateRangeNormalizer.normalizedRange(start: startDate, end: endDate)
         current.tripStartDate = normalizedRange.start
         current.tripEndDate = normalizedRange.end
-        current.dateRangeText = nil
         draft = current
         publish()
     }
@@ -474,7 +495,6 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
                 longitude: coordinate.longitude
             ),
             photos: [],
-            dateRangeText: nil,
             headerTitle: nil
         )
         originalNote = nil
@@ -565,31 +585,21 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
     }
 
     private func formatDateText(for note: Note) -> String {
-        NoteDateRangeFormatter.displayText(
+        let resolvedRange = NoteDateRangeResolver.effectiveRange(
             tripStartDate: note.tripStartDate,
-            tripEndDate: note.tripEndDate,
-            createdAt: note.createdAt,
-            legacyDateRangeText: note.dateRangeText
+            tripEndDate: note.tripEndDate
         )
+        if let start = resolvedRange.start, let end = resolvedRange.end {
+            return NoteDateRangeFormatter.displayText(startDate: start, endDate: end)
+        }
+        return NoteDateRangeFormatter.displayText(for: note.createdAt)
     }
 
     private func effectiveDateRange(for note: Note) -> (start: Date?, end: Date?) {
-        let normalizedRange = NoteDateRangeFormatter.normalizedRange(
-            start: note.tripStartDate,
-            end: note.tripEndDate
+        NoteDateRangeResolver.effectiveRange(
+            tripStartDate: note.tripStartDate,
+            tripEndDate: note.tripEndDate
         )
-        if normalizedRange.start != nil || normalizedRange.end != nil {
-            return normalizedRange
-        }
-
-        if let legacyRange = NoteDateRangeFormatter.parseLegacyRangeText(note.dateRangeText) {
-            return NoteDateRangeFormatter.normalizedRange(
-                start: legacyRange.start,
-                end: legacyRange.end
-            )
-        }
-
-        return (nil, nil)
     }
 
     private func normalizedNote(_ note: Note) -> Note {

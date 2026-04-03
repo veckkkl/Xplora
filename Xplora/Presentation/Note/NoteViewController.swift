@@ -593,13 +593,13 @@ final class NoteViewController: UIViewController {
 
     @objc private func didTapDate() {
         guard let state = lastState, state.mode == .edit else { return }
-        let today = NoteDateRangeFormatter.today()
-        let normalizedExisting = NoteDateRangeFormatter.normalizedRange(
+        let today = NoteDateRangeNormalizer.today()
+        let normalizedExisting = NoteDateRangeNormalizer.normalizedRange(
             start: state.tripStartDate,
             end: state.tripEndDate,
             today: today
         )
-        let fallbackDate = NoteDateRangeFormatter.normalizedRange(
+        let fallbackDate = NoteDateRangeNormalizer.normalizedRange(
             start: state.fallbackDate,
             end: state.fallbackDate,
             today: today
@@ -611,7 +611,7 @@ final class NoteViewController: UIViewController {
             maximumDate: today
         ) { [weak self] startDate in
             guard let self else { return }
-            let normalizedStart = NoteDateRangeFormatter.normalizedRange(
+            let normalizedStart = NoteDateRangeNormalizer.normalizedRange(
                 start: startDate,
                 end: startDate,
                 today: today
@@ -625,7 +625,7 @@ final class NoteViewController: UIViewController {
                 maximumDate: today
             ) { [weak self] endDate in
                 guard let self else { return }
-                let normalizedRange = NoteDateRangeFormatter.normalizedRange(
+                let normalizedRange = NoteDateRangeNormalizer.normalizedRange(
                     start: normalizedStart,
                     end: endDate,
                     today: today
@@ -861,39 +861,7 @@ extension NoteViewController: UISearchBarDelegate {
 extension NoteViewController: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
-        guard !results.isEmpty else { return }
-
-        let existingAssetIdentifiers = Set(lastState?.preselectedAssetIdentifiers ?? [])
-        let selectedAssetIdentifiers = Set(results.compactMap(\.assetIdentifier))
-
-        let group = DispatchGroup()
-        let lock = NSLock()
-        var pickedPhotos: [NotePickedPhoto] = []
-
-        for result in results {
-            if let assetIdentifier = result.assetIdentifier, existingAssetIdentifiers.contains(assetIdentifier) {
-                continue
-            }
-
-            let provider = result.itemProvider
-            guard provider.canLoadObject(ofClass: UIImage.self) else { continue }
-            group.enter()
-            let assetIdentifier = result.assetIdentifier
-            provider.loadObject(ofClass: UIImage.self) { object, _ in
-                defer { group.leave() }
-                guard let image = object as? UIImage else { return }
-                lock.lock()
-                pickedPhotos.append(NotePickedPhoto(image: image, assetIdentifier: assetIdentifier))
-                lock.unlock()
-            }
-        }
-
-        group.notify(queue: .main) { [weak self] in
-            self?.viewModel.didCompletePhotoLibrarySelection(
-                selectedAssetIdentifiers: selectedAssetIdentifiers,
-                newlyPickedPhotos: pickedPhotos
-            )
-        }
+        viewModel.didFinishPhotoLibraryPicking(results: results)
     }
 }
 
@@ -908,7 +876,7 @@ extension NoteViewController: UIImagePickerControllerDelegate, UINavigationContr
     ) {
         picker.dismiss(animated: true)
         guard let image = info[.originalImage] as? UIImage else { return }
-        viewModel.didAddPhotos([NotePickedPhoto(image: image, assetIdentifier: nil)])
+        viewModel.didCapturePhoto(image)
     }
 }
 

@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CryptoKit
 
 struct NoteLocation: Codable, Equatable {
     var placeName: String
@@ -76,7 +75,6 @@ struct Note: Identifiable, Equatable {
     var photos: [NotePhoto]
 
     // Temporary UI-compatibility fields that are not part of persistence core.
-    var dateRangeText: String?
     var headerTitle: String?
 
     var coordinate: LocationCoordinate {
@@ -90,8 +88,7 @@ struct Note: Identifiable, Equatable {
                 .map { URL(fileURLWithPath: $0.localPath) }
         }
         set {
-            let deduplicated = Note.deduplicatedPhotoURLs(from: newValue)
-            photos = deduplicated.enumerated().map { index, url in
+            photos = newValue.enumerated().map { index, url in
                 NotePhoto(
                     id: UUID().uuidString,
                     localPath: url.path,
@@ -121,41 +118,5 @@ struct Note: Identifiable, Equatable {
         set {
             location.country = newValue?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         }
-    }
-
-    private static func deduplicatedPhotoURLs(from urls: [URL]) -> [URL] {
-        var result: [URL] = []
-        var contentFingerprints = Set<String>()
-        var fallbackKeys = Set<String>()
-
-        for url in urls {
-            if let fingerprint = contentFingerprint(for: url) {
-                if contentFingerprints.insert(fingerprint).inserted {
-                    result.append(url)
-                }
-                continue
-            }
-
-            let key = fallbackDedupKey(for: url)
-            if fallbackKeys.insert(key).inserted {
-                result.append(url)
-            }
-        }
-
-        return result
-    }
-
-    private static func contentFingerprint(for url: URL) -> String? {
-        guard url.isFileURL else { return nil }
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        let digest = SHA256.hash(data: data)
-        return digest.map { String(format: "%02x", $0) }.joined()
-    }
-
-    private static func fallbackDedupKey(for url: URL) -> String {
-        if url.isFileURL {
-            return url.standardizedFileURL.path
-        }
-        return url.absoluteString
     }
 }
