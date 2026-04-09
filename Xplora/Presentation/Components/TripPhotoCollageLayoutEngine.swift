@@ -31,20 +31,6 @@ enum TripPhotoCollageLayoutEngine {
         case ten
     }
 
-    private enum HeightVariant {
-        case a
-        case b
-
-        var multiplier: CGFloat {
-            switch self {
-            case .a:
-                return 1.0
-            case .b:
-                return 1.5
-            }
-        }
-    }
-
     private struct TileFrame {
         let x: CGFloat
         let y: CGFloat
@@ -83,13 +69,12 @@ enum TripPhotoCollageLayoutEngine {
     ) -> CGFloat {
         guard width > 0, displayedCount > 0 else { return 0 }
 
-        let layoutCase = resolveLayoutCase(
+        let multiplier = heightMultiplier(
             displayedCount: displayedCount,
             mode: mode,
             hasOverflowBadge: hasOverflowBadge
         )
-        let variant = heightVariant(for: layoutCase, mode: mode, hasOverflowBadge: hasOverflowBadge)
-        return width * variant.multiplier
+        return width * multiplier
     }
 
     static func makeLayout(
@@ -164,22 +149,42 @@ enum TripPhotoCollageLayoutEngine {
         }
     }
 
-    private static func heightVariant(
-        for layoutCase: LayoutCase,
+    private static func heightMultiplier(
+        displayedCount: Int,
         mode: TripPhotoCollageDisplayMode,
         hasOverflowBadge: Bool
-    ) -> HeightVariant {
-        if mode == .preview && hasOverflowBadge {
-            return .a
-        }
+    ) -> CGFloat {
+        // Preview layout must remain horizontally oriented (height < width).
+        // Full note allows taller layouts for dense photo grids.
+        switch mode {
+        case .preview:
+            if hasOverflowBadge {
+                return 0.5
+            }
 
-        switch layoutCase {
-        case .one:
-            return .b
-        case .two, .three, .four, .five:
-            return .a
-        case .six, .seven, .eight, .nine, .ten:
-            return .b
+            switch displayedCount {
+            case 1:
+                return 0.75
+            case 2...5:
+                return 0.5
+            case 6...9:
+                return 0.75
+            default:
+                return 0.5
+            }
+        case .noteFull:
+            switch displayedCount {
+            case 1:
+                return 0.75
+            case 2...5:
+                return 0.5
+            case 6...9:
+                return 0.75
+            case 10:
+                return 1.0
+            default:
+                return 0.5
+            }
         }
     }
 }
