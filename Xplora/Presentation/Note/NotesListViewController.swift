@@ -37,7 +37,7 @@ final class NotesListViewController: UIViewController {
     }
 
     private func setupUI() {
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .systemGroupedBackground
         title = "Notes"
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
