@@ -38,7 +38,7 @@ final class NotesListViewController: UIViewController {
 
     private func setupUI() {
         view.backgroundColor = .systemBackground
-        title = "Notes"
+        title = L10n.Notes.List.title
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .add,
@@ -54,7 +54,7 @@ final class NotesListViewController: UIViewController {
         tableView.separatorStyle = .none
         tableView.backgroundColor = .clear
 
-        emptyLabel.text = "No notes yet"
+        emptyLabel.text = L10n.Notes.List.Empty.title
         emptyLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         emptyLabel.textColor = .secondaryLabel
         emptyLabel.textAlignment = .center
@@ -106,8 +106,8 @@ final class NotesListViewController: UIViewController {
     }
 
     private func showError(_ message: String) {
-        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        let alert = UIAlertController(title: L10n.Common.error, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
         present(alert, animated: true)
     }
 

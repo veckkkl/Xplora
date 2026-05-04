@@ -84,7 +84,7 @@ final class MapViewController: UIViewController {
         actionsContainer.contentView.addSubview(stack)
 
         var notesConfiguration = UIButton.Configuration.tinted()
-        notesConfiguration.title = "Notes"
+        notesConfiguration.title = L10n.Map.Actions.notes
         notesConfiguration.image = UIImage(systemName: "note.text")
         notesConfiguration.imagePadding = 6
         notesConfiguration.baseForegroundColor = .systemBlue

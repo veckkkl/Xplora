@@ -1,0 +1,61 @@
+"common.cancel" = "Cancel";
+"common.delete" = "Delete";
+"common.discard" = "Discard";
+"common.edit" = "Edit";
+"common.error" = "Error";
+"common.map" = "Map";
+"common.ok" = "OK";
+"common.remove_photo" = "Remove photo";
+"common.save" = "Save";
+
+"map.actions.notes" = "Notes";
+"map.marker.pinned_note" = "Pinned note";
+"map.preview.open_note_hint" = "Open note to see details.";
+
+"notes.editor.alert.delete.message" = "This action can't be undone.";
+"notes.editor.alert.delete.title" = "Delete note?";
+"notes.editor.alert.error.title" = "Something went wrong";
+"notes.editor.alert.unsaved.message" = "You have unsaved changes.";
+"notes.editor.alert.unsaved.title" = "Save changes?";
+"notes.editor.date.from" = "From";
+"notes.editor.date.to" = "To";
+"notes.editor.error.bookmark" = "Couldn't update the bookmark. Please try again.";
+"notes.editor.error.delete" = "Couldn't delete the note. Please try again.";
+"notes.editor.error.load" = "Couldn't load the note. Please try again.";
+"notes.editor.error.photo.add_failed" = "Couldn't add photos. Please try again.";
+"notes.editor.error.photo.duplicate.single" = "This photo is already added.";
+"notes.editor.error.photo.skipped_duplicates" = "Some photos were skipped because they are already added.";
+"notes.editor.error.photo.skipped_failed" = "Some photos couldn't be added.";
+"notes.editor.error.save" = "Couldn't save the note. Please try again.";
+"notes.editor.menu.bookmark.add" = "Add Bookmark";
+"notes.editor.menu.bookmark.remove" = "Remove Bookmark";
+"notes.editor.menu.delete" = "Delete Note";
+"notes.editor.menu.find" = "Find in Note";
+"notes.editor.photo.add.title" = "Add Photo";
+"notes.editor.photo.camera.unavailable" = "Camera is not available on this device.";
+"notes.editor.photo.limit" = "You can add up to %d photos.";
+"notes.editor.photo.picker.counter" = "%d/%d";
+"notes.editor.photo.source.camera" = "Camera";
+"notes.editor.photo.source.library" = "Photo Library";
+"notes.editor.search.placeholder" = "Search in note";
+"notes.editor.text.placeholder" = "Write your note...";
+"notes.editor.title.placeholder" = "Title";
+
+"notes.list.empty.title" = "No notes yet";
+"notes.list.error.load" = "Couldn't load notes. Please try again.";
+"notes.list.title" = "Notes";
+
+"notes.location.search.error.message" = "Couldn't fetch this location. Try another one.";
+"notes.location.search.error.title" = "Location unavailable";
+"notes.location.search.placeholder" = "Search location";
+"notes.location.search.title" = "Location";
+"notes.location.section.add" = "Add location";
+
+"notes.presentation.untitled" = "Untitled";
+
+"placeholder.stub_format" = "%@ (stub)";
+
+"tab.profile" = "Profile";
+"tab.statistics" = "Statistics";
+"tab.timeline" = "Timeline";
+"tab.wishlist" = "Wishlist";

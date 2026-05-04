@@ -115,7 +115,7 @@ private final class TripPhotoRemoveButton: UIControl {
     }
 
     private func setupView() {
-        accessibilityLabel = "Remove photo"
+        accessibilityLabel = L10n.Common.removePhoto
 
         addSubview(backgroundView)
         backgroundView.clipsToBounds = true

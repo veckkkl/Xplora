@@ -80,7 +80,7 @@ final class MapViewModel: MapViewModelInput, MapViewModelOutput {
         let previewText = note
             .map { NotePresentationFactory.textPreview(for: $0) }
             .flatMap { $0.isEmpty ? nil : $0 }
-            ?? "Open note to see details."
+            ?? L10n.Map.Preview.openNoteHint
 
         return TripNotePreviewViewModel(
             title: previewTitle,
@@ -121,7 +121,7 @@ final class MapViewModel: MapViewModelInput, MapViewModelOutput {
 
         let placeName = location.placeName.trimmingCharacters(in: .whitespacesAndNewlines)
         let noteTitle = note.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let title = !placeName.isEmpty ? placeName : (!noteTitle.isEmpty ? noteTitle : "Pinned note")
+        let title = !placeName.isEmpty ? placeName : (!noteTitle.isEmpty ? noteTitle : L10n.Map.Marker.pinnedNote)
         let countryCode = location.country.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         let resolvedRange = NoteDateRangeResolver.effectiveRange(
             tripStartDate: note.tripStartDate,

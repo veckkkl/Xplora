@@ -1,0 +1,61 @@
+"common.cancel" = "Отмена";
+"common.delete" = "Удалить";
+"common.discard" = "Не сохранять";
+"common.edit" = "Редактировать";
+"common.error" = "Ошибка";
+"common.map" = "Карта";
+"common.ok" = "ОК";
+"common.remove_photo" = "Удалить фото";
+"common.save" = "Сохранить";
+
+"map.actions.notes" = "Заметки";
+"map.marker.pinned_note" = "Закрепленная заметка";
+"map.preview.open_note_hint" = "Откройте заметку, чтобы увидеть детали.";
+
+"notes.editor.alert.delete.message" = "Это действие нельзя отменить.";
+"notes.editor.alert.delete.title" = "Удалить заметку?";
+"notes.editor.alert.error.title" = "Что-то пошло не так";
+"notes.editor.alert.unsaved.message" = "У вас есть несохраненные изменения.";
+"notes.editor.alert.unsaved.title" = "Сохранить изменения?";
+"notes.editor.date.from" = "С";
+"notes.editor.date.to" = "По";
+"notes.editor.error.bookmark" = "Не удалось обновить закладку. Попробуйте еще раз.";
+"notes.editor.error.delete" = "Не удалось удалить заметку. Попробуйте еще раз.";
+"notes.editor.error.load" = "Не удалось загрузить заметку. Попробуйте еще раз.";
+"notes.editor.error.photo.add_failed" = "Не удалось добавить фото. Попробуйте еще раз.";
+"notes.editor.error.photo.duplicate.single" = "Это фото уже добавлено.";
+"notes.editor.error.photo.skipped_duplicates" = "Некоторые фото пропущены, потому что они уже добавлены.";
+"notes.editor.error.photo.skipped_failed" = "Некоторые фото не удалось добавить.";
+"notes.editor.error.save" = "Не удалось сохранить заметку. Попробуйте еще раз.";
+"notes.editor.menu.bookmark.add" = "Добавить в закладки";
+"notes.editor.menu.bookmark.remove" = "Убрать из закладок";
+"notes.editor.menu.delete" = "Удалить заметку";
+"notes.editor.menu.find" = "Найти в заметке";
+"notes.editor.photo.add.title" = "Добавить фото";
+"notes.editor.photo.camera.unavailable" = "Камера недоступна на этом устройстве.";
+"notes.editor.photo.limit" = "Можно добавить не более %d фото.";
+"notes.editor.photo.picker.counter" = "%d/%d";
+"notes.editor.photo.source.camera" = "Камера";
+"notes.editor.photo.source.library" = "Фотопленка";
+"notes.editor.search.placeholder" = "Поиск в заметке";
+"notes.editor.text.placeholder" = "Напишите заметку...";
+"notes.editor.title.placeholder" = "Название";
+
+"notes.list.empty.title" = "Заметок пока нет";
+"notes.list.error.load" = "Не удалось загрузить заметки. Попробуйте еще раз.";
+"notes.list.title" = "Заметки";
+
+"notes.location.search.error.message" = "Не удалось получить эту локацию. Попробуйте другую.";
+"notes.location.search.error.title" = "Локация недоступна";
+"notes.location.search.placeholder" = "Поиск места";
+"notes.location.search.title" = "Местоположение";
+"notes.location.section.add" = "Добавить локацию";
+
+"notes.presentation.untitled" = "Без названия";
+
+"placeholder.stub_format" = "%@ (заглушка)";
+
+"tab.profile" = "Профиль";
+"tab.statistics" = "Статистика";
+"tab.timeline" = "Хронология";
+"tab.wishlist" = "Вишлист";

@@ -113,7 +113,7 @@ final class NoteViewController: UIViewController {
         placeTitleBookmarkImageView.isHidden = true
         placeTitleBookmarkImageView.setContentCompressionResistancePriority(.required, for: .horizontal)
 
-        headerTitleTextField.placeholder = "Title"
+        headerTitleTextField.placeholder = L10n.Notes.Editor.Title.placeholder
         headerTitleTextField.borderStyle = .none
         headerTitleTextField.backgroundColor = .clear
         headerTitleTextField.font = UIFont.systemFont(ofSize: 28, weight: .bold)
@@ -134,7 +134,7 @@ final class NoteViewController: UIViewController {
         let textTap = UITapGestureRecognizer(target: self, action: #selector(didTapText))
         textView.addGestureRecognizer(textTap)
 
-        textPlaceholderLabel.text = "Write your note..."
+        textPlaceholderLabel.text = L10n.Notes.Editor.Text.placeholder
         textPlaceholderLabel.textColor = .tertiaryLabel
         textPlaceholderLabel.font = UIFont.preferredFont(forTextStyle: .body)
         textView.addSubview(textPlaceholderLabel)
@@ -231,7 +231,7 @@ final class NoteViewController: UIViewController {
         searchContainerView.backgroundColor = .clear
         searchContainerView.isHidden = true
 
-        searchBar.placeholder = "Search in note"
+        searchBar.placeholder = L10n.Notes.Editor.Search.placeholder
         searchBar.searchBarStyle = .minimal
         searchBar.backgroundImage = UIImage()
         searchBar.isTranslucent = true
@@ -423,9 +423,9 @@ final class NoteViewController: UIViewController {
     }
 
     private func updateNavigationItems(state: NoteViewState) {
-        let editButton = UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(didTapEdit))
+        let editButton = UIBarButtonItem(title: L10n.Common.edit, style: .plain, target: self, action: #selector(didTapEdit))
 
-        let bookmarkTitle = state.isBookmarked ? "Remove Bookmark" : "Add Bookmark"
+        let bookmarkTitle = state.isBookmarked ? L10n.Notes.Editor.Menu.Bookmark.remove : L10n.Notes.Editor.Menu.Bookmark.add
         let bookmarkImageName = state.isBookmarked ? "bookmark.fill" : "bookmark"
         let bookmarkAction = UIAction(
             title: bookmarkTitle,
@@ -436,12 +436,12 @@ final class NoteViewController: UIViewController {
         }
         bookmarkAction.attributes = state.canToggleBookmark ? [] : [.disabled]
 
-        let searchAction = UIAction(title: "Find in Note", image: UIImage(systemName: "magnifyingglass")) { [weak self] _ in
+        let searchAction = UIAction(title: L10n.Notes.Editor.Menu.find, image: UIImage(systemName: "magnifyingglass")) { [weak self] _ in
             self?.viewModel.didTapSearch()
         }
         searchAction.attributes = (state.canSearch && state.mode != .edit) ? [] : [.disabled]
 
-        let deleteAction = UIAction(title: "Delete Note", image: UIImage(systemName: "trash"), attributes: [.destructive]) { [weak self] _ in
+        let deleteAction = UIAction(title: L10n.Notes.Editor.Menu.delete, image: UIImage(systemName: "trash"), attributes: [.destructive]) { [weak self] _ in
             self?.confirmDelete()
         }
         deleteAction.attributes = state.isDeleteVisible ? [.destructive] : [.disabled, .destructive]
@@ -468,19 +468,19 @@ final class NoteViewController: UIViewController {
     }
 
     private func showError(message: String) {
-        let alert = UIAlertController(title: "Something went wrong", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        let alert = UIAlertController(title: L10n.Notes.Editor.Alert.Error.title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
         present(alert, animated: true)
     }
 
     private func confirmDelete() {
         let alert = UIAlertController(
-            title: "Delete note?",
-            message: "This action can't be undone.",
+            title: L10n.Notes.Editor.Alert.Delete.title,
+            message: L10n.Notes.Editor.Alert.Delete.message,
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L10n.Common.cancel, style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.Common.delete, style: .destructive) { [weak self] _ in
             self?.viewModel.didTapDeleteConfirmed()
         })
         present(alert, animated: true)
@@ -492,15 +492,15 @@ final class NoteViewController: UIViewController {
 
         if state.hasUnsavedChanges {
             let alert = UIAlertController(
-                title: "Save changes?",
-                message: "You have unsaved changes.",
+                title: L10n.Notes.Editor.Alert.Unsaved.title,
+                message: L10n.Notes.Editor.Alert.Unsaved.message,
                 preferredStyle: .alert
             )
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-            alert.addAction(UIAlertAction(title: "Discard", style: .destructive) { [weak self] _ in
+            alert.addAction(UIAlertAction(title: L10n.Common.cancel, style: .cancel))
+            alert.addAction(UIAlertAction(title: L10n.Common.discard, style: .destructive) { [weak self] _ in
                 self?.exitScreen()
             })
-            let saveAction = UIAlertAction(title: "Save", style: .default) { [weak self] _ in
+            let saveAction = UIAlertAction(title: L10n.Common.save, style: .default) { [weak self] _ in
                 self?.viewModel.didTapSave()
             }
             saveAction.isEnabled = state.isSaveEnabled
@@ -606,7 +606,7 @@ final class NoteViewController: UIViewController {
         ).start ?? today
         let initialStart = normalizedExisting.start ?? normalizedExisting.end ?? fallbackDate
         presentDatePicker(
-            title: "From",
+            title: L10n.Notes.Editor.Date.from,
             initialDate: initialStart,
             maximumDate: today
         ) { [weak self] startDate in
@@ -619,7 +619,7 @@ final class NoteViewController: UIViewController {
             let existingEnd = normalizedExisting.end ?? normalizedStart
             let initialEnd = max(existingEnd, normalizedStart)
             self.presentDatePicker(
-                title: "To",
+                title: L10n.Notes.Editor.Date.to,
                 initialDate: initialEnd,
                 minimumDate: normalizedStart,
                 maximumDate: today
@@ -689,18 +689,18 @@ final class NoteViewController: UIViewController {
 
     private func presentPhotoSourcePicker() {
         if let state = lastState, !state.canAddPhoto {
-            showError(message: "You can add up to 10 photos.")
+            showError(message: L10n.Notes.Editor.Photo.limit(maxPhotoCount))
             return
         }
 
-        let alert = UIAlertController(title: "Add Photo", message: nil, preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: "Camera", style: .default) { [weak self] _ in
+        let alert = UIAlertController(title: L10n.Notes.Editor.Photo.Add.title, message: nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: L10n.Notes.Editor.Photo.Source.camera, style: .default) { [weak self] _ in
             self?.presentCameraPicker()
         })
-        alert.addAction(UIAlertAction(title: "Photo Library", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L10n.Notes.Editor.Photo.Source.library, style: .default) { [weak self] _ in
             self?.presentPhotoLibraryPicker()
         })
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: L10n.Common.cancel, style: .cancel))
 
         if let popover = alert.popoverPresentationController {
             popover.sourceView = photoSectionView
@@ -716,12 +716,12 @@ final class NoteViewController: UIViewController {
 
     private func presentCameraPicker() {
         if let state = lastState, !state.canAddPhoto {
-            showError(message: "You can add up to 10 photos.")
+            showError(message: L10n.Notes.Editor.Photo.limit(maxPhotoCount))
             return
         }
 
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
-            showError(message: "Camera is not available on this device.")
+            showError(message: L10n.Notes.Editor.Photo.Camera.unavailable)
             return
         }
 
@@ -736,7 +736,7 @@ final class NoteViewController: UIViewController {
         guard let state = lastState else { return }
         let remainingSlots = maxPhotoCount - state.photoURLs.count
         guard remainingSlots > 0 else {
-            showError(message: "You can add up to \(maxPhotoCount) photos.")
+            showError(message: L10n.Notes.Editor.Photo.limit(maxPhotoCount))
             return
         }
 
@@ -747,7 +747,7 @@ final class NoteViewController: UIViewController {
         configuration.preselectedAssetIdentifiers = state.preselectedAssetIdentifiers
 
         let picker = PHPickerViewController(configuration: configuration)
-        picker.title = "\(state.photoURLs.count)/\(maxPhotoCount)"
+        picker.title = L10n.Notes.Editor.Photo.Picker.counter(state.photoURLs.count, maxPhotoCount)
         picker.delegate = self
         present(picker, animated: true)
     }
@@ -919,13 +919,13 @@ private final class NoteDatePickerSheetViewController: UIViewController {
         title = titleText
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: "Cancel",
+            title: L10n.Common.cancel,
             style: .plain,
             target: self,
             action: #selector(didTapCancel)
         )
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Save",
+            title: L10n.Common.save,
             style: .done,
             target: self,
             action: #selector(didTapSave)

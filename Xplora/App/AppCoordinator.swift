@@ -22,13 +22,13 @@ final class AppCoordinator {
     func start() {
         let tabBarController = MainTabBarController()
 
-        let wishlistNav = makePlaceholderNav(title: "Wishlist", systemImageName: "heart")
-        let timelineNav = makePlaceholderNav(title: "Timeline", systemImageName: "clock")
-        let statisticsNav = makePlaceholderNav(title: "Statistics", systemImageName: "chart.bar.xaxis")
-        let profileNav = makePlaceholderNav(title: "Profile", systemImageName: "person.crop.circle")
+        let wishlistNav = makePlaceholderNav(title: L10n.Tab.wishlist, systemImageName: "heart")
+        let timelineNav = makePlaceholderNav(title: L10n.Tab.timeline, systemImageName: "clock")
+        let statisticsNav = makePlaceholderNav(title: L10n.Tab.statistics, systemImageName: "chart.bar.xaxis")
+        let profileNav = makePlaceholderNav(title: L10n.Tab.profile, systemImageName: "person.crop.circle")
 
         let mapNav = UINavigationController()
-        mapNav.tabBarItem = UITabBarItem(title: "Map", image: UIImage(systemName: "globe.europe.africa"), selectedImage: UIImage(systemName: "globe.europe.africa"))
+        mapNav.tabBarItem = UITabBarItem(title: L10n.Common.map, image: UIImage(systemName: "globe.europe.africa"), selectedImage: UIImage(systemName: "globe.europe.africa"))
 
         let mapCoordinator = MapCoordinator(navigationController: mapNav, locator: locator)
         mapCoordinator.start()

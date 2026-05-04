@@ -24,7 +24,7 @@ final class PlaceholderViewController: UIViewController {
 
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "\(displayTitle) (stub)"
+        label.text = L10n.Placeholder.stubFormat(displayTitle)
         label.textAlignment = .center
         label.numberOfLines = 0
         view.addSubview(label)

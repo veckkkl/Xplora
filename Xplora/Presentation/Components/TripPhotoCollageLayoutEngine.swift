@@ -154,8 +154,6 @@ enum TripPhotoCollageLayoutEngine {
         mode: TripPhotoCollageDisplayMode,
         hasOverflowBadge: Bool
     ) -> CGFloat {
-        // Preview layout must remain horizontally oriented (height < width).
-        // Full note allows taller layouts for dense photo grids.
         switch mode {
         case .preview:
             if hasOverflowBadge {
