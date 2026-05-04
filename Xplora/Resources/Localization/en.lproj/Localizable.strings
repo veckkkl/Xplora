@@ -55,6 +55,28 @@
 
 "placeholder.stub_format" = "%@ (stub)";
 
+"profile.card.subtitle" = "Apple ID, iCloud, and more";
+"profile.danger.footnote" = "Deleting data is permanent and cannot be undone.";
+"profile.item.about_xplora" = "About Xplora";
+"profile.item.delete_data" = "Delete Data";
+"profile.item.language" = "Language";
+"profile.item.privacy_policy" = "Privacy Policy";
+"profile.item.share_with_friends" = "Share with Friends";
+"profile.language.english" = "English";
+"profile.language.russian" = "Russian";
+"profile.section.app_settings" = "App Settings";
+"profile.section.danger_zone" = "Danger Zone";
+"profile.section.support" = "Support";
+"profile.stub.about" = "About screen will be implemented in the next step.";
+"profile.stub.delete_data" = "Delete data flow will be implemented in the next step.";
+"profile.stub.language" = "Language selection will be implemented in the next step.";
+"profile.stub.privacy_policy" = "Privacy Policy screen will be implemented in the next step.";
+"profile.stub.profile_card" = "Account details screen will be added in the next step.";
+"profile.stub.share_with_friends" = "Share flow will be implemented in the next step.";
+"profile.stub.title" = "Not Available Yet";
+"profile.tab.title" = "Profile";
+"profile.title" = "Settings";
+
 "tab.profile" = "Profile";
 "tab.statistics" = "Statistics";
 "tab.timeline" = "Timeline";
