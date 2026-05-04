@@ -1,0 +1,29 @@
+"common.ok" = "ОК";
+
+"profile.tab.title" = "Профиль";
+"profile.title" = "Настройки";
+
+"profile.card.subtitle" = "Apple ID, iCloud и другое";
+
+"profile.section.app_settings" = "Настройки приложения";
+"profile.section.support" = "Поддержка";
+"profile.section.danger_zone" = "Опасная зона";
+
+"profile.item.language" = "Язык";
+"profile.item.about_xplora" = "О Xplora";
+"profile.item.privacy_policy" = "Политика конфиденциальности";
+"profile.item.share_with_friends" = "Поделиться с друзьями";
+"profile.item.delete_data" = "Удалить данные";
+
+"profile.danger.footnote" = "Удаление данных необратимо и не может быть отменено.";
+
+"profile.language.english" = "Английский";
+"profile.language.russian" = "Русский";
+
+"profile.stub.title" = "Пока недоступно";
+"profile.stub.profile_card" = "Экран данных аккаунта будет добавлен на следующем этапе.";
+"profile.stub.language" = "Выбор языка будет реализован на следующем этапе.";
+"profile.stub.about" = "Экран «О Xplora» будет реализован на следующем этапе.";
+"profile.stub.privacy_policy" = "Экран политики конфиденциальности будет реализован на следующем этапе.";
+"profile.stub.share_with_friends" = "Функция «Поделиться» будет реализована на следующем этапе.";
+"profile.stub.delete_data" = "Сценарий удаления данных будет реализован на следующем этапе.";
