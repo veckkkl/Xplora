@@ -61,6 +61,25 @@ enum L10n {
         enum About {
             static let title = L10n.tr("Localizable", "profile.about.title")
             static let placeholder = L10n.tr("Localizable", "profile.about.placeholder")
+            static let subtitle = L10n.tr("Localizable", "profile.about.subtitle")
+            static let footer = L10n.tr("Localizable", "profile.about.footer")
+            static let version = L10n.tr("Localizable", "profile.about.version")
+            static let build = L10n.tr("Localizable", "profile.about.build")
+            static let developerResourcesTitle = L10n.tr("Localizable", "profile.about.developer_resources_title")
+            static let githubRepository = L10n.tr("Localizable", "profile.about.github_repository")
+            static let readmeGuide = L10n.tr("Localizable", "profile.about.readme_guide")
+            static func versionBuild(_ p1: Any, _ p2: Any) -> String {
+                L10n.tr("Localizable", "profile.about.version_build_format", String(describing: p1), String(describing: p2))
+            }
+
+            enum Card {
+                static let aboutTitle = L10n.tr("Localizable", "profile.about.card.about_title")
+                static let aboutText = L10n.tr("Localizable", "profile.about.card.about_text")
+                static let featuresTitle = L10n.tr("Localizable", "profile.about.card.features_title")
+                static let featuresText = L10n.tr("Localizable", "profile.about.card.features_text")
+                static let technologiesTitle = L10n.tr("Localizable", "profile.about.card.technologies_title")
+                static let technologiesText = L10n.tr("Localizable", "profile.about.card.technologies_text")
+            }
         }
 
         enum Privacy {
