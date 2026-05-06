@@ -55,8 +55,22 @@
 
 "placeholder.stub_format" = "%@ (stub)";
 
+"profile.about.build" = "Build";
+"profile.about.card.about_text" = "Xplora helps you save places, memories and travel stories.";
+"profile.about.card.about_title" = "About Xplora";
+"profile.about.card.features_text" = "Save places, keep travel notes, mark important memories and view your journeys on the map.";
+"profile.about.card.features_title" = "Features";
+"profile.about.card.technologies_text" = "Built with UIKit, MVVM, Clean Architecture, SnapKit and local data storage.";
+"profile.about.card.technologies_title" = "Technologies";
+"profile.about.developer_resources_title" = "Developer Resources";
+"profile.about.footer" = "Designed for capturing places, memories and trips.";
+"profile.about.github_repository" = "GitHub Repository";
 "profile.about.placeholder" = "About Xplora screen will be implemented in the next step.";
+"profile.about.readme_guide" = "README / Guide";
+"profile.about.subtitle" = "Travel journal for your experiences";
 "profile.about.title" = "About Xplora";
+"profile.about.version" = "Version";
+"profile.about.version_build_format" = "Version %@ · Build %@";
 "profile.card.subtitle" = "Apple ID, iCloud, and more";
 "profile.danger.footnote" = "Deleting data is permanent and cannot be undone.";
 "profile.delete.confirmation_message" = "This action cannot be undone.";

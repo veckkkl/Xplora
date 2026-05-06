@@ -55,8 +55,22 @@
 
 "placeholder.stub_format" = "%@ (заглушка)";
 
+"profile.about.build" = "Сборка";
+"profile.about.card.about_text" = "Xplora помогает сохранять места, впечатления и истории путешествий.";
+"profile.about.card.about_title" = "О приложении";
+"profile.about.card.features_text" = "Сохраняйте места, ведите заметки о поездках, отмечайте важные воспоминания и просматривайте путешествия на карте.";
+"profile.about.card.features_title" = "Возможности";
+"profile.about.card.technologies_text" = "Проект построен на UIKit, MVVM, Clean Architecture, SnapKit и локальном хранении данных.";
+"profile.about.card.technologies_title" = "Технологии";
+"profile.about.developer_resources_title" = "Для разработчиков";
+"profile.about.footer" = "Создано для сохранения мест, впечатлений и путешествий.";
+"profile.about.github_repository" = "GitHub Repository";
 "profile.about.placeholder" = "Экран «О Xplora» будет реализован на следующем этапе.";
+"profile.about.readme_guide" = "README / Руководство";
+"profile.about.subtitle" = "Дневник путешествий и впечатлений";
 "profile.about.title" = "О Xplora";
+"profile.about.version" = "Версия";
+"profile.about.version_build_format" = "Версия %@ · Сборка %@";
 "profile.card.subtitle" = "Apple ID, iCloud и другое";
 "profile.danger.footnote" = "Удаление данных необратимо и не может быть отменено.";
 "profile.delete.confirmation_message" = "Это действие нельзя отменить.";
