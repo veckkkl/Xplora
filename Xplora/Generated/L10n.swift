@@ -9,6 +9,8 @@ import Foundation
 
 enum L10n {
     enum Common {
+        static let cancel = L10n.tr("Localizable", "common.cancel")
+        static let delete = L10n.tr("Localizable", "common.delete")
         static let ok = L10n.tr("Localizable", "common.ok")
     }
 
@@ -37,10 +39,44 @@ enum L10n {
         enum Language {
             static let english = L10n.tr("Localizable", "profile.language.english")
             static let russian = L10n.tr("Localizable", "profile.language.russian")
+            static let englishNative = L10n.tr("Localizable", "profile.language.native_english")
+            static let russianNative = L10n.tr("Localizable", "profile.language.native_russian")
         }
 
         enum Danger {
             static let footnote = L10n.tr("Localizable", "profile.danger.footnote")
+        }
+
+        enum Details {
+            static let title = L10n.tr("Localizable", "profile.details.title")
+            static let placeholder = L10n.tr("Localizable", "profile.details.placeholder")
+        }
+
+        enum LanguageSelection {
+            static let title = L10n.tr("Localizable", "profile.language_selection.title")
+            static let placeholder = L10n.tr("Localizable", "profile.language_selection.placeholder")
+            static let restartMessage = L10n.tr("Localizable", "profile.language_selection.restart_message")
+        }
+
+        enum About {
+            static let title = L10n.tr("Localizable", "profile.about.title")
+            static let placeholder = L10n.tr("Localizable", "profile.about.placeholder")
+        }
+
+        enum Privacy {
+            static let title = L10n.tr("Localizable", "profile.privacy.title")
+            static let placeholder = L10n.tr("Localizable", "profile.privacy.placeholder")
+        }
+
+        enum Share {
+            static let text = L10n.tr("Localizable", "profile.share.text")
+        }
+
+        enum Delete {
+            static let confirmationTitle = L10n.tr("Localizable", "profile.delete.confirmation_title")
+            static let confirmationMessage = L10n.tr("Localizable", "profile.delete.confirmation_message")
+            static let stubTitle = L10n.tr("Localizable", "profile.delete.stub_title")
+            static let stubMessage = L10n.tr("Localizable", "profile.delete.stub_message")
         }
 
         enum Stub {

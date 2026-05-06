@@ -1,3 +1,5 @@
+"common.cancel" = "Cancel";
+"common.delete" = "Delete";
 "common.ok" = "OK";
 
 "profile.tab.title" = "Profile";
@@ -17,8 +19,25 @@
 
 "profile.danger.footnote" = "Deleting data is permanent and cannot be undone.";
 
+"profile.details.title" = "Profile";
+"profile.details.placeholder" = "Profile details screen will be implemented in the next step.";
+"profile.language_selection.title" = "Language";
+"profile.language_selection.placeholder" = "Language selection will be implemented in the next step.";
+"profile.language_selection.restart_message" = "Language will be applied after restarting the app.";
+"profile.about.title" = "About Xplora";
+"profile.about.placeholder" = "About Xplora screen will be implemented in the next step.";
+"profile.privacy.title" = "Privacy Policy";
+"profile.privacy.placeholder" = "Privacy Policy screen will be implemented in the next step.";
+"profile.share.text" = "Check out Xplora";
+"profile.delete.confirmation_title" = "Delete Data?";
+"profile.delete.confirmation_message" = "This action cannot be undone.";
+"profile.delete.stub_title" = "Not Available Yet";
+"profile.delete.stub_message" = "Data deletion will be implemented in the next step.";
+
 "profile.language.english" = "English";
 "profile.language.russian" = "Russian";
+"profile.language.native_english" = "English";
+"profile.language.native_russian" = "Русский";
 
 "profile.stub.title" = "Not Available Yet";
 "profile.stub.profile_card" = "Account details screen will be added in the next step.";

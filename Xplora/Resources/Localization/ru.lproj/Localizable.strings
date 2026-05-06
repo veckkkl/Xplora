@@ -1,3 +1,5 @@
+"common.cancel" = "Отмена";
+"common.delete" = "Удалить";
 "common.ok" = "ОК";
 
 "profile.tab.title" = "Профиль";
@@ -17,8 +19,25 @@
 
 "profile.danger.footnote" = "Удаление данных необратимо и не может быть отменено.";
 
+"profile.details.title" = "Профиль";
+"profile.details.placeholder" = "Экран профиля будет реализован на следующем этапе.";
+"profile.language_selection.title" = "Язык";
+"profile.language_selection.placeholder" = "Выбор языка будет реализован на следующем этапе.";
+"profile.language_selection.restart_message" = "Язык применится после перезапуска приложения.";
+"profile.about.title" = "О Xplora";
+"profile.about.placeholder" = "Экран «О Xplora» будет реализован на следующем этапе.";
+"profile.privacy.title" = "Политика конфиденциальности";
+"profile.privacy.placeholder" = "Экран политики конфиденциальности будет реализован на следующем этапе.";
+"profile.share.text" = "Попробуй Xplora";
+"profile.delete.confirmation_title" = "Удалить данные?";
+"profile.delete.confirmation_message" = "Это действие нельзя отменить.";
+"profile.delete.stub_title" = "Пока недоступно";
+"profile.delete.stub_message" = "Удаление данных будет реализовано на следующем этапе.";
+
 "profile.language.english" = "Английский";
 "profile.language.russian" = "Русский";
+"profile.language.native_english" = "English";
+"profile.language.native_russian" = "Русский";
 
 "profile.stub.title" = "Пока недоступно";
 "profile.stub.profile_card" = "Экран данных аккаунта будет добавлен на следующем этапе.";
