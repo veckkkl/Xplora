@@ -168,7 +168,13 @@ internal enum L10n {
           internal static let title = L10n.tr("Localizable", "notes.location.search.error.title", fallback: "Location unavailable")
         }
       }
-      internal enum Section {
+      internal enum Rate {
+      /// Unable to open the review prompt right now.
+      internal static let fallbackMessage = L10n.tr("Localizable", "profile.rate.fallback_message", fallback: "Unable to open the review prompt right now.")
+      /// Rate App
+      internal static let title = L10n.tr("Localizable", "profile.rate.title", fallback: "Rate App")
+    }
+    internal enum Section {
         /// Add location
         internal static let add = L10n.tr("Localizable", "notes.location.section.add", fallback: "Add location")
       }

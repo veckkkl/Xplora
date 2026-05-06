@@ -56,6 +56,21 @@ final class AboutXploraViewController: UIViewController {
         configureContent()
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // iOS 26 tab bar appearance can leave a bottom glass layer during pushes.
+        // Keep tab bar explicitly hidden on this child settings screen.
+        tabBarController?.tabBar.isHidden = true
+        additionalSafeAreaInsets.bottom = 0
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if isMovingFromParent || isBeingDismissed {
+            tabBarController?.tabBar.isHidden = false
+        }
+    }
+
     private func setupUI() {
         view.backgroundColor = .systemGroupedBackground
         title = L10n.Profile.About.title
@@ -63,6 +78,9 @@ final class AboutXploraViewController: UIViewController {
 
         scrollView.alwaysBounceVertical = true
         scrollView.backgroundColor = .clear
+        scrollView.contentInsetAdjustmentBehavior = .automatic
+        scrollView.contentInset.bottom = Constants.bottomInset
+        scrollView.verticalScrollIndicatorInsets.bottom = Constants.bottomInset
 
         contentView.backgroundColor = .clear
 
@@ -136,12 +154,12 @@ final class AboutXploraViewController: UIViewController {
 
     private func setupConstraints() {
         scrollView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
+            make.edges.equalToSuperview()
         }
 
         contentView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-            make.width.equalToSuperview()
+            make.edges.equalTo(scrollView.contentLayoutGuide)
+            make.width.equalTo(scrollView.frameLayoutGuide)
         }
 
         verticalStackView.snp.makeConstraints { make in
@@ -156,18 +174,6 @@ final class AboutXploraViewController: UIViewController {
 
         heroIconImageView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-        }
-
-        subtitleLabel.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(8)
-        }
-
-        versionBuildLabel.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(8)
-        }
-
-        footerLabel.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(8)
         }
     }
 

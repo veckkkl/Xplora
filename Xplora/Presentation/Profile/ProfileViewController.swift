@@ -3,8 +3,9 @@
 //  Xplora
 //
 
-import SnapKit
 import SafariServices
+import SnapKit
+import StoreKit
 import UIKit
 
 @MainActor
@@ -19,11 +20,23 @@ final class ProfileViewController: UIViewController {
         case action(sectionIndex: Int, rowIndex: Int)
     }
 
+    private enum Constants {
+        static let regularRowPadding: CGFloat = 16
+        static let destructiveRowPadding: CGFloat = 15
+        static let titleFontSize: CGFloat = 36
+        static let sectionAndRowFontSize: CGFloat = 20
+        static let rowIconPointSize: CGFloat = 16
+        static let rowIconReservedSize = CGSize(width: 18, height: 18)
+        static let sectionHeaderTopInset: CGFloat = 14
+        static let sectionInterSpacing: CGFloat = 2
+    }
+
     private let viewModel: ProfileViewModelInput & ProfileViewModelOutput
 
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
         collectionView.backgroundColor = .systemGroupedBackground
+        collectionView.contentInsetAdjustmentBehavior = .always
         collectionView.delegate = self
         return collectionView
     }()
@@ -58,19 +71,23 @@ final class ProfileViewController: UIViewController {
 
         content.text = actionItem.title
         content.textProperties.color = actionItem.style == .destructive ? .systemRed : .label
-        content.textProperties.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        content.textProperties.font = UIFont.systemFont(ofSize: Constants.sectionAndRowFontSize, weight: .regular)
         content.secondaryText = actionItem.value
         content.secondaryTextProperties.color = .secondaryLabel
         content.secondaryTextProperties.font = UIFont.systemFont(ofSize: 17, weight: .regular)
-        content.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 12, leading: 0, bottom: 12, trailing: 0)
+        content.directionalLayoutMargins = NSDirectionalEdgeInsets(
+            top: actionItem.style == .destructive ? Constants.destructiveRowPadding : Constants.regularRowPadding,
+            leading: 0,
+            bottom: actionItem.style == .destructive ? Constants.destructiveRowPadding : Constants.regularRowPadding,
+            trailing: 0
+        )
 
         if let iconName = actionItem.iconSystemName {
-            let iconImage = UIImage(systemName: iconName)?
-                .applyingSymbolConfiguration(.init(pointSize: 22, weight: .regular))
-            content.image = iconImage
-            content.imageProperties.tintColor = actionItem.style == .destructive ? .systemRed : .secondaryLabel
+            content.image = UIImage(systemName: iconName)?
+                .applyingSymbolConfiguration(.init(pointSize: Constants.rowIconPointSize, weight: .semibold))
+            content.imageProperties.tintColor = color(for: actionItem)
             content.imageToTextPadding = 12
-            content.imageProperties.reservedLayoutSize = CGSize(width: 24, height: 24)
+            content.imageProperties.reservedLayoutSize = Constants.rowIconReservedSize
         } else {
             content.image = nil
         }
@@ -79,14 +96,32 @@ final class ProfileViewController: UIViewController {
         cell.backgroundConfiguration = UIBackgroundConfiguration.listGroupedCell()
 
         var accessories: [UICellAccessory] = []
-        if actionItem.accessory == .disclosure {
+        switch actionItem.accessory {
+        case .none:
+            break
+        case .disclosure:
             accessories.append(
                 .disclosureIndicator(
                     displayed: .always,
                     options: .init(tintColor: .tertiaryLabel)
                 )
             )
+        case .toggle(let isOn):
+            let themeSwitch = UISwitch()
+            themeSwitch.onTintColor = .systemBlue
+            themeSwitch.isOn = isOn
+            themeSwitch.accessibilityIdentifier = "profile.darkThemeSwitch"
+            themeSwitch.tag = indexTag(section: sectionIndex, row: rowIndex)
+            themeSwitch.removeTarget(self, action: #selector(self.didChangeDarkThemeSwitch(_:)), for: .valueChanged)
+            themeSwitch.addTarget(self, action: #selector(self.didChangeDarkThemeSwitch(_:)), for: .valueChanged)
+
+            let configuration = UICellAccessory.CustomViewConfiguration(
+                customView: themeSwitch,
+                placement: .trailing(displayed: .always)
+            )
+            accessories.append(.customView(configuration: configuration))
         }
+
         cell.accessories = accessories
     }
 
@@ -98,11 +133,20 @@ final class ProfileViewController: UIViewController {
         let section = self.sections[indexPath.section].section
         let title = section.headerTitle
 
-        var content = UIListContentConfiguration.groupedHeader()
+        var content = section == .profileCard
+            ? UIListContentConfiguration.cell()
+            : UIListContentConfiguration.groupedHeader()
         content.text = title
-        content.textProperties.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        content.textProperties.color = .secondaryLabel
-        content.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 10, leading: 20, bottom: 8, trailing: 20)
+        content.textProperties.font = section == .profileCard
+            ? UIFont.systemFont(ofSize: Constants.titleFontSize, weight: .bold)
+            : UIFont.systemFont(ofSize: Constants.sectionAndRowFontSize, weight: .semibold)
+        content.textProperties.color = section == .profileCard ? .label : .secondaryLabel
+        content.directionalLayoutMargins = NSDirectionalEdgeInsets(
+            top: section == .profileCard ? 10 : Constants.sectionHeaderTopInset,
+            leading: 20,
+            bottom: section == .profileCard ? 14 : 10,
+            trailing: 20
+        )
         view.contentConfiguration = content
         view.backgroundConfiguration = .clear()
     }
@@ -115,7 +159,7 @@ final class ProfileViewController: UIViewController {
         let section = self.sections[indexPath.section].section
 
         var content = UIListContentConfiguration.groupedFooter()
-        content.text = section == .dangerZone ? L10n.Profile.Danger.footnote : nil
+        content.text = section == .data ? L10n.Profile.Data.footnote : nil
         content.textProperties.color = .secondaryLabel
         content.textProperties.font = UIFont.preferredFont(forTextStyle: .footnote)
         content.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 6, leading: 20, bottom: 4, trailing: 20)
@@ -155,19 +199,19 @@ final class ProfileViewController: UIViewController {
 
     private func setupUI() {
         view.backgroundColor = .systemGroupedBackground
-        title = L10n.Profile.title
-        navigationItem.largeTitleDisplayMode = .always
+        title = nil
+        navigationItem.largeTitleDisplayMode = .never
         view.addSubview(collectionView)
     }
 
     private func setupConstraints() {
         collectionView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
+            make.edges.equalToSuperview()
         }
     }
 
     private func makeLayout() -> UICollectionViewLayout {
-        UICollectionViewCompositionalLayout { [weak self] sectionIndex, layoutEnvironment in
+        let layout = UICollectionViewCompositionalLayout { [weak self] sectionIndex, layoutEnvironment in
             guard let self else { return nil }
 
             var configuration = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
@@ -175,11 +219,12 @@ final class ProfileViewController: UIViewController {
             configuration.showsSeparators = true
             configuration.separatorConfiguration.color = .separator
             configuration.separatorConfiguration.topSeparatorVisibility = .hidden
+            configuration.headerTopPadding = 0
 
             if self.sections.indices.contains(sectionIndex) {
                 let section = self.sections[sectionIndex].section
-                configuration.headerMode = section == .profileCard ? .none : .supplementary
-                configuration.footerMode = section == .dangerZone ? .supplementary : .none
+                configuration.headerMode = section.headerTitle == nil ? .none : .supplementary
+                configuration.footerMode = section == .data ? .supplementary : .none
             } else {
                 configuration.headerMode = .none
                 configuration.footerMode = .none
@@ -187,6 +232,11 @@ final class ProfileViewController: UIViewController {
 
             return NSCollectionLayoutSection.list(using: configuration, layoutEnvironment: layoutEnvironment)
         }
+
+        let layoutConfiguration = UICollectionViewCompositionalLayoutConfiguration()
+        layoutConfiguration.interSectionSpacing = Constants.sectionInterSpacing
+        layout.configuration = layoutConfiguration
+        return layout
     }
 
     private func configureDataSource() {
@@ -215,14 +265,14 @@ final class ProfileViewController: UIViewController {
             guard self.sections.indices.contains(indexPath.section) else { return nil }
             let sectionType = self.sections[indexPath.section].section
 
-            if kind == UICollectionView.elementKindSectionHeader, sectionType != .profileCard {
+            if kind == UICollectionView.elementKindSectionHeader, sectionType.headerTitle != nil {
                 return collectionView.dequeueConfiguredReusableSupplementary(
                     using: self.headerRegistration,
                     for: indexPath
                 )
             }
 
-            if kind == UICollectionView.elementKindSectionFooter, sectionType == .dangerZone {
+            if kind == UICollectionView.elementKindSectionFooter, sectionType == .data {
                 return collectionView.dequeueConfiguredReusableSupplementary(
                     using: self.footerRegistration,
                     for: indexPath
@@ -274,15 +324,23 @@ final class ProfileViewController: UIViewController {
     private func handle(route: ProfileRoute) {
         switch route {
         case .openProfileDetails:
-            navigationController?.pushViewController(ProfileDetailsViewController(), animated: true)
+            let viewController = ProfileDetailsViewController()
+            viewController.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(viewController, animated: true)
         case .openLanguageSelection:
-            navigationController?.pushViewController(LanguageSelectionViewController(), animated: true)
+            let viewController = LanguageSelectionViewController()
+            viewController.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(viewController, animated: true)
         case .openAboutXplora:
-            navigationController?.pushViewController(AboutXploraViewController(), animated: true)
+            let viewController = AboutXploraViewController()
+            viewController.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(viewController, animated: true)
         case .openPrivacyPolicy:
             presentPrivacyPolicy()
         case .shareApp:
             presentShareSheet()
+        case .rateApp:
+            presentRateAppStub()
         case .confirmDeleteData:
             presentDeleteConfirmation()
         }
@@ -326,6 +384,21 @@ final class ProfileViewController: UIViewController {
         present(activityController, animated: true)
     }
 
+    private func presentRateAppStub() {
+        if let windowScene = view.window?.windowScene {
+            SKStoreReviewController.requestReview(in: windowScene)
+            return
+        }
+
+        let alert = UIAlertController(
+            title: L10n.Profile.Rate.title,
+            message: L10n.Profile.Rate.fallbackMessage,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
+        present(alert, animated: true)
+    }
+
     private func presentDeleteConfirmation() {
         let alert = UIAlertController(
             title: L10n.Profile.Delete.confirmationTitle,
@@ -349,6 +422,43 @@ final class ProfileViewController: UIViewController {
         )
         alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
         present(alert, animated: true)
+    }
+
+    private func color(for item: ProfileActionItem) -> UIColor {
+        switch item.style {
+        case .destructive:
+            return .systemRed
+        case .standard:
+            switch item.iconTint {
+            case .blue:
+                return .systemBlue
+            case .green:
+                return .systemGreen
+            case .yellow:
+                return .systemYellow
+            case .purple:
+                return .systemPurple
+            case .gray:
+                return .secondaryLabel
+            case .red:
+                return .systemRed
+            }
+        }
+    }
+
+    private func indexTag(section: Int, row: Int) -> Int {
+        (section * 1_000) + row
+    }
+
+    @objc private func didChangeDarkThemeSwitch(_ sender: UISwitch) {
+        let section = sender.tag / 1_000
+        let row = sender.tag % 1_000
+
+        guard sections.indices.contains(section) else { return }
+        guard sections[section].items.indices.contains(row) else { return }
+        guard case .action(let actionItem) = sections[section].items[row], actionItem.action == .darkTheme else { return }
+
+        viewModel.didToggleDarkTheme(sender.isOn)
     }
 }
 

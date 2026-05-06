@@ -45,7 +45,7 @@ final class ProfileHeaderCollectionViewCell: UICollectionViewCell {
     private func setupConstraints() {
         headerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-            make.height.equalTo(96)
+            make.height.equalTo(204)
         }
     }
 

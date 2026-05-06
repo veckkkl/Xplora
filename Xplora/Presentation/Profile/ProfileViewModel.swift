@@ -11,6 +11,7 @@ enum ProfileRoute {
     case openAboutXplora
     case openPrivacyPolicy
     case shareApp
+    case rateApp
     case confirmDeleteData
 }
 
@@ -18,6 +19,7 @@ enum ProfileRoute {
 protocol ProfileViewModelInput: AnyObject {
     func viewDidLoad()
     func didSelectItem(at indexPath: IndexPath)
+    func didToggleDarkTheme(_ isOn: Bool)
 }
 
 @MainActor
@@ -28,14 +30,18 @@ protocol ProfileViewModelOutput: AnyObject {
 
 @MainActor
 final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
+    private enum Constants {
+        static let darkThemeEnabledKey = "profile.dark_theme_enabled"
+    }
+
     var onSectionsChange: (([ProfileSectionModel]) -> Void)?
     var onRoute: ((ProfileRoute) -> Void)?
 
     private var sections: [ProfileSectionModel] = []
+    private var isDarkThemeEnabled = UserDefaults.standard.bool(forKey: Constants.darkThemeEnabledKey)
 
     func viewDidLoad() {
-        sections = buildSections()
-        onSectionsChange?(sections)
+        refreshSections()
     }
 
     func didSelectItem(at indexPath: IndexPath) {
@@ -48,8 +54,18 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         case .profileCard:
             onRoute?(.openProfileDetails)
         case .action(let actionItem):
+            guard actionItem.action != .darkTheme else {
+                didToggleDarkTheme(!isDarkThemeEnabled)
+                return
+            }
             onRoute?(route(for: actionItem.action))
         }
+    }
+
+    func didToggleDarkTheme(_ isOn: Bool) {
+        isDarkThemeEnabled = isOn
+        UserDefaults.standard.set(isOn, forKey: Constants.darkThemeEnabledKey)
+        refreshSections()
     }
 
     private func buildSections() -> [ProfileSectionModel] {
@@ -61,14 +77,26 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
                         ProfileCardItem(
                             initials: "VB",
                             name: "valentina balde",
-                            subtitle: L10n.Profile.Card.subtitle
+                            status: .worldExplorer,
+                            stats: makeProfileStats()
                         )
                     )
                 ]
             ),
             ProfileSectionModel(
-                section: .appSettings,
+                section: .appearance,
                 items: [
+                    .action(
+                        ProfileActionItem(
+                            action: .darkTheme,
+                            title: L10n.Profile.Item.darkTheme,
+                            value: nil,
+                            style: .standard,
+                            accessory: .toggle(isDarkThemeEnabled),
+                            iconSystemName: "moon.fill",
+                            iconTint: .blue
+                        )
+                    ),
                     .action(
                         ProfileActionItem(
                             action: .language,
@@ -76,14 +104,37 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
                             value: currentLanguageDisplayValue(),
                             style: .standard,
                             accessory: .disclosure,
-                            iconSystemName: "globe"
+                            iconSystemName: "globe",
+                            iconTint: .green
                         )
                     )
                 ]
             ),
             ProfileSectionModel(
-                section: .support,
+                section: .app,
                 items: [
+                    .action(
+                        ProfileActionItem(
+                            action: .shareWithFriends,
+                            title: L10n.Profile.Item.share,
+                            value: nil,
+                            style: .standard,
+                            accessory: .none,
+                            iconSystemName: "square.and.arrow.up",
+                            iconTint: .blue
+                        )
+                    ),
+                    .action(
+                        ProfileActionItem(
+                            action: .rateApp,
+                            title: L10n.Profile.Item.rateApp,
+                            value: nil,
+                            style: .standard,
+                            accessory: .none,
+                            iconSystemName: "star.fill",
+                            iconTint: .yellow
+                        )
+                    ),
                     .action(
                         ProfileActionItem(
                             action: .about,
@@ -91,7 +142,8 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
                             value: nil,
                             style: .standard,
                             accessory: .disclosure,
-                            iconSystemName: "info.circle"
+                            iconSystemName: "info.circle",
+                            iconTint: .blue
                         )
                     ),
                     .action(
@@ -101,23 +153,14 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
                             value: nil,
                             style: .standard,
                             accessory: .disclosure,
-                            iconSystemName: "lock.shield"
-                        )
-                    ),
-                    .action(
-                        ProfileActionItem(
-                            action: .shareWithFriends,
-                            title: L10n.Profile.Item.shareWithFriends,
-                            value: nil,
-                            style: .standard,
-                            accessory: .disclosure,
-                            iconSystemName: "square.and.arrow.up"
+                            iconSystemName: "lock.shield",
+                            iconTint: .gray
                         )
                     )
                 ]
             ),
             ProfileSectionModel(
-                section: .dangerZone,
+                section: .data,
                 items: [
                     .action(
                         ProfileActionItem(
@@ -126,7 +169,8 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
                             value: nil,
                             style: .destructive,
                             accessory: .none,
-                            iconSystemName: "trash"
+                            iconSystemName: "trash",
+                            iconTint: .red
                         )
                     )
                 ]
@@ -138,10 +182,37 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         AppLanguage.current.displayName
     }
 
+    private func makeProfileStats() -> [ProfileCardItem.Stat] {
+        [
+            .init(
+                iconSystemName: "location.fill",
+                value: "23",
+                label: L10n.Profile.Card.Stat.places,
+                tint: .blue
+            ),
+            .init(
+                iconSystemName: "flag.fill",
+                value: "7",
+                label: L10n.Profile.Card.Stat.countries,
+                tint: .green
+            ),
+            .init(
+                iconSystemName: "globe.europe.africa.fill",
+                value: "12",
+                label: L10n.Profile.Card.Stat.trips,
+                tint: .purple
+            )
+        ]
+    }
+
     private func route(for action: ProfileItemAction) -> ProfileRoute {
         switch action {
+        case .darkTheme:
+            preconditionFailure("Dark theme action is handled directly via toggle.")
         case .language:
             return .openLanguageSelection
+        case .rateApp:
+            return .rateApp
         case .about:
             return .openAboutXplora
         case .privacyPolicy:
@@ -151,5 +222,10 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         case .deleteData:
             return .confirmDeleteData
         }
+    }
+
+    private func refreshSections() {
+        sections = buildSections()
+        onSectionsChange?(sections)
     }
 }

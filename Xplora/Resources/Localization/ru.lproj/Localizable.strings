@@ -109,6 +109,9 @@
 
 "profile.privacy.fallback_title" = "Политика конфиденциальности";
 "profile.privacy.fallback_message" = "Ссылка на политику конфиденциальности будет добавлена позже.";
+"profile.privacy.fallback_message" = "Ссылка на политику конфиденциальности будет добавлена позже.";
+"profile.rate.fallback_message" = "Сейчас не удалось открыть окно оценки.";
+"profile.rate.title" = "Оценить приложение";
 "tab.profile" = "Профиль";
 "tab.statistics" = "Статистика";
 "tab.timeline" = "Хронология";
