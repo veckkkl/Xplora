@@ -42,6 +42,8 @@
 "profile.about.readme_guide" = "README / Руководство";
 "profile.privacy.title" = "Политика конфиденциальности";
 "profile.privacy.placeholder" = "Экран политики конфиденциальности будет реализован на следующем этапе.";
+"profile.privacy.fallback_title" = "Политика конфиденциальности";
+"profile.privacy.fallback_message" = "Ссылка на политику конфиденциальности будет добавлена позже.";
 "profile.share.text" = "Попробуй Xplora";
 "profile.delete.confirmation_title" = "Удалить данные?";
 "profile.delete.confirmation_message" = "Это действие нельзя отменить.";

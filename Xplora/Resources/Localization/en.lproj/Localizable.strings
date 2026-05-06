@@ -42,6 +42,8 @@
 "profile.about.readme_guide" = "README / Guide";
 "profile.privacy.title" = "Privacy Policy";
 "profile.privacy.placeholder" = "Privacy Policy screen will be implemented in the next step.";
+"profile.privacy.fallback_title" = "Privacy Policy";
+"profile.privacy.fallback_message" = "Privacy Policy link will be added later.";
 "profile.share.text" = "Check out Xplora";
 "profile.delete.confirmation_title" = "Delete Data?";
 "profile.delete.confirmation_message" = "This action cannot be undone.";

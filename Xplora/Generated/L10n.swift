@@ -85,6 +85,8 @@ enum L10n {
         enum Privacy {
             static let title = L10n.tr("Localizable", "profile.privacy.title")
             static let placeholder = L10n.tr("Localizable", "profile.privacy.placeholder")
+            static let fallbackTitle = L10n.tr("Localizable", "profile.privacy.fallback_title")
+            static let fallbackMessage = L10n.tr("Localizable", "profile.privacy.fallback_message")
         }
 
         enum Share {
