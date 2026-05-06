@@ -107,6 +107,8 @@
 "profile.tab.title" = "Профиль";
 "profile.title" = "Настройки";
 
+"profile.privacy.fallback_title" = "Политика конфиденциальности";
+"profile.privacy.fallback_message" = "Ссылка на политику конфиденциальности будет добавлена позже.";
 "tab.profile" = "Профиль";
 "tab.statistics" = "Статистика";
 "tab.timeline" = "Хронология";

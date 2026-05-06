@@ -107,6 +107,8 @@
 "profile.tab.title" = "Profile";
 "profile.title" = "Settings";
 
+"profile.privacy.fallback_title" = "Privacy Policy";
+"profile.privacy.fallback_message" = "Privacy Policy link will be added later.";
 "tab.profile" = "Profile";
 "tab.statistics" = "Statistics";
 "tab.timeline" = "Timeline";

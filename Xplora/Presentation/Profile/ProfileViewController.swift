@@ -4,10 +4,16 @@
 //
 
 import SnapKit
+import SafariServices
 import UIKit
 
 @MainActor
 final class ProfileViewController: UIViewController {
+    private enum Links {
+        // TODO: Replace with the public GitHub or GitHub Pages privacy policy URL after publishing.
+        static let privacyPolicy: URL? = nil
+    }
+
     private enum Item: Hashable {
         case profileCard
         case action(sectionIndex: Int, rowIndex: Int)
@@ -274,12 +280,32 @@ final class ProfileViewController: UIViewController {
         case .openAboutXplora:
             navigationController?.pushViewController(AboutXploraViewController(), animated: true)
         case .openPrivacyPolicy:
-            navigationController?.pushViewController(PrivacyPolicyViewController(), animated: true)
+            presentPrivacyPolicy()
         case .shareApp:
             presentShareSheet()
         case .confirmDeleteData:
             presentDeleteConfirmation()
         }
+    }
+
+    private func presentPrivacyPolicy() {
+        guard let url = Links.privacyPolicy else {
+            presentPrivacyPolicyFallbackAlert()
+            return
+        }
+
+        let safariViewController = SFSafariViewController(url: url)
+        present(safariViewController, animated: true)
+    }
+
+    private func presentPrivacyPolicyFallbackAlert() {
+        let alert = UIAlertController(
+            title: L10n.Profile.Privacy.fallbackTitle,
+            message: L10n.Profile.Privacy.fallbackMessage,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
+        present(alert, animated: true)
     }
 
     private func presentShareSheet() {
