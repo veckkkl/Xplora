@@ -55,18 +55,34 @@
 
 "placeholder.stub_format" = "%@ (stub)";
 
+"profile.about.placeholder" = "About Xplora screen will be implemented in the next step.";
+"profile.about.title" = "About Xplora";
 "profile.card.subtitle" = "Apple ID, iCloud, and more";
 "profile.danger.footnote" = "Deleting data is permanent and cannot be undone.";
+"profile.delete.confirmation_message" = "This action cannot be undone.";
+"profile.delete.confirmation_title" = "Delete Data?";
+"profile.delete.stub_message" = "Data deletion will be implemented in the next step.";
+"profile.delete.stub_title" = "Not Available Yet";
+"profile.details.placeholder" = "Profile details screen will be implemented in the next step.";
+"profile.details.title" = "Profile";
 "profile.item.about_xplora" = "About Xplora";
 "profile.item.delete_data" = "Delete Data";
 "profile.item.language" = "Language";
 "profile.item.privacy_policy" = "Privacy Policy";
 "profile.item.share_with_friends" = "Share with Friends";
 "profile.language.english" = "English";
+"profile.language.native_english" = "English";
+"profile.language.native_russian" = "Русский";
 "profile.language.russian" = "Russian";
+"profile.language_selection.placeholder" = "Language selection will be implemented in the next step.";
+"profile.language_selection.restart_message" = "Language will be applied after restarting the app.";
+"profile.language_selection.title" = "Language";
+"profile.privacy.placeholder" = "Privacy Policy screen will be implemented in the next step.";
+"profile.privacy.title" = "Privacy Policy";
 "profile.section.app_settings" = "App Settings";
 "profile.section.danger_zone" = "Danger Zone";
 "profile.section.support" = "Support";
+"profile.share.text" = "Check out Xplora";
 "profile.stub.about" = "About screen will be implemented in the next step.";
 "profile.stub.delete_data" = "Delete data flow will be implemented in the next step.";
 "profile.stub.language" = "Language selection will be implemented in the next step.";

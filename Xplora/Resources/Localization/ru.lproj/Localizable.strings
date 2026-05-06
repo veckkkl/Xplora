@@ -55,18 +55,34 @@
 
 "placeholder.stub_format" = "%@ (заглушка)";
 
+"profile.about.placeholder" = "Экран «О Xplora» будет реализован на следующем этапе.";
+"profile.about.title" = "О Xplora";
 "profile.card.subtitle" = "Apple ID, iCloud и другое";
 "profile.danger.footnote" = "Удаление данных необратимо и не может быть отменено.";
+"profile.delete.confirmation_message" = "Это действие нельзя отменить.";
+"profile.delete.confirmation_title" = "Удалить данные?";
+"profile.delete.stub_message" = "Удаление данных будет реализовано на следующем этапе.";
+"profile.delete.stub_title" = "Пока недоступно";
+"profile.details.placeholder" = "Экран профиля будет реализован на следующем этапе.";
+"profile.details.title" = "Профиль";
 "profile.item.about_xplora" = "О Xplora";
 "profile.item.delete_data" = "Удалить данные";
 "profile.item.language" = "Язык";
 "profile.item.privacy_policy" = "Политика конфиденциальности";
 "profile.item.share_with_friends" = "Поделиться с друзьями";
 "profile.language.english" = "Английский";
+"profile.language.native_english" = "English";
+"profile.language.native_russian" = "Русский";
 "profile.language.russian" = "Русский";
+"profile.language_selection.placeholder" = "Выбор языка будет реализован на следующем этапе.";
+"profile.language_selection.restart_message" = "Язык применится после перезапуска приложения.";
+"profile.language_selection.title" = "Язык";
+"profile.privacy.placeholder" = "Экран политики конфиденциальности будет реализован на следующем этапе.";
+"profile.privacy.title" = "Политика конфиденциальности";
 "profile.section.app_settings" = "Настройки приложения";
 "profile.section.danger_zone" = "Опасная зона";
 "profile.section.support" = "Поддержка";
+"profile.share.text" = "Попробуй Xplora";
 "profile.stub.about" = "Экран «О Xplora» будет реализован на следующем этапе.";
 "profile.stub.delete_data" = "Сценарий удаления данных будет реализован на следующем этапе.";
 "profile.stub.language" = "Выбор языка будет реализован на следующем этапе.";

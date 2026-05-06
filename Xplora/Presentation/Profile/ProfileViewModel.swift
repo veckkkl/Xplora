@@ -5,6 +5,15 @@
 
 import Foundation
 
+enum ProfileRoute {
+    case openProfileDetails
+    case openLanguageSelection
+    case openAboutXplora
+    case openPrivacyPolicy
+    case shareApp
+    case confirmDeleteData
+}
+
 @MainActor
 protocol ProfileViewModelInput: AnyObject {
     func viewDidLoad()
@@ -14,13 +23,13 @@ protocol ProfileViewModelInput: AnyObject {
 @MainActor
 protocol ProfileViewModelOutput: AnyObject {
     var onSectionsChange: (([ProfileSectionModel]) -> Void)? { get set }
-    var onStubAction: ((String) -> Void)? { get set }
+    var onRoute: ((ProfileRoute) -> Void)? { get set }
 }
 
 @MainActor
 final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
     var onSectionsChange: (([ProfileSectionModel]) -> Void)?
-    var onStubAction: ((String) -> Void)?
+    var onRoute: ((ProfileRoute) -> Void)?
 
     private var sections: [ProfileSectionModel] = []
 
@@ -37,9 +46,9 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         let item = section.items[indexPath.row]
         switch item {
         case .profileCard:
-            onStubAction?(L10n.Profile.Stub.profileCard)
+            onRoute?(.openProfileDetails)
         case .action(let actionItem):
-            onStubAction?(stubMessage(for: actionItem.action))
+            onRoute?(route(for: actionItem.action))
         }
     }
 
@@ -126,22 +135,21 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
     }
 
     private func currentLanguageDisplayValue() -> String {
-        let languageCode = Bundle.main.preferredLocalizations.first ?? Locale.current.language.languageCode?.identifier ?? "en"
-        return languageCode.hasPrefix("ru") ? L10n.Profile.Language.russian : L10n.Profile.Language.english
+        AppLanguage.current.displayName
     }
 
-    private func stubMessage(for action: ProfileItemAction) -> String {
+    private func route(for action: ProfileItemAction) -> ProfileRoute {
         switch action {
         case .language:
-            return L10n.Profile.Stub.language
+            return .openLanguageSelection
         case .about:
-            return L10n.Profile.Stub.about
+            return .openAboutXplora
         case .privacyPolicy:
-            return L10n.Profile.Stub.privacyPolicy
+            return .openPrivacyPolicy
         case .shareWithFriends:
-            return L10n.Profile.Stub.shareWithFriends
+            return .shareApp
         case .deleteData:
-            return L10n.Profile.Stub.deleteData
+            return .confirmDeleteData
         }
     }
 }
