@@ -5,13 +5,25 @@
 "profile.tab.title" = "Profile";
 "profile.title" = "Settings";
 
-"profile.card.subtitle" = "Apple ID, iCloud, and more";
+"profile.card.subtitle" = "Travel journal and memories";
+"profile.card.status.world_explorer" = "World Explorer";
+"profile.card.status.place_collector" = "Place Collector";
+"profile.card.status.adventure_traveler" = "Adventure Traveler";
+"profile.card.stat.places" = "places";
+"profile.card.stat.countries" = "countries";
+"profile.card.stat.trips" = "trips";
 
 "profile.section.app_settings" = "App Settings";
 "profile.section.support" = "Support";
 "profile.section.danger_zone" = "Danger Zone";
+"profile.section.appearance" = "Appearance";
+"profile.section.app" = "App";
+"profile.section.data" = "Data";
 
+"profile.item.dark_theme" = "Dark Theme";
 "profile.item.language" = "Language";
+"profile.item.share" = "Share";
+"profile.item.rate_app" = "Rate App";
 "profile.item.about_xplora" = "About Xplora";
 "profile.item.privacy_policy" = "Privacy Policy";
 "profile.item.share_with_friends" = "Share with Friends";
@@ -45,6 +57,8 @@
 "profile.privacy.fallback_title" = "Privacy Policy";
 "profile.privacy.fallback_message" = "Privacy Policy link will be added later.";
 "profile.share.text" = "Check out Xplora";
+"profile.rate.title" = "Rate App";
+"profile.rate.fallback_message" = "Unable to open the review prompt right now.";
 "profile.delete.confirmation_title" = "Delete Data?";
 "profile.delete.confirmation_message" = "This action cannot be undone.";
 "profile.delete.stub_title" = "Not Available Yet";

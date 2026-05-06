@@ -5,13 +5,25 @@
 "profile.tab.title" = "Профиль";
 "profile.title" = "Настройки";
 
-"profile.card.subtitle" = "Apple ID, iCloud и другое";
+"profile.card.subtitle" = "Дневник путешествий и впечатлений";
+"profile.card.status.world_explorer" = "Исследователь мира";
+"profile.card.status.place_collector" = "Коллекционер мест";
+"profile.card.status.adventure_traveler" = "Путешественник мира";
+"profile.card.stat.places" = "места";
+"profile.card.stat.countries" = "страны";
+"profile.card.stat.trips" = "поездки";
 
 "profile.section.app_settings" = "Настройки приложения";
 "profile.section.support" = "Поддержка";
 "profile.section.danger_zone" = "Опасная зона";
+"profile.section.appearance" = "Внешний вид";
+"profile.section.app" = "Приложение";
+"profile.section.data" = "Данные";
 
+"profile.item.dark_theme" = "Тёмная тема";
 "profile.item.language" = "Язык";
+"profile.item.share" = "Поделиться";
+"profile.item.rate_app" = "Оценить приложение";
 "profile.item.about_xplora" = "О Xplora";
 "profile.item.privacy_policy" = "Политика конфиденциальности";
 "profile.item.share_with_friends" = "Поделиться с друзьями";
@@ -45,6 +57,8 @@
 "profile.privacy.fallback_title" = "Политика конфиденциальности";
 "profile.privacy.fallback_message" = "Ссылка на политику конфиденциальности будет добавлена позже.";
 "profile.share.text" = "Попробуй Xplora";
+"profile.rate.title" = "Оценить приложение";
+"profile.rate.fallback_message" = "Сейчас не удалось открыть окно оценки.";
 "profile.delete.confirmation_title" = "Удалить данные?";
 "profile.delete.confirmation_message" = "Это действие нельзя отменить.";
 "profile.delete.stub_title" = "Пока недоступно";

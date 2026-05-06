@@ -20,16 +20,34 @@ enum L10n {
 
         enum Card {
             static let subtitle = L10n.tr("Localizable", "profile.card.subtitle")
+
+            enum Status {
+                static let worldExplorer = L10n.tr("Localizable", "profile.card.status.world_explorer")
+                static let placeCollector = L10n.tr("Localizable", "profile.card.status.place_collector")
+                static let adventureTraveler = L10n.tr("Localizable", "profile.card.status.adventure_traveler")
+            }
+
+            enum Stat {
+                static let places = L10n.tr("Localizable", "profile.card.stat.places")
+                static let countries = L10n.tr("Localizable", "profile.card.stat.countries")
+                static let trips = L10n.tr("Localizable", "profile.card.stat.trips")
+            }
         }
 
         enum Section {
             static let appSettings = L10n.tr("Localizable", "profile.section.app_settings")
             static let support = L10n.tr("Localizable", "profile.section.support")
             static let dangerZone = L10n.tr("Localizable", "profile.section.danger_zone")
+            static let appearance = L10n.tr("Localizable", "profile.section.appearance")
+            static let app = L10n.tr("Localizable", "profile.section.app")
+            static let data = L10n.tr("Localizable", "profile.section.data")
         }
 
         enum Item {
+            static let darkTheme = L10n.tr("Localizable", "profile.item.dark_theme")
             static let language = L10n.tr("Localizable", "profile.item.language")
+            static let share = L10n.tr("Localizable", "profile.item.share")
+            static let rateApp = L10n.tr("Localizable", "profile.item.rate_app")
             static let aboutXplora = L10n.tr("Localizable", "profile.item.about_xplora")
             static let privacyPolicy = L10n.tr("Localizable", "profile.item.privacy_policy")
             static let shareWithFriends = L10n.tr("Localizable", "profile.item.share_with_friends")
@@ -98,6 +116,15 @@ enum L10n {
             static let confirmationMessage = L10n.tr("Localizable", "profile.delete.confirmation_message")
             static let stubTitle = L10n.tr("Localizable", "profile.delete.stub_title")
             static let stubMessage = L10n.tr("Localizable", "profile.delete.stub_message")
+        }
+
+        enum Rate {
+            static let title = L10n.tr("Localizable", "profile.rate.title")
+            static let fallbackMessage = L10n.tr("Localizable", "profile.rate.fallback_message")
+        }
+
+        enum Data {
+            static let footnote = L10n.tr("Localizable", "profile.danger.footnote")
         }
 
         enum Stub {
