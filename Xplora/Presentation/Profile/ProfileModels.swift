@@ -46,7 +46,7 @@ enum ProfileRowStyle: Equatable {
     case destructive
 }
 
-enum ProfileIconTint: Equatable {
+enum ProfileIconTint: Hashable {
     case blue
     case green
     case yellow
@@ -55,7 +55,7 @@ enum ProfileIconTint: Equatable {
     case red
 }
 
-enum ProfileStatus: Equatable {
+enum ProfileStatus: Hashable {
     case worldExplorer
     case placeCollector
     case adventureTraveler
@@ -72,8 +72,8 @@ enum ProfileStatus: Equatable {
     }
 }
 
-struct ProfileCardItem: Equatable {
-    struct Stat: Equatable {
+struct ProfileCardItem: Hashable {
+    struct Stat: Hashable {
         let iconSystemName: String
         let value: String
         let label: String
@@ -81,8 +81,10 @@ struct ProfileCardItem: Equatable {
     }
 
     let initials: String
+    let avatarFileName: String?
     let name: String
     let status: ProfileStatus
+    let isStatusVisible: Bool
     let stats: [Stat]
 }
 

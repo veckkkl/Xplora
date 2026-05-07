@@ -16,7 +16,7 @@ final class ProfileViewController: UIViewController {
     }
 
     private enum Item: Hashable {
-        case profileCard
+        case profileCard(ProfileCardItem)
         case action(sectionIndex: Int, rowIndex: Int)
     }
 
@@ -24,10 +24,13 @@ final class ProfileViewController: UIViewController {
         static let regularRowPadding: CGFloat = 16
         static let destructiveRowPadding: CGFloat = 15
         static let titleFontSize: CGFloat = 36
+        static let sectionTitleFontSize: CGFloat = 22
         static let sectionAndRowFontSize: CGFloat = 20
         static let rowIconPointSize: CGFloat = 16
         static let rowIconReservedSize = CGSize(width: 18, height: 18)
         static let sectionHeaderTopInset: CGFloat = 14
+        static let sectionHeaderBottomInset: CGFloat = 10
+        static let sectionHeaderHorizontalInset: CGFloat = 20
         static let sectionInterSpacing: CGFloat = 2
     }
 
@@ -43,14 +46,11 @@ final class ProfileViewController: UIViewController {
 
     private var dataSource: UICollectionViewDiffableDataSource<Int, Item>?
     private var sections: [ProfileSectionModel] = []
+    private var isRoutingFromProfileCard = false
 
-    private lazy var profileCardRegistration = UICollectionView.CellRegistration<ProfileHeaderCollectionViewCell, Item> { [weak self] cell, _, _ in
+    private lazy var profileCardRegistration = UICollectionView.CellRegistration<ProfileHeaderCollectionViewCell, Item> { [weak self] cell, _, item in
         guard let self else { return }
-        guard let profileSection = self.sections.first(where: { $0.section == .profileCard }),
-              let firstItem = profileSection.items.first,
-              case .profileCard(let cardModel) = firstItem else {
-            return
-        }
+        guard case .profileCard(let cardModel) = item else { return }
         cell.configure(with: cardModel)
         cell.onTap = { [weak self] in
             self?.didTapProfileCard()
@@ -125,7 +125,7 @@ final class ProfileViewController: UIViewController {
         cell.accessories = accessories
     }
 
-    private lazy var headerRegistration = UICollectionView.SupplementaryRegistration<UICollectionViewListCell>(
+    private lazy var headerRegistration = UICollectionView.SupplementaryRegistration<ProfileSectionHeaderView>(
         elementKind: UICollectionView.elementKindSectionHeader
     ) { [weak self] view, _, indexPath in
         guard let self else { return }
@@ -133,22 +133,19 @@ final class ProfileViewController: UIViewController {
         let section = self.sections[indexPath.section].section
         let title = section.headerTitle
 
-        var content = section == .profileCard
-            ? UIListContentConfiguration.cell()
-            : UIListContentConfiguration.groupedHeader()
-        content.text = title
-        content.textProperties.font = section == .profileCard
-            ? UIFont.systemFont(ofSize: Constants.titleFontSize, weight: .bold)
-            : UIFont.systemFont(ofSize: Constants.sectionAndRowFontSize, weight: .semibold)
-        content.textProperties.color = section == .profileCard ? .label : .secondaryLabel
-        content.directionalLayoutMargins = NSDirectionalEdgeInsets(
-            top: section == .profileCard ? 10 : Constants.sectionHeaderTopInset,
-            leading: 20,
-            bottom: section == .profileCard ? 14 : 10,
-            trailing: 20
+        view.configure(
+            title: title,
+            font: section == .profileCard
+                ? UIFont.systemFont(ofSize: Constants.titleFontSize, weight: .bold)
+                : UIFont.systemFont(ofSize: Constants.sectionTitleFontSize, weight: .semibold),
+            color: section == .profileCard ? .label : .secondaryLabel,
+            insets: UIEdgeInsets(
+                top: section == .profileCard ? 10 : Constants.sectionHeaderTopInset,
+                left: Constants.sectionHeaderHorizontalInset,
+                bottom: section == .profileCard ? 14 : Constants.sectionHeaderBottomInset,
+                right: Constants.sectionHeaderHorizontalInset
+            )
         )
-        view.contentConfiguration = content
-        view.backgroundConfiguration = .clear()
     }
 
     private lazy var footerRegistration = UICollectionView.SupplementaryRegistration<UICollectionViewListCell>(
@@ -303,7 +300,11 @@ final class ProfileViewController: UIViewController {
 
             switch sectionModel.section {
             case .profileCard:
-                snapshot.appendItems([.profileCard], toSection: sectionIndex)
+                guard let firstItem = sectionModel.items.first,
+                      case .profileCard(let cardModel) = firstItem else {
+                    continue
+                }
+                snapshot.appendItems([.profileCard(cardModel)], toSection: sectionIndex)
             default:
                 let items: [Item] = sectionModel.items.enumerated().compactMap { rowIndex, item in
                     guard case .action = item else { return nil }
@@ -317,6 +318,10 @@ final class ProfileViewController: UIViewController {
     }
 
     private func didTapProfileCard() {
+        guard !isRoutingFromProfileCard else { return }
+        isRoutingFromProfileCard = true
+        defer { isRoutingFromProfileCard = false }
+
         guard let profileSectionIndex = sections.firstIndex(where: { $0.section == .profileCard }) else { return }
         viewModel.didSelectItem(at: IndexPath(row: 0, section: profileSectionIndex))
     }
@@ -462,6 +467,43 @@ final class ProfileViewController: UIViewController {
     }
 }
 
+private final class ProfileSectionHeaderView: UICollectionReusableView {
+    private let titleLabel = UILabel()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+        setupConstraints()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(title: String?, font: UIFont, color: UIColor, insets: UIEdgeInsets) {
+        titleLabel.text = title
+        titleLabel.font = font
+        titleLabel.textColor = color
+        titleLabel.snp.remakeConstraints { make in
+            make.edges.equalToSuperview().inset(insets)
+        }
+    }
+
+    private func setupUI() {
+        backgroundColor = .clear
+        titleLabel.numberOfLines = 1
+        titleLabel.lineBreakMode = .byTruncatingTail
+        titleLabel.adjustsFontForContentSizeCategory = true
+        addSubview(titleLabel)
+    }
+
+    private func setupConstraints() {
+        titleLabel.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+    }
+}
+
 extension ProfileViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard sections.indices.contains(indexPath.section) else { return }
@@ -470,7 +512,10 @@ extension ProfileViewController: UICollectionViewDelegate {
 
         collectionView.deselectItem(at: indexPath, animated: true)
 
-        guard section.section != .profileCard else { return }
+        if section.section == .profileCard {
+            didTapProfileCard()
+            return
+        }
         viewModel.didSelectItem(at: indexPath)
     }
 }

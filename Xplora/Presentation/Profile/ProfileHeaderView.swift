@@ -31,6 +31,7 @@ final class ProfileHeaderView: UIControl {
 
     private let topRowStackView = UIStackView()
     private let avatarContainerView = UIView()
+    private let avatarImageView = UIImageView()
     private let avatarLabel = UILabel()
 
     private let textStackView = UIStackView()
@@ -63,12 +64,14 @@ final class ProfileHeaderView: UIControl {
     }
 
     func configure(with item: ProfileCardItem) {
+        applyAvatar(fileName: item.avatarFileName, initials: item.initials)
         avatarLabel.text = item.initials
         nameLabel.text = item.name
         subtitleLabel.text = item.status.title
+        subtitleLabel.isHidden = !item.isStatusVisible
 
         applyStats(item.stats)
-        accessibilityLabel = "\(item.name), \(item.status.title)"
+        accessibilityLabel = item.isStatusVisible ? "\(item.name), \(item.status.title)" : item.name
     }
 
     override var isHighlighted: Bool {
@@ -99,6 +102,8 @@ final class ProfileHeaderView: UIControl {
         cardBackgroundView.layer.cornerRadius = Constants.cornerRadius
         cardBackgroundView.layer.cornerCurve = .continuous
         cardBackgroundView.clipsToBounds = true
+        // Keep touch handling on UIControl itself, otherwise nested container may swallow taps.
+        cardBackgroundView.isUserInteractionEnabled = false
         cardBackgroundView.directionalLayoutMargins = Constants.cardInsets
 
         contentStackView.axis = .vertical
@@ -109,9 +114,14 @@ final class ProfileHeaderView: UIControl {
         topRowStackView.alignment = .center
         topRowStackView.spacing = Constants.topRowSpacing
 
-        avatarContainerView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.14)
+        avatarContainerView.backgroundColor = .secondarySystemFill
         avatarContainerView.layer.cornerRadius = Constants.avatarSize / 2
         avatarContainerView.layer.cornerCurve = .continuous
+        avatarContainerView.clipsToBounds = true
+
+        avatarImageView.contentMode = .scaleAspectFill
+        avatarImageView.clipsToBounds = true
+        avatarImageView.isHidden = true
 
         let avatarFont = UIFont.systemFont(ofSize: Constants.avatarFontSize, weight: .semibold)
         avatarLabel.font = UIFontMetrics(forTextStyle: .title3).scaledFont(for: avatarFont)
@@ -169,6 +179,7 @@ final class ProfileHeaderView: UIControl {
         topRowStackView.addArrangedSubview(textStackView)
         topRowStackView.addArrangedSubview(chevronImageView)
 
+        avatarContainerView.addSubview(avatarImageView)
         avatarContainerView.addSubview(avatarLabel)
 
         textStackView.addArrangedSubview(nameLabel)
@@ -190,6 +201,10 @@ final class ProfileHeaderView: UIControl {
 
         avatarLabel.snp.makeConstraints { make in
             make.center.equalToSuperview()
+        }
+
+        avatarImageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
 
         chevronImageView.snp.makeConstraints { make in
@@ -223,6 +238,14 @@ final class ProfileHeaderView: UIControl {
             statViews.append(statView)
             statsStackView.addArrangedSubview(statView)
         }
+    }
+
+    private func applyAvatar(fileName: String?, initials: String) {
+        let image = ProfileUserSettings.loadAvatarImage(fileName: fileName)
+        avatarImageView.image = image
+        avatarImageView.isHidden = image == nil
+        avatarLabel.isHidden = image != nil
+        avatarLabel.text = initials
     }
 }
 

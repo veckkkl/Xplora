@@ -75,9 +75,11 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
                 items: [
                     .profileCard(
                         ProfileCardItem(
-                            initials: "VB",
-                            name: "valentina balde",
-                            status: .worldExplorer,
+                            initials: ProfileUserSettings.initials(from: ProfileUserSettings.currentName),
+                            avatarFileName: ProfileUserSettings.currentAvatarFileName,
+                            name: ProfileUserSettings.currentName,
+                            status: ProfileUserSettings.currentStatus,
+                            isStatusVisible: ProfileUserSettings.isStatusVisible,
                             stats: makeProfileStats()
                         )
                     )
