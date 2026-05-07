@@ -49,8 +49,8 @@
 "profile.details.validation.empty_name" = "Введите имя";
 "profile.details.validation.too_long_name" = "Имя должно быть не длиннее %d символов.";
 "profile.details.validation.invalid_characters" = "Имя может содержать только буквы, пробел, дефис, апостроф и точку.";
-"profile.details.avatar.choose_photo" = "Выбрать фото";
-"profile.details.avatar.take_photo" = "Сделать фото";
+"profile.details.avatar.choose_photo" = "Медиатека";
+"profile.details.avatar.take_photo" = "Камера";
 "profile.details.avatar.camera_unavailable" = "Камера недоступна";
 "profile.details.avatar.preview_title" = "Новое фото профиля";
 "profile.language_selection.title" = "Язык";

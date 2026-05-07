@@ -49,8 +49,8 @@
 "profile.details.validation.empty_name" = "Please enter a name";
 "profile.details.validation.too_long_name" = "Name must be %d characters or fewer.";
 "profile.details.validation.invalid_characters" = "Name can only contain letters, spaces, hyphens, apostrophes, and periods.";
-"profile.details.avatar.choose_photo" = "Choose Photo";
-"profile.details.avatar.take_photo" = "Take Photo";
+"profile.details.avatar.choose_photo" = "Photo Library";
+"profile.details.avatar.take_photo" = "Camera";
 "profile.details.avatar.camera_unavailable" = "Camera is unavailable";
 "profile.details.avatar.preview_title" = "New Profile Photo";
 "profile.language_selection.title" = "Language";
