@@ -59,8 +59,8 @@ final class AppCoordinator {
         let navigationController = UINavigationController(rootViewController: viewController)
         navigationController.tabBarItem = UITabBarItem(
             title: L10n.Profile.tabTitle,
-            image: UIImage(systemName: "person.crop.circle"),
-            selectedImage: UIImage(systemName: "person.crop.circle")
+            image: UIImage(systemName: "gear"),
+            selectedImage: UIImage(systemName: "gear")
         )
         return navigationController
     }
