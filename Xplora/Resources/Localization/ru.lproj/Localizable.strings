@@ -1,6 +1,7 @@
 "common.cancel" = "Отмена";
 "common.delete" = "Удалить";
 "common.ok" = "ОК";
+"common.save" = "Сохранить";
 
 "profile.tab.title" = "Профиль";
 "profile.title" = "Настройки";
@@ -33,6 +34,25 @@
 
 "profile.details.title" = "Профиль";
 "profile.details.placeholder" = "Экран профиля будет реализован на следующем этапе.";
+"profile.details.change_photo" = "Изменить фото";
+"profile.details.change_photo_stub" = "Изменение фото будет добавлено позже.";
+"profile.details.name" = "Имя";
+"profile.details.status" = "Статус";
+"profile.details.status_note" = "Статус обновляется автоматически по статистике путешествий.";
+"profile.details.show_status" = "Показывать статус";
+"profile.details.about_status" = "Подробнее про статус";
+"profile.details.status_info.title" = "Статус профиля";
+"profile.details.status_info.message" = "Статус определяется автоматически на основе количества мест, стран и поездок.";
+"profile.details.edit_name.title" = "Изменить имя";
+"profile.details.edit_name.placeholder" = "Введите имя";
+"profile.details.edit_name.save" = "Сохранить";
+"profile.details.validation.empty_name" = "Введите имя";
+"profile.details.validation.too_long_name" = "Имя должно быть не длиннее %d символов.";
+"profile.details.validation.invalid_characters" = "Имя может содержать только буквы, пробел, дефис, апостроф и точку.";
+"profile.details.avatar.choose_photo" = "Выбрать фото";
+"profile.details.avatar.take_photo" = "Сделать фото";
+"profile.details.avatar.camera_unavailable" = "Камера недоступна";
+"profile.details.avatar.preview_title" = "Новое фото профиля";
 "profile.language_selection.title" = "Язык";
 "profile.language_selection.placeholder" = "Выбор языка будет реализован на следующем этапе.";
 "profile.language_selection.restart_message" = "Язык применится после перезапуска приложения.";

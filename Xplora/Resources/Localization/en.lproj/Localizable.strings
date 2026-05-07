@@ -1,6 +1,7 @@
 "common.cancel" = "Cancel";
 "common.delete" = "Delete";
 "common.ok" = "OK";
+"common.save" = "Save";
 
 "profile.tab.title" = "Profile";
 "profile.title" = "Settings";
@@ -33,6 +34,25 @@
 
 "profile.details.title" = "Profile";
 "profile.details.placeholder" = "Profile details screen will be implemented in the next step.";
+"profile.details.change_photo" = "Change Photo";
+"profile.details.change_photo_stub" = "Changing profile photo will be added later.";
+"profile.details.name" = "Name";
+"profile.details.status" = "Status";
+"profile.details.status_note" = "Status updates automatically based on travel statistics.";
+"profile.details.show_status" = "Show Status";
+"profile.details.about_status" = "About status";
+"profile.details.status_info.title" = "Profile Status";
+"profile.details.status_info.message" = "Status is automatically calculated based on your places, countries, and trips.";
+"profile.details.edit_name.title" = "Edit Name";
+"profile.details.edit_name.placeholder" = "Enter name";
+"profile.details.edit_name.save" = "Save";
+"profile.details.validation.empty_name" = "Please enter a name";
+"profile.details.validation.too_long_name" = "Name must be %d characters or fewer.";
+"profile.details.validation.invalid_characters" = "Name can only contain letters, spaces, hyphens, apostrophes, and periods.";
+"profile.details.avatar.choose_photo" = "Choose Photo";
+"profile.details.avatar.take_photo" = "Take Photo";
+"profile.details.avatar.camera_unavailable" = "Camera is unavailable";
+"profile.details.avatar.preview_title" = "New Profile Photo";
 "profile.language_selection.title" = "Language";
 "profile.language_selection.placeholder" = "Language selection will be implemented in the next step.";
 "profile.language_selection.restart_message" = "Language will be applied after restarting the app.";

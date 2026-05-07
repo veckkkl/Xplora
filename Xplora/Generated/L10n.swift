@@ -12,6 +12,7 @@ enum L10n {
         static let cancel = L10n.tr("Localizable", "common.cancel")
         static let delete = L10n.tr("Localizable", "common.delete")
         static let ok = L10n.tr("Localizable", "common.ok")
+        static let save = L10n.tr("Localizable", "common.save")
     }
 
     enum Profile {
@@ -68,6 +69,39 @@ enum L10n {
         enum Details {
             static let title = L10n.tr("Localizable", "profile.details.title")
             static let placeholder = L10n.tr("Localizable", "profile.details.placeholder")
+            static let changePhoto = L10n.tr("Localizable", "profile.details.change_photo")
+            static let changePhotoStub = L10n.tr("Localizable", "profile.details.change_photo_stub")
+            static let name = L10n.tr("Localizable", "profile.details.name")
+            static let status = L10n.tr("Localizable", "profile.details.status")
+            static let statusNote = L10n.tr("Localizable", "profile.details.status_note")
+            static let showStatus = L10n.tr("Localizable", "profile.details.show_status")
+            static let aboutStatus = L10n.tr("Localizable", "profile.details.about_status")
+
+            enum EditName {
+                static let title = L10n.tr("Localizable", "profile.details.edit_name.title")
+                static let placeholder = L10n.tr("Localizable", "profile.details.edit_name.placeholder")
+                static let save = L10n.tr("Localizable", "profile.details.edit_name.save")
+            }
+
+            enum StatusInfo {
+                static let title = L10n.tr("Localizable", "profile.details.status_info.title")
+                static let message = L10n.tr("Localizable", "profile.details.status_info.message")
+            }
+
+            enum Validation {
+                static let emptyName = L10n.tr("Localizable", "profile.details.validation.empty_name")
+                static let invalidCharacters = L10n.tr("Localizable", "profile.details.validation.invalid_characters")
+                static func tooLongName(_ p1: Int) -> String {
+                    L10n.tr("Localizable", "profile.details.validation.too_long_name", p1)
+                }
+            }
+
+            enum Avatar {
+                static let choosePhoto = L10n.tr("Localizable", "profile.details.avatar.choose_photo")
+                static let takePhoto = L10n.tr("Localizable", "profile.details.avatar.take_photo")
+                static let cameraUnavailable = L10n.tr("Localizable", "profile.details.avatar.camera_unavailable")
+                static let previewTitle = L10n.tr("Localizable", "profile.details.avatar.preview_title")
+            }
         }
 
         enum LanguageSelection {
