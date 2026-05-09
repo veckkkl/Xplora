@@ -582,7 +582,25 @@ internal enum L10n {
     /// Save
     internal static let save = L10n.tr("Localizable", "common.save", fallback: "Save")
   }
+  internal enum Continent {
+    /// Africa
+    internal static let africa = L10n.tr("Localizable", "continent.africa", fallback: "Africa")
+    /// Antarctica
+    internal static let antarctica = L10n.tr("Localizable", "continent.antarctica", fallback: "Antarctica")
+    /// Asia
+    internal static let asia = L10n.tr("Localizable", "continent.asia", fallback: "Asia")
+    /// Europe
+    internal static let europe = L10n.tr("Localizable", "continent.europe", fallback: "Europe")
+    /// North America
+    internal static let northAmerica = L10n.tr("Localizable", "continent.northAmerica", fallback: "North America")
+    /// Oceania
+    internal static let oceania = L10n.tr("Localizable", "continent.oceania", fallback: "Oceania")
+    /// South America
+    internal static let southAmerica = L10n.tr("Localizable", "continent.southAmerica", fallback: "South America")
+  }
   internal enum Country {
+    /// Antarctica
+    internal static let aq = L10n.tr("Localizable", "country.AQ", fallback: "Antarctica")
     /// Argentina
     internal static let ar = L10n.tr("Localizable", "country.AR", fallback: "Argentina")
     /// Austria
@@ -671,6 +689,8 @@ internal enum L10n {
     internal static let sa = L10n.tr("Localizable", "country.SA", fallback: "Saudi Arabia")
     /// Sweden
     internal static let se = L10n.tr("Localizable", "country.SE", fallback: "Sweden")
+    /// French Southern Territories
+    internal static let tf = L10n.tr("Localizable", "country.TF", fallback: "French Southern Territories")
     /// Thailand
     internal static let th = L10n.tr("Localizable", "country.TH", fallback: "Thailand")
     /// Turkey
@@ -862,28 +882,44 @@ internal enum L10n {
       internal static let `optional` = L10n.tr("Localizable", "wishlist.city.optional", fallback: "City (optional)")
     }
     internal enum Confirm {
-      internal enum CountryOnlyExists {
-        /// Country already added
-        internal static let title = L10n.tr("Localizable", "wishlist.confirm.countryOnlyExists.title", fallback: "Country already added")
-        /// %@ is already in your wishlist without a city. Add %@ as a separate place?
-        internal static func message(_ p1: Any, _ p2: Any) -> String {
-          L10n.tr("Localizable", "wishlist.confirm.countryOnlyExists.message", String(describing: p1), String(describing: p2), fallback: "%@ is already in your wishlist without a city. Add %@ as a separate place?")
-        }
-      }
-      internal enum CountryHasCities {
-        /// Places already added
-        internal static let title = L10n.tr("Localizable", "wishlist.confirm.countryHasCities.title", fallback: "Places already added")
-        /// You already have places in %@. Add %@ as a separate country-level goal?
-        internal static func message(_ p1: Any, _ p2: Any) -> String {
-          L10n.tr("Localizable", "wishlist.confirm.countryHasCities.message", String(describing: p1), String(describing: p2), fallback: "You already have places in %@. Add %@ as a separate country-level goal?")
-        }
-      }
-      /// Add place
-      internal static let addPlace = L10n.tr("Localizable", "wishlist.confirm.addPlace", fallback: "Add place")
       /// Add country
       internal static let addCountry = L10n.tr("Localizable", "wishlist.confirm.addCountry", fallback: "Add country")
+      /// Add place
+      internal static let addPlace = L10n.tr("Localizable", "wishlist.confirm.addPlace", fallback: "Add place")
       /// Cancel
       internal static let cancel = L10n.tr("Localizable", "wishlist.confirm.cancel", fallback: "Cancel")
+      internal enum CountryHasCities {
+        /// You already have places in %@. Add %@ as a separate country-level goal?
+        internal static func message(_ p1: Any, _ p2: Any) -> String {
+          return L10n.tr("Localizable", "wishlist.confirm.countryHasCities.message", String(describing: p1), String(describing: p2), fallback: "You already have places in %@. Add %@ as a separate country-level goal?")
+        }
+        /// Places already added
+        internal static let title = L10n.tr("Localizable", "wishlist.confirm.countryHasCities.title", fallback: "Places already added")
+      }
+      internal enum CountryOnlyExists {
+        /// %@ is already in your wishlist without a city. Add %@ as a separate place?
+        internal static func message(_ p1: Any, _ p2: Any) -> String {
+          return L10n.tr("Localizable", "wishlist.confirm.countryOnlyExists.message", String(describing: p1), String(describing: p2), fallback: "%@ is already in your wishlist without a city. Add %@ as a separate place?")
+        }
+        /// Country already added
+        internal static let title = L10n.tr("Localizable", "wishlist.confirm.countryOnlyExists.title", fallback: "Country already added")
+      }
+    }
+    internal enum CurrentLocation {
+      /// Settings
+      internal static let settings = L10n.tr("Localizable", "wishlist.currentLocation.settings", fallback: "Settings")
+      internal enum NotFound {
+        /// Could not determine your current country.
+        internal static let message = L10n.tr("Localizable", "wishlist.currentLocation.notFound.message", fallback: "Could not determine your current country.")
+        /// Location Not Found
+        internal static let title = L10n.tr("Localizable", "wishlist.currentLocation.notFound.title", fallback: "Location Not Found")
+      }
+      internal enum Permission {
+        /// Allow location access to add your current country.
+        internal static let message = L10n.tr("Localizable", "wishlist.currentLocation.permission.message", fallback: "Allow location access to add your current country.")
+        /// Location Permission Needed
+        internal static let title = L10n.tr("Localizable", "wishlist.currentLocation.permission.title", fallback: "Location Permission Needed")
+      }
     }
     internal enum Duplicate {
       /// This place is already in your wishlist.
@@ -897,31 +933,15 @@ internal enum L10n {
       /// Your wishlist is empty
       internal static let title = L10n.tr("Localizable", "wishlist.empty.title", fallback: "Your wishlist is empty")
     }
-    internal enum CurrentLocation {
-      internal enum Permission {
-        /// Location Permission Needed
-        internal static let title = L10n.tr("Localizable", "wishlist.currentLocation.permission.title", fallback: "Location Permission Needed")
-        /// Allow location access to add your current country.
-        internal static let message = L10n.tr("Localizable", "wishlist.currentLocation.permission.message", fallback: "Allow location access to add your current country.")
-      }
-      internal enum NotFound {
-        /// Location Not Found
-        internal static let title = L10n.tr("Localizable", "wishlist.currentLocation.notFound.title", fallback: "Location Not Found")
-        /// Could not determine your current country.
-        internal static let message = L10n.tr("Localizable", "wishlist.currentLocation.notFound.message", fallback: "Could not determine your current country.")
-      }
-      /// Settings
-      internal static let settings = L10n.tr("Localizable", "wishlist.currentLocation.settings", fallback: "Settings")
-    }
     internal enum Search {
       /// Search countries
       internal static let placeholder = L10n.tr("Localizable", "wishlist.search.placeholder", fallback: "Search countries")
     }
     internal enum Select {
+      /// Add current location
+      internal static let currentLocation = L10n.tr("Localizable", "wishlist.select.current_location", fallback: "Add current location")
       /// Select destination
       internal static let title = L10n.tr("Localizable", "wishlist.select.title", fallback: "Select destination")
-      /// Add current location
-      internal static let addCurrentLocation = L10n.tr("Localizable", "wishlist.select.current_location", fallback: "Add current location")
     }
   }
 }

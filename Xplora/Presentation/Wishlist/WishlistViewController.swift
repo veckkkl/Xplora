@@ -8,7 +8,6 @@ import UIKit
 final class WishlistViewController: UIViewController {
     private let viewModel: WishlistViewModelInput & WishlistViewModelOutput
 
-    private let headerView = WishlistHeaderView()
     private var collectionView: UICollectionView!
     private var dataSource: UICollectionViewDiffableDataSource<Int, WishlistCountry>!
     private let emptyLabel = UILabel()
@@ -25,7 +24,6 @@ final class WishlistViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupNavBar()
-        setupHeader()
         setupCollectionView()
         setupDataSource()
         setupEmptyLabel()
@@ -33,42 +31,19 @@ final class WishlistViewController: UIViewController {
         viewModel.viewDidLoad()
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: false)
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: false)
-    }
-
     // MARK: - Nav bar
 
     private func setupNavBar() {
-        title = nil
+        title = L10n.Wishlist.title
         navigationController?.navigationBar.prefersLargeTitles = false
         navigationItem.largeTitleDisplayMode = .never
-
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.shadowColor = .clear
-        navigationController?.navigationBar.standardAppearance = appearance
-        navigationController?.navigationBar.scrollEdgeAppearance = appearance
-    }
-
-    // MARK: - Header (standalone, always visible)
-
-    private func setupHeader() {
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            systemItem: .add,
+            primaryAction: UIAction { [weak self] _ in
+                self?.viewModel.didTapAdd()
+            }
+        )
         view.backgroundColor = .systemBackground
-        headerView.configure(title: L10n.Wishlist.title)
-        headerView.onAddTap = { [weak self] in self?.viewModel.didTapAdd() }
-
-        view.addSubview(headerView)
-        headerView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide)
-            make.leading.trailing.equalToSuperview()
-        }
     }
 
     // MARK: - Collection view
@@ -105,7 +80,7 @@ final class WishlistViewController: UIViewController {
 
         view.addSubview(collectionView)
         collectionView.snp.makeConstraints { make in
-            make.top.equalTo(headerView.snp.bottom).offset(8)
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
             make.leading.trailing.bottom.equalToSuperview()
         }
     }
@@ -209,7 +184,8 @@ final class WishlistViewController: UIViewController {
     private func showAddCountry() {
         let vc = AddWishlistCountryViewController()
         vc.onSelect = { [weak self] country in self?.viewModel.didSelect(country: country) }
-        vc.modalPresentationStyle = .fullScreen
-        present(vc, animated: true)
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
     }
 }

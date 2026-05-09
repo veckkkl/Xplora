@@ -8,7 +8,6 @@ import UIKit
 final class AddWishlistCountryViewController: UIViewController {
     var onSelect: ((WishlistCountry) -> Void)?
 
-    private let headerView = SelectCountryHeaderView()
     private let searchBar = UISearchBar()
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let addButton = UIButton(type: .system)
@@ -29,11 +28,6 @@ final class AddWishlistCountryViewController: UIViewController {
         rebuildSections()
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: false)
-    }
-
     // Unified background for the full-screen Select Destination flow.
     // Full-screen presentation owns its own surface, so systemBackground is correct here.
     private let screenBackground = UIColor.systemBackground
@@ -42,10 +36,20 @@ final class AddWishlistCountryViewController: UIViewController {
 
     private func setupUI() {
         view.backgroundColor = screenBackground
-
-        headerView.configure(title: L10n.Wishlist.Select.title)
-        headerView.onDismiss = { [weak self] in self?.dismiss(animated: true) }
-        headerView.onAddCurrentLocation = { [weak self] in self?.handleAddCurrentLocation() }
+        title = L10n.Wishlist.Select.title
+        navigationItem.largeTitleDisplayMode = .never
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            systemItem: .close,
+            primaryAction: UIAction { [weak self] _ in
+                self?.dismiss(animated: true)
+            }
+        )
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: L10n.Wishlist.Select.currentLocation,
+            style: .plain,
+            target: self,
+            action: #selector(didTapAddCurrentLocation)
+        )
 
         searchBar.placeholder = L10n.Wishlist.Search.placeholder
         searchBar.searchBarStyle = .minimal
@@ -77,17 +81,12 @@ final class AddWishlistCountryViewController: UIViewController {
         addButton.isHidden = true
         addButton.addTarget(self, action: #selector(didTapAdd), for: .touchUpInside)
 
-        view.addSubview(headerView)
         view.addSubview(searchBar)
         view.addSubview(tableView)
         view.addSubview(addButton)
 
-        headerView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide)
-            make.leading.trailing.equalToSuperview()
-        }
         searchBar.snp.makeConstraints { make in
-            make.top.equalTo(headerView.snp.bottom)
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
             make.leading.trailing.equalToSuperview()
         }
         tableView.snp.makeConstraints { make in
@@ -208,6 +207,10 @@ final class AddWishlistCountryViewController: UIViewController {
     }
 
     // MARK: - Actions
+
+    @objc private func didTapAddCurrentLocation() {
+        handleAddCurrentLocation()
+    }
 
     @objc private func didTapAdd() {
         guard let catalog = selectedCountry else { return }
