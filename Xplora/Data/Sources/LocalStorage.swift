@@ -14,6 +14,7 @@ final class LocalStorage: LocalStorageProtocol {
         static let trips = "trips"
         static let countries = "countries"
         static let settings = "settings"
+        static let wishlistCountries = "wishlistCountries"
     }
 
     init() {}
@@ -48,5 +49,10 @@ final class LocalStorage: LocalStorageProtocol {
     var settings: UserSettings {
         get { load(UserSettings.self, forKey: Keys.settings) ?? .default }
         set { save(newValue, forKey: Keys.settings) }
+    }
+
+    var wishlistCountries: [WishlistCountry] {
+        get { load([WishlistCountry].self, forKey: Keys.wishlistCountries) ?? [] }
+        set { save(newValue, forKey: Keys.wishlistCountries) }
     }
 }
