@@ -292,7 +292,6 @@ final class ProfileViewController: UIViewController {
 
     private func applySections(_ sections: [ProfileSectionModel]) {
         self.sections = sections
-        collectionView.setCollectionViewLayout(makeLayout(), animated: false)
 
         var snapshot = NSDiffableDataSourceSnapshot<Int, Item>()
         for (sectionIndex, sectionModel) in sections.enumerated() {
