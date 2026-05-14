@@ -11,7 +11,7 @@
 "map.actions.notes" = "Notes";
 
 "onboarding.country.picker_title" = "Country of Residence";
-"onboarding.country.placeholder" = "Select country...";
+"onboarding.country.placeholder" = "Select Country";
 "onboarding.error.country_required" = "Please select a country or choose World Citizen";
 "onboarding.world_citizen.subtitle" = "I don't live in one country";
 "onboarding.world_citizen.title" = "World Citizen";
