@@ -8,27 +8,22 @@ import UIKit
 
 final class OnboardingViewController: UIViewController {
 
-    private enum Constants {
-        static let horizontalInset: CGFloat = 24
-        static let logoTopOffset: CGFloat = 40
-        static let logoSize: CGFloat = 64
-        static let logoToTitleSpacing: CGFloat = 12
-        static let titleToSubtitleSpacing: CGFloat = 6
-        static let subtitleToFormSpacing: CGFloat = 28
-        static let formSpacing: CGFloat = 12
-        static let fieldHeight: CGFloat = 50
+    private enum Layout {
+        static let hInset: CGFloat = 20
+        static let logoTop: CGFloat = 48
+        static let logoSize: CGFloat = 56
+        static let cardRadius: CGFloat = 12
+        static let cardPad: CGFloat = 16
+        static let rowHeight: CGFloat = 50
         static let worldCitizenRowHeight: CGFloat = 56
+        static let separatorH: CGFloat = 0.5
         static let buttonHeight: CGFloat = 50
-        static let errorSpacing: CGFloat = 6
-        static let formToButtonSpacing: CGFloat = 24
-        static let cardCornerRadius: CGFloat = 14
-        static let cardHPad: CGFloat = 16
-        static let separatorHeight: CGFloat = 0.5
     }
 
     private let viewModel: OnboardingViewModelInput & OnboardingViewModelOutput
+    private var currentSelection: CountrySelection = .none
 
-    // MARK: - UI: header
+    // MARK: - Header
 
     private let logoImageView: UIImageView = {
         let iv = UIImageView()
@@ -43,27 +38,26 @@ final class OnboardingViewController: UIViewController {
         let l = UILabel()
         l.text = "Xplora"
         l.font = .systemFont(ofSize: 34, weight: .bold)
-        l.textColor = .label
         l.textAlignment = .center
         return l
     }()
 
     private let subtitleLabel: UILabel = {
         let l = UILabel()
-        l.text = "Track everywhere you've been.\nTell us a bit about yourself."
-        l.font = .systemFont(ofSize: 15, weight: .regular)
+        l.text = "Track everywhere you've been."
+        l.font = .systemFont(ofSize: 15)
         l.textColor = .secondaryLabel
         l.textAlignment = .center
         l.numberOfLines = 0
         return l
     }()
 
-    // MARK: - UI: name field
+    // MARK: - Name
 
-    private let nameFieldCard: UIView = {
+    private let nameCard: UIView = {
         let v = UIView()
         v.backgroundColor = .secondarySystemGroupedBackground
-        v.layer.cornerRadius = Constants.cardCornerRadius
+        v.layer.cornerRadius = Layout.cardRadius
         v.layer.cornerCurve = .continuous
         return v
     }()
@@ -88,32 +82,29 @@ final class OnboardingViewController: UIViewController {
         return l
     }()
 
-    // MARK: - UI: country card
+    // MARK: - Location section
 
-    private let countryCard: UIView = {
+    private let sectionHeaderLabel: UILabel = {
+        let l = UILabel()
+        l.font = .systemFont(ofSize: 13)
+        l.textColor = .secondaryLabel
+        return l
+    }()
+
+    private let locationCard: UIView = {
         let v = UIView()
         v.backgroundColor = .secondarySystemGroupedBackground
-        v.layer.cornerRadius = Constants.cardCornerRadius
+        v.layer.cornerRadius = Layout.cardRadius
         v.layer.cornerCurve = .continuous
         v.clipsToBounds = true
         return v
     }()
 
-    private let countryRow: UIView = UIView()
-
-    private let countryIconView: UIImageView = {
-        let iv = UIImageView()
-        iv.image = UIImage(systemName: "globe.americas")
-        iv.tintColor = .secondaryLabel
-        iv.contentMode = .scaleAspectFit
-        iv.preferredSymbolConfiguration = .init(pointSize: 18)
-        return iv
-    }()
+    private let countryRow = UIControl()
 
     private let countryLabel: UILabel = {
         let l = UILabel()
         l.font = .systemFont(ofSize: 17)
-        l.textColor = .placeholderText
         return l
     }()
 
@@ -126,18 +117,17 @@ final class OnboardingViewController: UIViewController {
         return iv
     }()
 
-    private let cardSeparator: UIView = {
+    private let separator: UIView = {
         let v = UIView()
         v.backgroundColor = .separator
         return v
     }()
 
-    private let worldCitizenRow: UIView = UIView()
+    private let worldCitizenRow = UIControl()
 
     private let worldCitizenTitleLabel: UILabel = {
         let l = UILabel()
         l.font = .systemFont(ofSize: 17)
-        l.textColor = .label
         return l
     }()
 
@@ -148,7 +138,15 @@ final class OnboardingViewController: UIViewController {
         return l
     }()
 
-    private let worldCitizenSwitch = UISwitch()
+    private let checkmarkImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = UIImage(systemName: "checkmark")
+        iv.tintColor = .systemBlue
+        iv.contentMode = .scaleAspectFit
+        iv.preferredSymbolConfiguration = .init(pointSize: 15, weight: .semibold)
+        iv.alpha = 0
+        return iv
+    }()
 
     private let countryErrorLabel: UILabel = {
         let l = UILabel()
@@ -159,14 +157,14 @@ final class OnboardingViewController: UIViewController {
         return l
     }()
 
-    // MARK: - UI: button
+    // MARK: - Button
 
     private let continueButton: UIButton = {
         var config = UIButton.Configuration.filled()
         config.title = "Get Started"
         config.cornerStyle = .large
-        config.baseForegroundColor = .white
         config.baseBackgroundColor = .systemBlue
+        config.baseForegroundColor = .white
         let b = UIButton(configuration: config)
         b.isEnabled = false
         return b
@@ -201,24 +199,25 @@ final class OnboardingViewController: UIViewController {
 
     private func setupUI() {
         view.backgroundColor = .systemGroupedBackground
-        countryLabel.text = L10n.Onboarding.Country.placeholder
+        sectionHeaderLabel.text = L10n.Onboarding.Country.pickerTitle.uppercased()
         worldCitizenTitleLabel.text = L10n.Onboarding.WorldCitizen.title
         worldCitizenSubtitleLabel.text = L10n.Onboarding.WorldCitizen.subtitle
+        applyPlaceholderCountry()
+        addHighlightBehavior(to: countryRow)
+        addHighlightBehavior(to: worldCitizenRow)
     }
 
     private func setupHierarchy() {
         [logoImageView, titleLabel, subtitleLabel,
-         nameFieldCard, nameErrorLabel,
-         countryCard, countryErrorLabel,
+         nameCard, nameErrorLabel,
+         sectionHeaderLabel,
+         locationCard, countryErrorLabel,
          continueButton].forEach { view.addSubview($0) }
 
-        nameFieldCard.addSubview(nameField)
-
-        [countryRow, cardSeparator, worldCitizenRow].forEach { countryCard.addSubview($0) }
-
-        [countryIconView, countryLabel, countryChevron].forEach { countryRow.addSubview($0) }
-
-        [worldCitizenTitleLabel, worldCitizenSubtitleLabel, worldCitizenSwitch].forEach {
+        nameCard.addSubview(nameField)
+        [countryRow, separator, worldCitizenRow].forEach { locationCard.addSubview($0) }
+        [countryLabel, countryChevron].forEach { countryRow.addSubview($0) }
+        [worldCitizenTitleLabel, worldCitizenSubtitleLabel, checkmarkImageView].forEach {
             worldCitizenRow.addSubview($0)
         }
     }
@@ -226,95 +225,92 @@ final class OnboardingViewController: UIViewController {
     private func setupConstraints() {
         logoImageView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(Constants.logoTopOffset)
-            make.size.equalTo(Constants.logoSize)
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(Layout.logoTop)
+            make.size.equalTo(Layout.logoSize)
         }
         titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(logoImageView.snp.bottom).offset(Constants.logoToTitleSpacing)
+            make.top.equalTo(logoImageView.snp.bottom).offset(12)
             make.centerX.equalToSuperview()
         }
         subtitleLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(Constants.titleToSubtitleSpacing)
-            make.leading.trailing.equalToSuperview().inset(Constants.horizontalInset)
+            make.top.equalTo(titleLabel.snp.bottom).offset(6)
+            make.leading.trailing.equalToSuperview().inset(Layout.hInset)
         }
 
-        // Name card
-        nameFieldCard.snp.makeConstraints { make in
-            make.top.equalTo(subtitleLabel.snp.bottom).offset(Constants.subtitleToFormSpacing)
-            make.leading.trailing.equalToSuperview().inset(Constants.horizontalInset)
-            make.height.equalTo(Constants.fieldHeight)
+        nameCard.snp.makeConstraints { make in
+            make.top.equalTo(subtitleLabel.snp.bottom).offset(32)
+            make.leading.trailing.equalToSuperview().inset(Layout.hInset)
+            make.height.equalTo(Layout.rowHeight)
         }
         nameField.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(Constants.cardHPad)
+            make.leading.trailing.equalToSuperview().inset(Layout.cardPad)
             make.top.bottom.equalToSuperview().inset(4)
         }
         nameErrorLabel.snp.makeConstraints { make in
-            make.top.equalTo(nameFieldCard.snp.bottom).offset(Constants.errorSpacing)
-            make.leading.trailing.equalToSuperview().inset(Constants.horizontalInset)
+            make.top.equalTo(nameCard.snp.bottom).offset(6)
+            make.leading.trailing.equalToSuperview().inset(Layout.hInset + 4)
         }
 
-        // Country card
-        countryCard.snp.makeConstraints { make in
-            make.top.equalTo(nameErrorLabel.snp.bottom).offset(Constants.formSpacing)
-            make.leading.trailing.equalToSuperview().inset(Constants.horizontalInset)
+        sectionHeaderLabel.snp.makeConstraints { make in
+            make.top.equalTo(nameErrorLabel.snp.bottom).offset(16)
+            make.leading.trailing.equalToSuperview().inset(Layout.hInset + 4)
+        }
+        locationCard.snp.makeConstraints { make in
+            make.top.equalTo(sectionHeaderLabel.snp.bottom).offset(8)
+            make.leading.trailing.equalToSuperview().inset(Layout.hInset)
         }
 
         countryRow.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
-            make.height.equalTo(Constants.fieldHeight)
-        }
-        countryIconView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().inset(Constants.cardHPad)
-            make.centerY.equalToSuperview()
-            make.size.equalTo(22)
+            make.height.equalTo(Layout.rowHeight)
         }
         countryLabel.snp.makeConstraints { make in
-            make.leading.equalTo(countryIconView.snp.trailing).offset(10)
+            make.leading.equalToSuperview().inset(Layout.cardPad)
             make.centerY.equalToSuperview()
             make.trailing.lessThanOrEqualTo(countryChevron.snp.leading).offset(-8)
         }
         countryChevron.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(Constants.cardHPad)
+            make.trailing.equalToSuperview().inset(Layout.cardPad)
             make.centerY.equalToSuperview()
             make.size.equalTo(16)
         }
 
-        cardSeparator.snp.makeConstraints { make in
+        separator.snp.makeConstraints { make in
             make.top.equalTo(countryRow.snp.bottom)
-            make.leading.equalToSuperview().inset(Constants.cardHPad)
+            make.leading.equalToSuperview().inset(Layout.cardPad)
             make.trailing.equalToSuperview()
-            make.height.equalTo(Constants.separatorHeight)
+            make.height.equalTo(Layout.separatorH)
         }
 
         worldCitizenRow.snp.makeConstraints { make in
-            make.top.equalTo(cardSeparator.snp.bottom)
+            make.top.equalTo(separator.snp.bottom)
             make.leading.trailing.bottom.equalToSuperview()
-            make.height.equalTo(Constants.worldCitizenRowHeight)
+            make.height.equalTo(Layout.worldCitizenRowHeight)
         }
         worldCitizenTitleLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().inset(Constants.cardHPad)
+            make.leading.equalToSuperview().inset(Layout.cardPad)
             make.bottom.equalTo(worldCitizenRow.snp.centerY).offset(-1)
-            make.trailing.lessThanOrEqualTo(worldCitizenSwitch.snp.leading).offset(-8)
+            make.trailing.lessThanOrEqualTo(checkmarkImageView.snp.leading).offset(-8)
         }
         worldCitizenSubtitleLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().inset(Constants.cardHPad)
+            make.leading.equalToSuperview().inset(Layout.cardPad)
             make.top.equalTo(worldCitizenRow.snp.centerY).offset(1)
-            make.trailing.lessThanOrEqualTo(worldCitizenSwitch.snp.leading).offset(-8)
+            make.trailing.lessThanOrEqualTo(checkmarkImageView.snp.leading).offset(-8)
         }
-        worldCitizenSwitch.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(Constants.cardHPad)
+        checkmarkImageView.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().inset(Layout.cardPad)
             make.centerY.equalToSuperview()
+            make.size.equalTo(20)
         }
 
         countryErrorLabel.snp.makeConstraints { make in
-            make.top.equalTo(countryCard.snp.bottom).offset(Constants.errorSpacing)
-            make.leading.trailing.equalToSuperview().inset(Constants.horizontalInset)
+            make.top.equalTo(locationCard.snp.bottom).offset(6)
+            make.leading.trailing.equalToSuperview().inset(Layout.hInset + 4)
         }
-
         continueButton.snp.makeConstraints { make in
-            make.top.equalTo(countryErrorLabel.snp.bottom).offset(Constants.formToButtonSpacing)
-            make.leading.trailing.equalToSuperview().inset(Constants.horizontalInset)
-            make.height.equalTo(Constants.buttonHeight)
+            make.top.equalTo(countryErrorLabel.snp.bottom).offset(24)
+            make.leading.trailing.equalToSuperview().inset(Layout.hInset)
+            make.height.equalTo(Layout.buttonHeight)
         }
     }
 
@@ -322,11 +318,8 @@ final class OnboardingViewController: UIViewController {
         nameField.addTarget(self, action: #selector(nameChanged), for: .editingChanged)
         nameField.delegate = self
 
-        let tap = UITapGestureRecognizer(target: self, action: #selector(countryRowTapped))
-        countryRow.addGestureRecognizer(tap)
-        countryRow.isUserInteractionEnabled = true
-
-        worldCitizenSwitch.addTarget(self, action: #selector(worldCitizenToggled), for: .valueChanged)
+        countryRow.addTarget(self, action: #selector(countryRowTapped), for: .touchUpInside)
+        worldCitizenRow.addTarget(self, action: #selector(worldCitizenRowTapped), for: .touchUpInside)
         continueButton.addTarget(self, action: #selector(continueTapped), for: .touchUpInside)
 
         viewModel.onContinueEnabled = { [weak self] enabled in
@@ -343,7 +336,34 @@ final class OnboardingViewController: UIViewController {
         }
     }
 
-    // MARK: - Private
+    // MARK: - State
+
+    private func applyCountrySelection(_ selection: CountrySelection) {
+        currentSelection = selection
+        switch selection {
+        case .none:
+            applyPlaceholderCountry()
+            setCheckmark(visible: false)
+        case .country(let code, let name):
+            countryLabel.text = "\(CountryOption(code: code, name: name).flagEmoji)  \(name)"
+            countryLabel.textColor = .label
+            setCheckmark(visible: false)
+        case .worldCitizen:
+            applyPlaceholderCountry()
+            setCheckmark(visible: true)
+        }
+    }
+
+    private func applyPlaceholderCountry() {
+        countryLabel.text = L10n.Onboarding.Country.placeholder
+        countryLabel.textColor = .placeholderText
+    }
+
+    private func setCheckmark(visible: Bool) {
+        UIView.animate(withDuration: 0.2) {
+            self.checkmarkImageView.alpha = visible ? 1 : 0
+        }
+    }
 
     private func showError(_ message: String?, in label: UILabel?) {
         guard let label else { return }
@@ -355,25 +375,9 @@ final class OnboardingViewController: UIViewController {
         }
     }
 
-    private func applyCountrySelection(_ selection: CountrySelection) {
-        switch selection {
-        case .none:
-            countryLabel.text = L10n.Onboarding.Country.placeholder
-            countryLabel.textColor = .placeholderText
-            countryIconView.image = UIImage(systemName: "globe.americas")
-            worldCitizenSwitch.setOn(false, animated: true)
-        case .country(let code, let name):
-            let flag = CountryOption(code: code, name: name).flagEmoji
-            countryLabel.text = "\(flag)  \(name)"
-            countryLabel.textColor = .label
-            countryIconView.image = nil
-            worldCitizenSwitch.setOn(false, animated: true)
-        case .worldCitizen:
-            countryLabel.text = L10n.Onboarding.Country.placeholder
-            countryLabel.textColor = .placeholderText
-            countryIconView.image = UIImage(systemName: "globe.americas")
-            worldCitizenSwitch.setOn(true, animated: true)
-        }
+    private func addHighlightBehavior(to control: UIControl) {
+        control.addTarget(self, action: #selector(rowHighlighted(_:)), for: [.touchDown, .touchDragEnter])
+        control.addTarget(self, action: #selector(rowUnhighlighted(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel, .touchDragExit])
     }
 
     private func presentCountryPicker() {
@@ -381,8 +385,7 @@ final class OnboardingViewController: UIViewController {
         picker.onSelect = { [weak self] country in
             self?.viewModel.didSelectCountry(country)
         }
-        let nav = UINavigationController(rootViewController: picker)
-        present(nav, animated: true)
+        present(UINavigationController(rootViewController: picker), animated: true)
     }
 
     // MARK: - Actions
@@ -396,12 +399,28 @@ final class OnboardingViewController: UIViewController {
         presentCountryPicker()
     }
 
-    @objc private func worldCitizenToggled() {
-        viewModel.didToggleWorldCitizen(worldCitizenSwitch.isOn)
+    @objc private func worldCitizenRowTapped() {
+        if case .worldCitizen = currentSelection {
+            viewModel.didToggleWorldCitizen(false)
+        } else {
+            viewModel.didToggleWorldCitizen(true)
+        }
     }
 
     @objc private func continueTapped() {
         viewModel.didTapContinue()
+    }
+
+    @objc private func rowHighlighted(_ sender: UIControl) {
+        UIView.animate(withDuration: 0.05) {
+            sender.backgroundColor = .systemFill
+        }
+    }
+
+    @objc private func rowUnhighlighted(_ sender: UIControl) {
+        UIView.animate(withDuration: 0.15) {
+            sender.backgroundColor = .clear
+        }
     }
 }
 

@@ -182,8 +182,8 @@ internal enum L10n {
     internal enum Country {
       /// Country of Residence
       internal static let pickerTitle = L10n.tr("Localizable", "onboarding.country.picker_title", fallback: "Country of Residence")
-      /// Select country...
-      internal static let placeholder = L10n.tr("Localizable", "onboarding.country.placeholder", fallback: "Select country...")
+      /// Select Country
+      internal static let placeholder = L10n.tr("Localizable", "onboarding.country.placeholder", fallback: "Select Country")
     }
     internal enum Error {
       /// Please select a country or choose World Citizen

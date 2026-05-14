@@ -11,7 +11,7 @@
 "map.actions.notes" = "Заметки";
 
 "onboarding.country.picker_title" = "Страна проживания";
-"onboarding.country.placeholder" = "Выберите страну...";
+"onboarding.country.placeholder" = "Выберите страну";
 "onboarding.error.country_required" = "Выберите страну или отметьте «Гражданин мира»";
 "onboarding.world_citizen.subtitle" = "Я не живу в одной стране";
 "onboarding.world_citizen.title" = "Гражданин мира";
