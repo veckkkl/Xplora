@@ -14,12 +14,10 @@ enum ProfileUserSettings {
     }
 
     static let maxNameLength = 40
-    static let defaultName = "valentina balde"
 
     static var currentName: String {
-        let storedName = UserDefaults.standard.string(forKey: Keys.name) ?? defaultName
-        let trimmed = storedName.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? defaultName : trimmed
+        let stored = UserDefaults.standard.string(forKey: Keys.name) ?? ""
+        return stored.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     static var currentStatus: ProfileStatus {
