@@ -33,6 +33,7 @@ enum ProfileItemAction: Equatable {
     case privacyPolicy
     case shareWithFriends
     case deleteData
+    case logout
 }
 
 enum ProfileRowAccessory: Equatable {
