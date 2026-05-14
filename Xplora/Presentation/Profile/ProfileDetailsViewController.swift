@@ -8,12 +8,7 @@ import SnapKit
 import UIKit
 
 final class ProfileDetailsViewController: UIViewController {
-    private enum ProfileNameValidationResult: Equatable {
-        case valid(String)
-        case empty
-        case tooLong(maxLength: Int)
-        case invalidCharacters
-    }
+    private let viewModel = ProfileDetailsViewModel()
 
     private enum Constants {
         static let horizontalInset: CGFloat = 22
@@ -421,7 +416,7 @@ final class ProfileDetailsViewController: UIViewController {
     }
 
     private func handleNameSave(_ input: String) {
-        switch validateProfileName(input) {
+        switch viewModel.validateName(input) {
         case .valid(let normalizedName):
             ProfileUserSettings.saveName(normalizedName)
             refreshProfileData()
@@ -503,7 +498,7 @@ final class ProfileDetailsViewController: UIViewController {
     }
 
     private func updateEditNameValidationState(for rawName: String) {
-        let validation = validateProfileName(rawName)
+        let validation = viewModel.validateName(rawName)
         let isValid: Bool
         let message: String?
 
@@ -550,32 +545,6 @@ final class ProfileDetailsViewController: UIViewController {
         editNameSaveAction = nil
     }
 
-    private func validateProfileName(_ name: String) -> ProfileNameValidationResult {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !trimmed.isEmpty else {
-            return .empty
-        }
-
-        guard trimmed.count <= ProfileUserSettings.maxNameLength else {
-            return .tooLong(maxLength: ProfileUserSettings.maxNameLength)
-        }
-
-        guard isAllowedProfileNameCharacters(trimmed) else {
-            return .invalidCharacters
-        }
-
-        return .valid(trimmed)
-    }
-
-    private func isAllowedProfileNameCharacters(_ name: String) -> Bool {
-        for scalar in name.unicodeScalars {
-            if CharacterSet.letters.contains(scalar) { continue }
-            if scalar == " " || scalar == "-" || scalar == "'" || scalar == "." { continue }
-            return false
-        }
-        return true
-    }
 }
 
 private final class AvatarPreviewViewController: UIViewController {

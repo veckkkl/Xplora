@@ -30,15 +30,11 @@ protocol ProfileViewModelOutput: AnyObject {
 
 @MainActor
 final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
-    private enum Constants {
-        static let darkThemeEnabledKey = "profile.dark_theme_enabled"
-    }
-
     var onSectionsChange: (([ProfileSectionModel]) -> Void)?
     var onRoute: ((ProfileRoute) -> Void)?
 
     private var sections: [ProfileSectionModel] = []
-    private var isDarkThemeEnabled = UserDefaults.standard.bool(forKey: Constants.darkThemeEnabledKey)
+    private var isDarkThemeEnabled = AppThemeManager.isDarkThemeEnabled
 
     func viewDidLoad() {
         refreshSections()
@@ -64,7 +60,7 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
 
     func didToggleDarkTheme(_ isOn: Bool) {
         isDarkThemeEnabled = isOn
-        UserDefaults.standard.set(isOn, forKey: Constants.darkThemeEnabledKey)
+        AppThemeManager.apply(isDark: isOn)
         refreshSections()
     }
 
