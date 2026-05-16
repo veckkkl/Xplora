@@ -9,9 +9,10 @@ import Foundation
 
 struct Trip: Identifiable, Equatable, Codable {
     let id: UUID
-    let title: String
+    let country: Country
     let startDate: Date
-    let endDate: Date?
+    let endDate: Date
+    let notesCount: Int
     let visitedPlaces: [VisitedPlace]
 }
 

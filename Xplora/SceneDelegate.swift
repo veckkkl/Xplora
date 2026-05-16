@@ -55,15 +55,35 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let getVisitedCountriesUseCase: GetVisitedCountriesUseCase =
             GetVisitedCountriesUseCaseImpl(placesRepo: placesRepo)
 
-        let getTripsTimelineUseCase: GetTripsTimelineUseCase =
-            GetTripsTimelineUseCaseImpl(tripsRepo: tripsRepo)
-
         let addVisitedPlaceUseCase: AddVisitedPlaceUseCase =
             AddVisitedPlaceUseCaseImpl(placesRepo: placesRepo)
 
+        let validateTripDateRangeUseCase: ValidateTripDateRangeUseCase =
+            ValidateTripDateRangeUseCaseImpl()
+
+        let getTripsUseCase: GetTripsUseCase =
+            GetTripsUseCaseImpl(tripsRepo: tripsRepo)
+
+        let createTripUseCase: CreateTripUseCase =
+            CreateTripUseCaseImpl(tripsRepo: tripsRepo, validateDates: validateTripDateRangeUseCase)
+
+        let updateTripDatesUseCase: UpdateTripDatesUseCase =
+            UpdateTripDatesUseCaseImpl(tripsRepo: tripsRepo, validateDates: validateTripDateRangeUseCase)
+
+        let deleteTripUseCase: DeleteTripUseCase =
+            DeleteTripUseCaseImpl(tripsRepo: tripsRepo)
+
+        let tripNotesCountProvider: TripNotesCountProviding =
+            StoredTripNotesCountProvider(tripsRepo: tripsRepo)
+
         locator.register(GetVisitedCountriesUseCase.self, instance: getVisitedCountriesUseCase)
-        locator.register(GetTripsTimelineUseCase.self, instance: getTripsTimelineUseCase)
         locator.register(AddVisitedPlaceUseCase.self, instance: addVisitedPlaceUseCase)
+        locator.register(ValidateTripDateRangeUseCase.self, instance: validateTripDateRangeUseCase)
+        locator.register(GetTripsUseCase.self, instance: getTripsUseCase)
+        locator.register(CreateTripUseCase.self, instance: createTripUseCase)
+        locator.register(UpdateTripDatesUseCase.self, instance: updateTripDatesUseCase)
+        locator.register(DeleteTripUseCase.self, instance: deleteTripUseCase)
+        locator.register(TripNotesCountProviding.self, instance: tripNotesCountProvider)
 
         let getNoteUseCase: GetNoteUseCase = GetNoteUseCaseImpl(notesRepo: notesRepo)
         let getAllNotesUseCase: GetAllNotesUseCase = GetAllNotesUseCaseImpl(notesRepo: notesRepo)

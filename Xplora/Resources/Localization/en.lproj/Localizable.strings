@@ -55,6 +55,23 @@
 
 "placeholder.stub_format" = "%@ (stub)";
 
+"timeline.empty.title" = "No trips yet";
+"timeline.error.load" = "Couldn't load trips. Please try again.";
+"timeline.trip.notes.one" = "1 note";
+"timeline.trip.notes.other" = "%d notes";
+"timeline.menu.edit_dates" = "Edit dates";
+"timeline.menu.delete" = "Delete";
+"timeline.delete.alert.title" = "Delete trip?";
+"timeline.delete.alert.message" = "This action can't be undone. Notes from this trip will be kept.";
+"timeline.delete.error" = "Couldn't delete the trip. Please try again.";
+"timeline.date_range.title.edit" = "Edit dates";
+"timeline.date_range.title.create" = "New trip";
+"timeline.date_range.start" = "Start date";
+"timeline.date_range.end" = "End date";
+"timeline.date_range.error.end_before_start" = "End date must be on or after start date.";
+"timeline.date_range.error.start_in_future" = "Start date can't be in the future.";
+"timeline.date_range.error.save" = "Couldn't save the changes. Please try again.";
+
 "tab.profile" = "Profile";
 "tab.statistics" = "Statistics";
 "tab.timeline" = "Timeline";

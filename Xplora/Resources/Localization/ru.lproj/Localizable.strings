@@ -55,6 +55,23 @@
 
 "placeholder.stub_format" = "%@ (заглушка)";
 
+"timeline.empty.title" = "Поездок пока нет";
+"timeline.error.load" = "Не удалось загрузить поездки. Попробуйте ещё раз.";
+"timeline.trip.notes.one" = "1 заметка";
+"timeline.trip.notes.other" = "%d заметок";
+"timeline.menu.edit_dates" = "Изменить даты";
+"timeline.menu.delete" = "Удалить";
+"timeline.delete.alert.title" = "Удалить поездку?";
+"timeline.delete.alert.message" = "Это действие нельзя отменить. Заметки этой поездки сохранятся.";
+"timeline.delete.error" = "Не удалось удалить поездку. Попробуйте ещё раз.";
+"timeline.date_range.title.edit" = "Изменить даты";
+"timeline.date_range.title.create" = "Новая поездка";
+"timeline.date_range.start" = "Начало";
+"timeline.date_range.end" = "Окончание";
+"timeline.date_range.error.end_before_start" = "Дата окончания должна быть в день начала или позже.";
+"timeline.date_range.error.start_in_future" = "Дата начала не может быть в будущем.";
+"timeline.date_range.error.save" = "Не удалось сохранить изменения. Попробуйте ещё раз.";
+
 "tab.profile" = "Профиль";
 "tab.statistics" = "Статистика";
 "tab.timeline" = "Хронология";

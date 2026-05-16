@@ -178,6 +178,60 @@ internal enum L10n {
       internal static let untitled = L10n.tr("Localizable", "notes.presentation.untitled", fallback: "Untitled")
     }
   }
+  internal enum Timeline {
+    internal enum Empty {
+      /// No trips yet
+      internal static let title = L10n.tr("Localizable", "timeline.empty.title", fallback: "No trips yet")
+    }
+    internal enum Error {
+      /// Couldn't load trips. Please try again.
+      internal static let load = L10n.tr("Localizable", "timeline.error.load", fallback: "Couldn't load trips. Please try again.")
+    }
+    internal enum Trip {
+      /// 1 note
+      internal static let notesOne = L10n.tr("Localizable", "timeline.trip.notes.one", fallback: "1 note")
+      /// %d notes
+      internal static func notesOther(_ p1: Int) -> String {
+        L10n.tr("Localizable", "timeline.trip.notes.other", p1, fallback: "%d notes")
+      }
+    }
+    internal enum Menu {
+      /// Edit dates
+      internal static let editDates = L10n.tr("Localizable", "timeline.menu.edit_dates", fallback: "Edit dates")
+      /// Delete
+      internal static let delete = L10n.tr("Localizable", "timeline.menu.delete", fallback: "Delete")
+    }
+    internal enum Delete {
+      /// Couldn't delete the trip. Please try again.
+      internal static let error = L10n.tr("Localizable", "timeline.delete.error", fallback: "Couldn't delete the trip. Please try again.")
+      internal enum Alert {
+        /// Delete trip?
+        internal static let title = L10n.tr("Localizable", "timeline.delete.alert.title", fallback: "Delete trip?")
+        /// This action can't be undone. Notes from this trip will be kept.
+        internal static let message = L10n.tr("Localizable", "timeline.delete.alert.message", fallback: "This action can't be undone. Notes from this trip will be kept.")
+      }
+    }
+    internal enum DateRange {
+      /// Start date
+      internal static let start = L10n.tr("Localizable", "timeline.date_range.start", fallback: "Start date")
+      /// End date
+      internal static let end = L10n.tr("Localizable", "timeline.date_range.end", fallback: "End date")
+      internal enum Title {
+        /// Edit dates
+        internal static let edit = L10n.tr("Localizable", "timeline.date_range.title.edit", fallback: "Edit dates")
+        /// New trip
+        internal static let create = L10n.tr("Localizable", "timeline.date_range.title.create", fallback: "New trip")
+      }
+      internal enum Error {
+        /// End date must be on or after start date.
+        internal static let endBeforeStart = L10n.tr("Localizable", "timeline.date_range.error.end_before_start", fallback: "End date must be on or after start date.")
+        /// Start date can't be in the future.
+        internal static let startInFuture = L10n.tr("Localizable", "timeline.date_range.error.start_in_future", fallback: "Start date can't be in the future.")
+        /// Couldn't save the changes. Please try again.
+        internal static let save = L10n.tr("Localizable", "timeline.date_range.error.save", fallback: "Couldn't save the changes. Please try again.")
+      }
+    }
+  }
   internal enum Placeholder {
     /// %@ (stub)
     internal static func stubFormat(_ p1: Any) -> String {

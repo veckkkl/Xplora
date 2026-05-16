@@ -12,20 +12,30 @@ final class AppCoordinator {
     private let window: UIWindow
     private let locator: ServiceLocator
     private var mapCoordinator: MapCoordinator?
-    
+    private var timelineCoordinator: TimelineCoordinator?
+
     init(window: UIWindow, locator: ServiceLocator = .shared) {
         self.window = window
         self.locator = locator
     }
-    
+
     @MainActor
     func start() {
         let tabBarController = MainTabBarController()
 
         let wishlistNav = makePlaceholderNav(title: L10n.Tab.wishlist, systemImageName: "heart")
-        let timelineNav = makePlaceholderNav(title: L10n.Tab.timeline, systemImageName: "clock")
         let statisticsNav = makePlaceholderNav(title: L10n.Tab.statistics, systemImageName: "chart.bar.xaxis")
         let profileNav = makePlaceholderNav(title: L10n.Tab.profile, systemImageName: "person.crop.circle")
+
+        let timelineNav = UINavigationController()
+        timelineNav.tabBarItem = UITabBarItem(
+            title: L10n.Tab.timeline,
+            image: UIImage(systemName: "clock"),
+            selectedImage: UIImage(systemName: "clock")
+        )
+        let timelineCoordinator = TimelineCoordinator(navigationController: timelineNav, locator: locator)
+        timelineCoordinator.start()
+        self.timelineCoordinator = timelineCoordinator
 
         let mapNav = UINavigationController()
         mapNav.tabBarItem = UITabBarItem(title: L10n.Common.map, image: UIImage(systemName: "globe.europe.africa"), selectedImage: UIImage(systemName: "globe.europe.africa"))
