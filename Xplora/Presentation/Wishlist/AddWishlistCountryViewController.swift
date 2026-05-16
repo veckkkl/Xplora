@@ -9,6 +9,7 @@ final class AddWishlistCountryViewController: UIViewController {
     var onSelect: ((WishlistCountry) -> Void)?
 
     private let getCatalogPlacesUseCase: GetCatalogPlacesUseCase
+    private let getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase
 
     private let searchBar = UISearchBar()
     private let tableView = UITableView(frame: .zero, style: .plain)
@@ -20,7 +21,6 @@ final class AddWishlistCountryViewController: UIViewController {
     private let retryButton = UIButton(type: .system)
     private var currentLocationBarButton: UIBarButtonItem?
 
-    private let suggestionsProvider: CitySuggestionsProviding = StaticCitySuggestionsProvider()
     private let locationProvider: CurrentCountryProviding = CurrentCountryProvider()
 
     private var places: [CatalogPlace] = []
@@ -28,13 +28,18 @@ final class AddWishlistCountryViewController: UIViewController {
     private var searchQuery = ""
 
     private var selectedPlace: CatalogPlace? { didSet { updateAddButton() } }
-    private var selectedSuggestion: CitySuggestion?
+    private var selectedCity: CatalogCity?
+    private var citiesForSelectedPlace: [CatalogCity] = []
     private var cityText = ""
 
     private let screenBackground = UIColor.systemBackground
 
-    init(getCatalogPlacesUseCase: GetCatalogPlacesUseCase) {
+    init(
+        getCatalogPlacesUseCase: GetCatalogPlacesUseCase,
+        getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase
+    ) {
         self.getCatalogPlacesUseCase = getCatalogPlacesUseCase
+        self.getCitiesForPlaceUseCase = getCitiesForPlaceUseCase
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -257,10 +262,24 @@ final class AddWishlistCountryViewController: UIViewController {
         searchQuery = ""
         searchBar.text = ""
         selectedPlace = place
-        selectedSuggestion = nil
+        selectedCity = nil
+        citiesForSelectedPlace = []
         cityText = ""
         rebuildSections()
         scrollToSelectedPlace()
+        loadCities(for: place)
+    }
+
+    private func loadCities(for place: CatalogPlace) {
+        let placeCode = place.code
+        Task { [weak self] in
+            guard let self else { return }
+            let result = (try? await self.getCitiesForPlaceUseCase.execute(placeCode: placeCode)) ?? []
+            // Drop the result if the selection moved on while loading.
+            guard self.selectedPlace?.code == placeCode else { return }
+            self.citiesForSelectedPlace = result
+            self.rebuildSections()
+        }
     }
 
     private func scrollToSelectedPlace() {
@@ -305,13 +324,24 @@ final class AddWishlistCountryViewController: UIViewController {
     @objc private func didTapAdd() {
         guard let place = selectedPlace else { return }
         let trimmed = cityText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // If a curated city was chosen, prefer its localization key. Otherwise
+        // fall back to the typed text (or the city's fallback name if it has
+        // no L10n key) so the WishlistCountry round-trips correctly later.
+        let cityKey = selectedCity.flatMap(\.nameKey)
+        let note: String? = {
+            if let cityKey, !cityKey.isEmpty { return nil }
+            if let city = selectedCity { return city.fallbackName }
+            return trimmed.isEmpty ? nil : trimmed
+        }()
+
         let country = WishlistCountry(
             id: UUID(),
             code: place.code,
             flag: place.flag,
             name: place.name,
-            cityKey: selectedSuggestion?.key,
-            note: selectedSuggestion == nil && !trimmed.isEmpty ? trimmed : nil,
+            cityKey: cityKey,
+            note: note,
             isCompleted: false,
             addedAt: Date()
         )
@@ -354,7 +384,8 @@ extension AddWishlistCountryViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         searchQuery = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         selectedPlace = nil
-        selectedSuggestion = nil
+        selectedCity = nil
+        citiesForSelectedPlace = []
         cityText = ""
         rebuildSections()
     }
@@ -431,25 +462,25 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
         cell.backgroundColor = selectedTint
         cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
 
-        let suggestions = suggestionsProvider.suggestions(for: countryCode)
-        cell.configure(cityText: cityText, selectedSuggestion: selectedSuggestion, suggestions: suggestions)
+        let cities = citiesForSelectedPlace
+        cell.configure(cityText: cityText, selectedCity: selectedCity, cities: cities)
 
         cell.onCityTextChanged = { [weak self] text in
             guard let self else { return }
-            let hadSuggestion = selectedSuggestion != nil
+            let hadSelection = selectedCity != nil
             cityText = text
-            if hadSuggestion && text != selectedSuggestion?.displayName {
-                selectedSuggestion = nil
+            if hadSelection && text != selectedCity?.displayName {
+                selectedCity = nil
                 (tableView.cellForRow(at: indexPath) as? CityEntryCell)?.updateChipSelection(nil)
             }
         }
 
-        cell.onSuggestionSelected = { [weak self] suggestion in
+        cell.onCitySelected = { [weak self] city in
             guard let self else { return }
-            selectedSuggestion = suggestion
-            cityText = suggestion.displayName
+            selectedCity = city
+            cityText = city.displayName
             (tableView.cellForRow(at: indexPath) as? CityEntryCell)?
-                .configure(cityText: cityText, selectedSuggestion: selectedSuggestion, suggestions: suggestions)
+                .configure(cityText: cityText, selectedCity: selectedCity, cities: cities)
         }
 
         return cell
@@ -464,9 +495,11 @@ extension AddWishlistCountryViewController: UITableViewDelegate {
         guard case .country(let place) = sections[indexPath.section].rows[indexPath.row] else { return }
         let isSame = place.code == selectedPlace?.code
         selectedPlace = isSame ? nil : place
-        selectedSuggestion = nil
+        selectedCity = nil
+        citiesForSelectedPlace = []
         cityText = ""
         rebuildSections()
+        if let newPlace = selectedPlace { loadCities(for: newPlace) }
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {

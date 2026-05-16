@@ -8,7 +8,7 @@ final class CityEntryCell: UITableViewCell {
     static let reuseIdentifier = "CityEntryCell"
 
     var onCityTextChanged: ((String) -> Void)?
-    var onSuggestionSelected: ((CitySuggestion) -> Void)?
+    var onCitySelected: ((CatalogCity) -> Void)?
 
     private let containerView = UIView()
     private let inputWrapper = UIView()
@@ -33,22 +33,22 @@ final class CityEntryCell: UITableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         onCityTextChanged = nil
-        onSuggestionSelected = nil
+        onCitySelected = nil
         clearChips()
     }
 
     // MARK: - Configuration
 
-    func configure(cityText: String, selectedSuggestion: CitySuggestion?, suggestions: [CitySuggestion]) {
+    func configure(cityText: String, selectedCity: CatalogCity?, cities: [CatalogCity]) {
         if cityTextField.text != cityText { cityTextField.text = cityText }
-        rebuildChips(suggestions: suggestions, selected: selectedSuggestion)
+        rebuildChips(cities: cities, selected: selectedCity)
     }
 
-    func updateChipSelection(_ selected: CitySuggestion?) {
+    func updateChipSelection(_ selected: CatalogCity?) {
         for rowStack in chipsStackView.arrangedSubviews.compactMap({ $0 as? UIStackView }) {
             for chip in rowStack.arrangedSubviews.compactMap({ $0 as? CitySuggestionChipView }) {
-                guard let s = chip.suggestion else { continue }
-                chip.configure(suggestion: s, isSelected: s == selected)
+                guard let city = chip.city else { continue }
+                chip.configure(city: city, isSelected: city == selected)
             }
         }
     }
@@ -138,9 +138,9 @@ final class CityEntryCell: UITableViewCell {
 
     // MARK: - Chips
 
-    private func rebuildChips(suggestions: [CitySuggestion], selected: CitySuggestion?) {
+    private func rebuildChips(cities: [CatalogCity], selected: CatalogCity?) {
         clearChips()
-        guard !suggestions.isEmpty else {
+        guard !cities.isEmpty else {
             chipsTopToInputBottom.isActive = false
             chipsBottomToContainer.isActive = false
             inputToContainerBottom.isActive = true
@@ -150,15 +150,15 @@ final class CityEntryCell: UITableViewCell {
         chipsTopToInputBottom.isActive = true
         chipsBottomToContainer.isActive = true
 
-        for chunk in suggestions.chunked(into: 2) {
+        for chunk in cities.chunked(into: 2) {
             let rowStack = UIStackView()
             rowStack.axis = .horizontal
             rowStack.spacing = 10
             rowStack.distribution = .fillEqually
 
-            for suggestion in chunk {
+            for city in chunk {
                 let chip = CitySuggestionChipView()
-                chip.configure(suggestion: suggestion, isSelected: suggestion == selected)
+                chip.configure(city: city, isSelected: city == selected)
                 chip.addTarget(self, action: #selector(chipTapped(_:)), for: .touchUpInside)
                 rowStack.addArrangedSubview(chip)
             }
@@ -176,9 +176,9 @@ final class CityEntryCell: UITableViewCell {
     // MARK: - Actions
 
     @objc private func chipTapped(_ sender: CitySuggestionChipView) {
-        guard let suggestion = sender.suggestion else { return }
-        cityTextField.text = suggestion.displayName
-        onSuggestionSelected?(suggestion)
+        guard let city = sender.city else { return }
+        cityTextField.text = city.displayName
+        onCitySelected?(city)
     }
 
     @objc private func textDidChange() {

@@ -98,6 +98,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         locator.register(CatalogPlacesRepo.self, instance: catalogPlacesRepo)
         locator.register(GetCatalogPlacesUseCase.self, instance: getCatalogPlacesUseCase)
+
+        // Cities catalog (bundled, gated by CatalogPlacePolicy)
+        let citiesCatalogRepo: CitiesCatalogRepo = CitiesCatalogRepoImpl()
+        let getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase =
+            GetCitiesForPlaceUseCaseImpl(repo: citiesCatalogRepo)
+        let searchCitiesUseCase: SearchCitiesUseCase =
+            SearchCitiesUseCaseImpl(repo: citiesCatalogRepo)
+
+        locator.register(CitiesCatalogRepo.self, instance: citiesCatalogRepo)
+        locator.register(GetCitiesForPlaceUseCase.self, instance: getCitiesForPlaceUseCase)
+        locator.register(SearchCitiesUseCase.self, instance: searchCitiesUseCase)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

@@ -8,6 +8,7 @@ import UIKit
 final class WishlistViewController: UIViewController {
     private let viewModel: WishlistViewModelInput & WishlistViewModelOutput
     private let getCatalogPlacesUseCase: GetCatalogPlacesUseCase
+    private let getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase
 
     private var collectionView: UICollectionView!
     private var dataSource: UICollectionViewDiffableDataSource<Int, WishlistCountry>!
@@ -15,10 +16,12 @@ final class WishlistViewController: UIViewController {
 
     init(
         viewModel: WishlistViewModelInput & WishlistViewModelOutput,
-        getCatalogPlacesUseCase: GetCatalogPlacesUseCase
+        getCatalogPlacesUseCase: GetCatalogPlacesUseCase,
+        getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase
     ) {
         self.viewModel = viewModel
         self.getCatalogPlacesUseCase = getCatalogPlacesUseCase
+        self.getCitiesForPlaceUseCase = getCitiesForPlaceUseCase
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -187,7 +190,10 @@ final class WishlistViewController: UIViewController {
     }
 
     private func showAddCountry() {
-        let vc = AddWishlistCountryViewController(getCatalogPlacesUseCase: getCatalogPlacesUseCase)
+        let vc = AddWishlistCountryViewController(
+            getCatalogPlacesUseCase: getCatalogPlacesUseCase,
+            getCitiesForPlaceUseCase: getCitiesForPlaceUseCase
+        )
         vc.onSelect = { [weak self] country in self?.viewModel.didSelect(country: country) }
         let nav = UINavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .fullScreen

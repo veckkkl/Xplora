@@ -4,7 +4,7 @@
 import UIKit
 
 final class CitySuggestionChipView: UIButton {
-    private(set) var suggestion: CitySuggestion?
+    private(set) var city: CatalogCity?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -16,11 +16,11 @@ final class CitySuggestionChipView: UIButton {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func configure(suggestion: CitySuggestion, isSelected: Bool) {
-        self.suggestion = suggestion
+    func configure(city: CatalogCity, isSelected: Bool) {
+        self.city = city
 
         var config = UIButton.Configuration.plain()
-        config.title = suggestion.displayName
+        config.title = city.displayName
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 14, bottom: 8, trailing: 14)
         config.baseForegroundColor = isSelected ? .systemBlue : .label
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
