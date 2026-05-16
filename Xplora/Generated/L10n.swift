@@ -940,8 +940,14 @@ internal enum L10n {
     internal enum Select {
       /// Add current location
       internal static let currentLocation = L10n.tr("Localizable", "wishlist.select.current_location", fallback: "Add current location")
+      /// Retry
+      internal static let retry = L10n.tr("Localizable", "wishlist.select.retry", fallback: "Retry")
       /// Select destination
       internal static let title = L10n.tr("Localizable", "wishlist.select.title", fallback: "Select destination")
+      internal enum Error {
+        /// Couldn't load countries. Check your internet connection.
+        internal static let load = L10n.tr("Localizable", "wishlist.select.error.load", fallback: "Couldn't load countries. Check your internet connection.")
+      }
     }
   }
 }

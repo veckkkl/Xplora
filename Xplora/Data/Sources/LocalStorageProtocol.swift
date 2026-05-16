@@ -19,4 +19,5 @@ protocol LocalStorageProtocol: AnyObject {
     var countries: [Country] { get set }
     var settings: UserSettings { get set }
     var wishlistCountries: [WishlistCountry] { get set }
+    var cachedCountryCodes: [String]? { get set }
 }

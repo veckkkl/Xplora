@@ -70,6 +70,8 @@
 "wishlist.duplicate.title" = "Already in wishlist";
 "wishlist.select.title" = "Select destination";
 "wishlist.select.current_location" = "Add current location";
+"wishlist.select.error.load" = "Couldn't load countries. Check your internet connection.";
+"wishlist.select.retry" = "Retry";
 "wishlist.duplicate.message" = "This place is already in your wishlist.";
 
 "wishlist.confirm.countryOnlyExists.title" = "Country already added";

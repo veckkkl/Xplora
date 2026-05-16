@@ -87,6 +87,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         locator.register(AddWishlistCountryUseCase.self, instance: addWishlistUseCase)
         locator.register(RemoveWishlistCountryUseCase.self, instance: removeWishlistUseCase)
         locator.register(ToggleWishlistCountryUseCase.self, instance: toggleWishlistUseCase)
+
+        // Countries catalog (API-backed with local cache)
+        let countriesAPIClient: CountriesAPIClient = CountriesNowAPIClient()
+        let countriesCatalogRepo: CountriesCatalogRepo =
+            CountriesCatalogRepoImpl(api: countriesAPIClient, storage: storage)
+        let getCountriesCatalogUseCase: GetCountriesCatalogUseCase =
+            GetCountriesCatalogUseCaseImpl(repo: countriesCatalogRepo)
+
+        locator.register(CountriesCatalogRepo.self, instance: countriesCatalogRepo)
+        locator.register(GetCountriesCatalogUseCase.self, instance: getCountriesCatalogUseCase)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

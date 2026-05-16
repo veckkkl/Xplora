@@ -70,6 +70,8 @@
 "wishlist.duplicate.title" = "Уже в вишлисте";
 "wishlist.select.title" = "Выбор направления";
 "wishlist.select.current_location" = "Добавить текущее местоположение";
+"wishlist.select.error.load" = "Не удалось загрузить страны. Проверьте интернет.";
+"wishlist.select.retry" = "Повторить";
 "wishlist.duplicate.message" = "Это место уже есть в вишлисте.";
 
 "wishlist.confirm.countryOnlyExists.title" = "Страна уже добавлена";

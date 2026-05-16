@@ -8,13 +8,22 @@ import UIKit
 final class AddWishlistCountryViewController: UIViewController {
     var onSelect: ((WishlistCountry) -> Void)?
 
+    private let getCountriesUseCase: GetCountriesCatalogUseCase
+
     private let searchBar = UISearchBar()
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let addButton = UIButton(type: .system)
 
+    private let loadingIndicator = UIActivityIndicatorView(style: .large)
+    private let errorContainer = UIView()
+    private let errorLabel = UILabel()
+    private let retryButton = UIButton(type: .system)
+    private var currentLocationBarButton: UIBarButtonItem?
+
     private let suggestionsProvider: CitySuggestionsProviding = StaticCitySuggestionsProvider()
     private let locationProvider: CurrentCountryProviding = CurrentCountryProvider()
 
+    private var countries: [CatalogCountry] = []
     private var sections: [CountrySection] = []
     private var searchQuery = ""
 
@@ -22,15 +31,22 @@ final class AddWishlistCountryViewController: UIViewController {
     private var selectedSuggestion: CitySuggestion?
     private var cityText = ""
 
+    private let screenBackground = UIColor.systemBackground
+
+    init(getCountriesUseCase: GetCountriesCatalogUseCase) {
+        self.getCountriesUseCase = getCountriesUseCase
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        rebuildSections()
+        loadCountries()
     }
-
-    // Unified background for the full-screen Select Destination flow.
-    // Full-screen presentation owns its own surface, so systemBackground is correct here.
-    private let screenBackground = UIColor.systemBackground
 
     // MARK: - Setup
 
@@ -44,12 +60,15 @@ final class AddWishlistCountryViewController: UIViewController {
                 self?.dismiss(animated: true)
             }
         )
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
+        let currentLocationItem = UIBarButtonItem(
             title: L10n.Wishlist.Select.currentLocation,
             style: .plain,
             target: self,
             action: #selector(didTapAddCurrentLocation)
         )
+        currentLocationItem.isEnabled = false
+        navigationItem.rightBarButtonItem = currentLocationItem
+        currentLocationBarButton = currentLocationItem
 
         searchBar.placeholder = L10n.Wishlist.Search.placeholder
         searchBar.searchBarStyle = .minimal
@@ -68,7 +87,7 @@ final class AddWishlistCountryViewController: UIViewController {
         tableView.delegate = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "CountryCell")
         tableView.register(CityEntryCell.self, forCellReuseIdentifier: CityEntryCell.reuseIdentifier)
-        if #available(iOS 15.0, *) { tableView.sectionHeaderTopPadding = 0 }
+        tableView.sectionHeaderTopPadding = 0
         tableView.tableFooterView = UIView()
         tableView.tableFooterView?.backgroundColor = screenBackground
 
@@ -81,9 +100,35 @@ final class AddWishlistCountryViewController: UIViewController {
         addButton.isHidden = true
         addButton.addTarget(self, action: #selector(didTapAdd), for: .touchUpInside)
 
+        loadingIndicator.hidesWhenStopped = true
+
+        errorContainer.isHidden = true
+        errorLabel.font = .systemFont(ofSize: 15, weight: .regular)
+        errorLabel.textColor = .secondaryLabel
+        errorLabel.textAlignment = .center
+        errorLabel.numberOfLines = 0
+        var retryConfig = UIButton.Configuration.borderedTinted()
+        retryConfig.title = L10n.Wishlist.Select.retry
+        retryConfig.cornerStyle = .large
+        retryButton.configuration = retryConfig
+        retryButton.addTarget(self, action: #selector(didTapRetry), for: .touchUpInside)
+
+        let errorStack = UIStackView(arrangedSubviews: [errorLabel, retryButton])
+        errorStack.axis = .vertical
+        errorStack.spacing = 16
+        errorStack.alignment = .center
+        errorContainer.addSubview(errorStack)
+        errorStack.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.leading.greaterThanOrEqualToSuperview().offset(24)
+            make.trailing.lessThanOrEqualToSuperview().offset(-24)
+        }
+
         view.addSubview(searchBar)
         view.addSubview(tableView)
         view.addSubview(addButton)
+        view.addSubview(loadingIndicator)
+        view.addSubview(errorContainer)
 
         searchBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
@@ -100,6 +145,61 @@ final class AddWishlistCountryViewController: UIViewController {
             make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-8)
             make.height.equalTo(52)
         }
+        loadingIndicator.snp.makeConstraints { make in
+            make.center.equalTo(view.safeAreaLayoutGuide)
+        }
+        errorContainer.snp.makeConstraints { make in
+            make.edges.equalTo(view.safeAreaLayoutGuide)
+        }
+    }
+
+    // MARK: - Loading
+
+    private func loadCountries() {
+        showLoading()
+
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let result = try await getCountriesUseCase.execute()
+                self.countries = result
+                self.showLoaded()
+            } catch {
+                self.showError()
+            }
+        }
+    }
+
+    private func showLoading() {
+        searchBar.isHidden = true
+        tableView.isHidden = true
+        addButton.isHidden = true
+        errorContainer.isHidden = true
+        loadingIndicator.startAnimating()
+        currentLocationBarButton?.isEnabled = false
+    }
+
+    private func showLoaded() {
+        loadingIndicator.stopAnimating()
+        errorContainer.isHidden = true
+        searchBar.isHidden = false
+        tableView.isHidden = false
+        currentLocationBarButton?.isEnabled = true
+        rebuildSections()
+    }
+
+    private func showError() {
+        loadingIndicator.stopAnimating()
+        searchBar.isHidden = true
+        tableView.isHidden = true
+        addButton.isHidden = true
+        errorLabel.text = L10n.Wishlist.Select.Error.load
+        errorContainer.isHidden = false
+        currentLocationBarButton?.isEnabled = false
+    }
+
+    @objc private func didTapRetry() {
+        loadCountries()
     }
 
     // MARK: - Sections
@@ -107,7 +207,7 @@ final class AddWishlistCountryViewController: UIViewController {
     private func rebuildSections() {
         if searchQuery.isEmpty {
             sections = Continent.allCases.compactMap { continent in
-                let rows = CountryCatalog.all
+                let rows = countries
                     .filter { $0.continent == continent }
                     .sorted { $0.localizedName.localizedCompare($1.localizedName) == .orderedAscending }
                     .flatMap { expandedRows(for: $0) }
@@ -116,7 +216,7 @@ final class AddWishlistCountryViewController: UIViewController {
         } else {
             let normalized = searchQuery
                 .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
-            let rows = CountryCatalog.all
+            let rows = countries
                 .filter {
                     $0.localizedName
                         .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
@@ -160,7 +260,7 @@ final class AddWishlistCountryViewController: UIViewController {
     }
 
     private func selectCountry(byCode code: String) {
-        guard let country = CountryCatalog.all.first(where: { $0.code == code }) else {
+        guard let country = countries.first(where: { $0.code == code }) else {
             showLocationError(.countryNotFound)
             return
         }
