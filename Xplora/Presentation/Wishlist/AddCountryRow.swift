@@ -4,11 +4,15 @@
 import Foundation
 
 enum AddCountryRow: Hashable {
-    case country(CatalogCountry)
+    case country(CatalogPlace)
     case cityEntry(countryCode: String)
 }
 
 struct CountrySection {
-    let continent: Continent?   // nil = flat results during search
+    /// `nil`        → flat search-results section (no header).
+    /// `.other`     → fallback bucket for supported places whose continent
+    ///                couldn't be classified (header is "Other").
+    /// any other    → standard continent header.
+    let continent: Continent?
     let rows: [AddCountryRow]
 }

@@ -95,6 +95,7 @@
 "continent.southAmerica" = "Южная Америка";
 "continent.oceania" = "Океания";
 "continent.antarctica" = "Антарктида";
+"continent.other" = "Другое";
 
 "country.AQ" = "Антарктида";
 "country.TF" = "Французские Южные территории";

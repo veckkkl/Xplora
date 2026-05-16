@@ -88,15 +88,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         locator.register(RemoveWishlistCountryUseCase.self, instance: removeWishlistUseCase)
         locator.register(ToggleWishlistCountryUseCase.self, instance: toggleWishlistUseCase)
 
-        // Countries catalog (API-backed with local cache)
+        // Place catalog. The source of truth is `CatalogPlacePolicy`; the API
+        // client refreshes the cache in the background as a validation step.
         let countriesAPIClient: CountriesAPIClient = CountriesNowAPIClient()
-        let countriesCatalogRepo: CountriesCatalogRepo =
-            CountriesCatalogRepoImpl(api: countriesAPIClient, storage: storage)
-        let getCountriesCatalogUseCase: GetCountriesCatalogUseCase =
-            GetCountriesCatalogUseCaseImpl(repo: countriesCatalogRepo)
+        let catalogPlacesRepo: CatalogPlacesRepo =
+            CatalogPlacesRepoImpl(api: countriesAPIClient, storage: storage)
+        let getCatalogPlacesUseCase: GetCatalogPlacesUseCase =
+            GetCatalogPlacesUseCaseImpl(repo: catalogPlacesRepo)
 
-        locator.register(CountriesCatalogRepo.self, instance: countriesCatalogRepo)
-        locator.register(GetCountriesCatalogUseCase.self, instance: getCountriesCatalogUseCase)
+        locator.register(CatalogPlacesRepo.self, instance: catalogPlacesRepo)
+        locator.register(GetCatalogPlacesUseCase.self, instance: getCatalogPlacesUseCase)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

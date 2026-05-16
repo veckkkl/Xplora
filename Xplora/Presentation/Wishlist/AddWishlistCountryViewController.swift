@@ -8,7 +8,7 @@ import UIKit
 final class AddWishlistCountryViewController: UIViewController {
     var onSelect: ((WishlistCountry) -> Void)?
 
-    private let getCountriesUseCase: GetCountriesCatalogUseCase
+    private let getCatalogPlacesUseCase: GetCatalogPlacesUseCase
 
     private let searchBar = UISearchBar()
     private let tableView = UITableView(frame: .zero, style: .plain)
@@ -23,18 +23,18 @@ final class AddWishlistCountryViewController: UIViewController {
     private let suggestionsProvider: CitySuggestionsProviding = StaticCitySuggestionsProvider()
     private let locationProvider: CurrentCountryProviding = CurrentCountryProvider()
 
-    private var countries: [CatalogCountry] = []
+    private var places: [CatalogPlace] = []
     private var sections: [CountrySection] = []
     private var searchQuery = ""
 
-    private var selectedCountry: CatalogCountry? { didSet { updateAddButton() } }
+    private var selectedPlace: CatalogPlace? { didSet { updateAddButton() } }
     private var selectedSuggestion: CitySuggestion?
     private var cityText = ""
 
     private let screenBackground = UIColor.systemBackground
 
-    init(getCountriesUseCase: GetCountriesCatalogUseCase) {
-        self.getCountriesUseCase = getCountriesUseCase
+    init(getCatalogPlacesUseCase: GetCatalogPlacesUseCase) {
+        self.getCatalogPlacesUseCase = getCatalogPlacesUseCase
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -45,7 +45,7 @@ final class AddWishlistCountryViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        loadCountries()
+        loadCatalog()
     }
 
     // MARK: - Setup
@@ -155,14 +155,14 @@ final class AddWishlistCountryViewController: UIViewController {
 
     // MARK: - Loading
 
-    private func loadCountries() {
+    private func loadCatalog() {
         showLoading()
 
         Task { [weak self] in
             guard let self else { return }
             do {
-                let result = try await getCountriesUseCase.execute()
-                self.countries = result
+                let result = try await getCatalogPlacesUseCase.execute()
+                self.places = result
                 self.showLoaded()
             } catch {
                 self.showError()
@@ -199,46 +199,33 @@ final class AddWishlistCountryViewController: UIViewController {
     }
 
     @objc private func didTapRetry() {
-        loadCountries()
+        loadCatalog()
     }
 
     // MARK: - Sections
+    //
+    // Sections and search share the same source (`places`). A place is either in
+    // exactly one continent bucket, or in the "Other" fallback. A search result
+    // appears iff the underlying place is also in a continent / Other section.
 
     private func rebuildSections() {
+        let expanded = selectedPlace?.code
         if searchQuery.isEmpty {
-            sections = Continent.allCases.compactMap { continent in
-                let rows = countries
-                    .filter { $0.continent == continent }
-                    .sorted { $0.localizedName.localizedCompare($1.localizedName) == .orderedAscending }
-                    .flatMap { expandedRows(for: $0) }
-                return rows.isEmpty ? nil : CountrySection(continent: continent, rows: rows)
-            }
+            sections = CatalogSectionBuilder.continentSections(from: places, expandedCode: expanded)
+        } else if let results = CatalogSectionBuilder.searchResultsSection(
+            from: places,
+            query: searchQuery,
+            expandedCode: expanded
+        ) {
+            sections = [results]
         } else {
-            let normalized = searchQuery
-                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
-            let rows = countries
-                .filter {
-                    $0.localizedName
-                        .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
-                        .hasPrefix(normalized)
-                }
-                .sorted { $0.localizedName.localizedCompare($1.localizedName) == .orderedAscending }
-                .flatMap { expandedRows(for: $0) }
-            sections = rows.isEmpty ? [] : [CountrySection(continent: nil, rows: rows)]
+            sections = []
         }
         tableView.reloadData()
     }
 
-    private func expandedRows(for country: CatalogCountry) -> [AddCountryRow] {
-        var result: [AddCountryRow] = [.country(country)]
-        if country.code == selectedCountry?.code {
-            result.append(.cityEntry(countryCode: country.code))
-        }
-        return result
-    }
-
     private func updateAddButton() {
-        let active = selectedCountry != nil
+        let active = selectedPlace != nil
         addButton.isHidden = !active
         let inset: CGFloat = active ? 52 + 32 : 0
         tableView.contentInset.bottom = inset
@@ -252,31 +239,34 @@ final class AddWishlistCountryViewController: UIViewController {
             guard let self else { return }
             switch result {
             case .success(let code):
-                selectCountry(byCode: code)
+                selectPlace(byCode: code)
             case .failure(let error):
                 showLocationError(error)
             }
         }
     }
 
-    private func selectCountry(byCode code: String) {
-        guard let country = countries.first(where: { $0.code == code }) else {
+    /// Selects a place only if the policy recognises the code. Unsupported
+    /// codes (e.g. an obscure territory not in the Xplora catalog) surface as
+    /// a "country not found" error rather than picking something silently.
+    private func selectPlace(byCode code: String) {
+        guard let place = places.first(where: { $0.code == code }) else {
             showLocationError(.countryNotFound)
             return
         }
         searchQuery = ""
         searchBar.text = ""
-        selectedCountry = country
+        selectedPlace = place
         selectedSuggestion = nil
         cityText = ""
         rebuildSections()
-        scrollToSelectedCountry()
+        scrollToSelectedPlace()
     }
 
-    private func scrollToSelectedCountry() {
+    private func scrollToSelectedPlace() {
         for (si, section) in sections.enumerated() {
             for (ri, row) in section.rows.enumerated() {
-                if case .country(let c) = row, c.code == selectedCountry?.code {
+                if case .country(let p) = row, p.code == selectedPlace?.code {
                     tableView.scrollToRow(at: IndexPath(row: ri, section: si), at: .middle, animated: true)
                     return
                 }
@@ -313,19 +303,48 @@ final class AddWishlistCountryViewController: UIViewController {
     }
 
     @objc private func didTapAdd() {
-        guard let catalog = selectedCountry else { return }
+        guard let place = selectedPlace else { return }
         let trimmed = cityText.trimmingCharacters(in: .whitespacesAndNewlines)
         let country = WishlistCountry(
             id: UUID(),
-            code: catalog.code,
-            flag: catalog.flag,
-            name: catalog.name,
+            code: place.code,
+            flag: place.flag,
+            name: place.name,
             cityKey: selectedSuggestion?.key,
             note: selectedSuggestion == nil && !trimmed.isEmpty ? trimmed : nil,
             isCompleted: false,
             addedAt: Date()
         )
         dismiss(animated: true) { [weak self] in self?.onSelect?(country) }
+    }
+
+    // MARK: - Accessory view
+
+    private func makeAccessoryView(badge: String?, isSelected: Bool) -> UIView? {
+        let badgeView: CatalogPlaceBadgeView? = badge.map { CatalogPlaceBadgeView(text: $0) }
+        let checkmark: UIImageView? = isSelected
+            ? {
+                let imageView = UIImageView(image: UIImage(systemName: "checkmark"))
+                imageView.tintColor = .systemBlue
+                imageView.setContentHuggingPriority(.required, for: .horizontal)
+                return imageView
+            }()
+            : nil
+
+        let parts: [UIView] = [badgeView, checkmark].compactMap { $0 }
+        guard !parts.isEmpty else { return nil }
+
+        if parts.count == 1 {
+            let view = parts[0]
+            view.frame = CGRect(origin: .zero, size: view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize))
+            return view
+        }
+        let stack = UIStackView(arrangedSubviews: parts)
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 6
+        stack.frame = CGRect(origin: .zero, size: stack.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize))
+        return stack
     }
 }
 
@@ -334,7 +353,7 @@ final class AddWishlistCountryViewController: UIViewController {
 extension AddWishlistCountryViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         searchQuery = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        selectedCountry = nil
+        selectedPlace = nil
         selectedSuggestion = nil
         cityText = ""
         rebuildSections()
@@ -356,22 +375,23 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         switch sections[indexPath.section].rows[indexPath.row] {
-        case .country(let catalog):
-            return countryCell(for: catalog, at: indexPath)
+        case .country(let place):
+            return countryCell(for: place, at: indexPath)
         case .cityEntry(let countryCode):
             return cityEntryCell(countryCode: countryCode, at: indexPath)
         }
     }
 
-    private func countryCell(for catalog: CatalogCountry, at indexPath: IndexPath) -> UITableViewCell {
+    private func countryCell(for place: CatalogPlace, at indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CountryCell", for: indexPath)
-        let isSelected = catalog.code == selectedCountry?.code
+        let isSelected = place.code == selectedPlace?.code
 
         var content = cell.defaultContentConfiguration()
-        content.text = "\(catalog.flag)  \(catalog.localizedName)"
+        content.text = "\(place.flag)  \(place.localizedName)"
         content.textProperties.font = .systemFont(ofSize: 20)
         cell.contentConfiguration = content
-        cell.accessoryType = isSelected ? .checkmark : .none
+        cell.accessoryType = .none
+        cell.accessoryView = makeAccessoryView(badge: place.status.badgeLabel, isSelected: isSelected)
         cell.tintColor = .systemBlue
 
         var bg = UIBackgroundConfiguration.clear()
@@ -394,7 +414,7 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
         let nextRow = indexPath.row + 1
         guard nextRow < sections[indexPath.section].rows.count else { return false }
         if case .country(let next) = sections[indexPath.section].rows[nextRow] {
-            return next.code == selectedCountry?.code
+            return next.code == selectedPlace?.code
         }
         return false
     }
@@ -441,9 +461,9 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
 extension AddWishlistCountryViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        guard case .country(let catalog) = sections[indexPath.section].rows[indexPath.row] else { return }
-        let isSame = catalog.code == selectedCountry?.code
-        selectedCountry = isSame ? nil : catalog
+        guard case .country(let place) = sections[indexPath.section].rows[indexPath.row] else { return }
+        let isSame = place.code == selectedPlace?.code
+        selectedPlace = isSame ? nil : place
         selectedSuggestion = nil
         cityText = ""
         rebuildSections()

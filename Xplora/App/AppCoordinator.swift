@@ -51,7 +51,7 @@ final class AppCoordinator {
         let addUseCase: AddWishlistCountryUseCase = locator.resolve(AddWishlistCountryUseCase.self)
         let removeUseCase: RemoveWishlistCountryUseCase = locator.resolve(RemoveWishlistCountryUseCase.self)
         let toggleUseCase: ToggleWishlistCountryUseCase = locator.resolve(ToggleWishlistCountryUseCase.self)
-        let getCountriesUseCase: GetCountriesCatalogUseCase = locator.resolve(GetCountriesCatalogUseCase.self)
+        let getCatalogPlacesUseCase: GetCatalogPlacesUseCase = locator.resolve(GetCatalogPlacesUseCase.self)
 
         let viewModel = WishlistViewModel(
             getUseCase: getUseCase,
@@ -61,7 +61,7 @@ final class AppCoordinator {
         )
         let viewController = WishlistViewController(
             viewModel: viewModel,
-            getCountriesUseCase: getCountriesUseCase
+            getCatalogPlacesUseCase: getCatalogPlacesUseCase
         )
         let nav = UINavigationController(rootViewController: viewController)
         nav.tabBarItem = UITabBarItem(

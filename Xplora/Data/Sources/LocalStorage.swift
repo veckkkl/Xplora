@@ -15,7 +15,7 @@ final class LocalStorage: LocalStorageProtocol {
         static let countries = "countries"
         static let settings = "settings"
         static let wishlistCountries = "wishlistCountries"
-        static let cachedCountryCodes = "cachedCountryCodes"
+        static let cachedCatalogCodes = "cachedCatalogCodes"
     }
 
     init() {}
@@ -57,13 +57,13 @@ final class LocalStorage: LocalStorageProtocol {
         set { save(newValue, forKey: Keys.wishlistCountries) }
     }
 
-    var cachedCountryCodes: [String]? {
-        get { load([String].self, forKey: Keys.cachedCountryCodes) }
+    var cachedCatalogCodes: [String]? {
+        get { load([String].self, forKey: Keys.cachedCatalogCodes) }
         set {
             if let newValue {
-                save(newValue, forKey: Keys.cachedCountryCodes)
+                save(newValue, forKey: Keys.cachedCatalogCodes)
             } else {
-                removeValue(forKey: Keys.cachedCountryCodes)
+                removeValue(forKey: Keys.cachedCatalogCodes)
             }
         }
     }

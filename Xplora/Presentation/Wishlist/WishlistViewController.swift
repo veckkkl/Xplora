@@ -7,7 +7,7 @@ import UIKit
 @MainActor
 final class WishlistViewController: UIViewController {
     private let viewModel: WishlistViewModelInput & WishlistViewModelOutput
-    private let getCountriesUseCase: GetCountriesCatalogUseCase
+    private let getCatalogPlacesUseCase: GetCatalogPlacesUseCase
 
     private var collectionView: UICollectionView!
     private var dataSource: UICollectionViewDiffableDataSource<Int, WishlistCountry>!
@@ -15,10 +15,10 @@ final class WishlistViewController: UIViewController {
 
     init(
         viewModel: WishlistViewModelInput & WishlistViewModelOutput,
-        getCountriesUseCase: GetCountriesCatalogUseCase
+        getCatalogPlacesUseCase: GetCatalogPlacesUseCase
     ) {
         self.viewModel = viewModel
-        self.getCountriesUseCase = getCountriesUseCase
+        self.getCatalogPlacesUseCase = getCatalogPlacesUseCase
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -187,7 +187,7 @@ final class WishlistViewController: UIViewController {
     }
 
     private func showAddCountry() {
-        let vc = AddWishlistCountryViewController(getCountriesUseCase: getCountriesUseCase)
+        let vc = AddWishlistCountryViewController(getCatalogPlacesUseCase: getCatalogPlacesUseCase)
         vc.onSelect = { [weak self] country in self?.viewModel.didSelect(country: country) }
         let nav = UINavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .fullScreen

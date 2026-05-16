@@ -95,6 +95,7 @@
 "continent.southAmerica" = "South America";
 "continent.oceania" = "Oceania";
 "continent.antarctica" = "Antarctica";
+"continent.other" = "Other";
 
 "country.AQ" = "Antarctica";
 "country.TF" = "French Southern Territories";
