@@ -78,10 +78,16 @@ final class AddWishlistCountryViewController: UIViewController {
         searchBar.placeholder = L10n.Wishlist.Search.placeholder
         searchBar.searchBarStyle = .minimal
         searchBar.backgroundColor = .clear
+        // `.minimal` still keeps a 1pt hairline at the bar's bottom edge on
+        // some iOS versions — an empty background image suppresses it.
+        searchBar.backgroundImage = UIImage()
         searchBar.searchTextField.backgroundColor = screenBackground
         searchBar.delegate = self
 
-        tableView.backgroundColor = screenBackground
+        // Use the host view's background everywhere: table view, cells and the
+        // search bar all sit on the same surface, so the section-header blur
+        // and the search-bar area read as the same colour.
+        tableView.backgroundColor = .clear
         tableView.backgroundView = nil
         tableView.separatorStyle = .singleLine
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
@@ -94,7 +100,7 @@ final class AddWishlistCountryViewController: UIViewController {
         tableView.register(CityEntryCell.self, forCellReuseIdentifier: CityEntryCell.reuseIdentifier)
         tableView.sectionHeaderTopPadding = 0
         tableView.tableFooterView = UIView()
-        tableView.tableFooterView?.backgroundColor = screenBackground
+        tableView.tableFooterView?.backgroundColor = .clear
 
         var btnConfig = UIButton.Configuration.filled()
         btnConfig.title = L10n.Wishlist.Add.button
@@ -354,9 +360,10 @@ final class AddWishlistCountryViewController: UIViewController {
         let badgeView: CatalogPlaceBadgeView? = badge.map { CatalogPlaceBadgeView(text: $0) }
         let checkmark: UIImageView? = isSelected
             ? {
-                let imageView = UIImageView(image: UIImage(systemName: "checkmark"))
+                let cfg = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
+                let imageView = UIImageView(image: UIImage(systemName: "checkmark", withConfiguration: cfg))
                 imageView.tintColor = .systemBlue
-                imageView.setContentHuggingPriority(.required, for: .horizontal)
+                imageView.contentMode = .center
                 return imageView
             }()
             : nil
@@ -366,15 +373,32 @@ final class AddWishlistCountryViewController: UIViewController {
 
         if parts.count == 1 {
             let view = parts[0]
-            view.frame = CGRect(origin: .zero, size: view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize))
+            view.frame = CGRect(origin: .zero, size: view.intrinsicContentSize)
             return view
         }
-        let stack = UIStackView(arrangedSubviews: parts)
-        stack.axis = .horizontal
-        stack.alignment = .center
-        stack.spacing = 6
-        stack.frame = CGRect(origin: .zero, size: stack.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize))
-        return stack
+
+        // Explicit frame math: `accessoryView` is sized from `frame.size`, and
+        // `systemLayoutSizeFitting` on a standalone view (no parent in the
+        // Auto Layout engine) is unreliable. Compose manually using each
+        // child's intrinsic size.
+        let spacing: CGFloat = 6
+        let sizes = parts.map { $0.intrinsicContentSize }
+        let totalWidth = sizes.reduce(0) { $0 + $1.width } + CGFloat(parts.count - 1) * spacing
+        let maxHeight = sizes.map(\.height).max() ?? 0
+
+        let container = UIView(frame: CGRect(x: 0, y: 0, width: totalWidth, height: maxHeight))
+        var x: CGFloat = 0
+        for (view, size) in zip(parts, sizes) {
+            view.frame = CGRect(
+                x: x,
+                y: (maxHeight - size.height) / 2,
+                width: size.width,
+                height: size.height
+            )
+            container.addSubview(view)
+            x += size.width + spacing
+        }
+        return container
     }
 }
 
@@ -425,10 +449,11 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
         cell.accessoryView = makeAccessoryView(badge: place.status.badgeLabel, isSelected: isSelected)
         cell.tintColor = .systemBlue
 
+        let cellBackground: UIColor = isSelected ? UIColor.systemBlue.withAlphaComponent(0.08) : .clear
         var bg = UIBackgroundConfiguration.clear()
-        bg.backgroundColor = isSelected ? UIColor.systemBlue.withAlphaComponent(0.08) : screenBackground
+        bg.backgroundColor = cellBackground
         cell.backgroundConfiguration = bg
-        cell.backgroundColor = isSelected ? UIColor.systemBlue.withAlphaComponent(0.08) : screenBackground
+        cell.backgroundColor = cellBackground
         cell.contentView.backgroundColor = .clear
 
         // Hide separator on the selected row AND on the row immediately above it,
@@ -513,12 +538,16 @@ extension AddWishlistCountryViewController: UITableViewDelegate {
         }
     }
 
-    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        guard let continent = sections[section].continent else { return nil }
-        return ContinentHeaderView(title: continent.localizedName)
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        // Returning a String (not a custom view) opts us into the system header
+        // for `.plain`-style tables: sticky pinned, translucent blurred
+        // background, system typography.
+        sections[section].continent?.localizedName
     }
 
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        sections[section].continent == nil ? CGFloat.leastNonzeroMagnitude : 44
+        sections[section].continent == nil
+            ? CGFloat.leastNonzeroMagnitude
+            : UITableView.automaticDimension
     }
 }

@@ -7,7 +7,7 @@ import UIKit
 /// `CatalogPlaceStatus` next to a country row.
 final class CatalogPlaceBadgeView: UILabel {
 
-    private let contentInsets = UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6)
+    private let contentInsets = UIEdgeInsets(top: 3, left: 7, bottom: 3, right: 7)
 
     init(text: String) {
         super.init(frame: .zero)
@@ -33,13 +33,18 @@ final class CatalogPlaceBadgeView: UILabel {
     }
 
     private func configure() {
-        font = .systemFont(ofSize: 10, weight: .semibold)
+        font = .systemFont(ofSize: 11, weight: .semibold)
         textColor = .secondaryLabel
         textAlignment = .center
         backgroundColor = .secondarySystemFill
-        layer.cornerRadius = 4
+        layer.cornerRadius = 5
         layer.cornerCurve = .continuous
         layer.masksToBounds = true
+        // Prevent UITableViewCell from squeezing the accessory below intrinsic size.
+        setContentHuggingPriority(.required, for: .horizontal)
+        setContentHuggingPriority(.required, for: .vertical)
+        setContentCompressionResistancePriority(.required, for: .horizontal)
+        setContentCompressionResistancePriority(.required, for: .vertical)
     }
 }
 

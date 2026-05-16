@@ -43,8 +43,20 @@ final class WishlistViewController: UIViewController {
 
     private func setupNavBar() {
         title = L10n.Wishlist.title
-        navigationController?.navigationBar.prefersLargeTitles = false
-        navigationItem.largeTitleDisplayMode = .never
+        navigationController?.navigationBar.prefersLargeTitles = true
+        navigationItem.largeTitleDisplayMode = .always
+
+        // Fully transparent navigation bar across all scroll states so the
+        // list content doesn't get covered by a material backdrop as the user
+        // scrolls. Scope the override to this view controller via
+        // `navigationItem.*Appearance` (per-VC, doesn't leak globally).
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        navigationItem.standardAppearance = appearance
+        navigationItem.scrollEdgeAppearance = appearance
+        navigationItem.compactAppearance = appearance
+        navigationItem.compactScrollEdgeAppearance = appearance
+
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             systemItem: .add,
             primaryAction: UIAction { [weak self] _ in

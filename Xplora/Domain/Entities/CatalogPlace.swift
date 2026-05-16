@@ -54,25 +54,40 @@ struct CatalogPlace: Equatable, Hashable, Codable {
         Locale.current.localizedString(forRegionCode: code) ?? name
     }
 
-    /// Continent derived from the M49 region tree. Uses `subContinent` to split
-    /// Americas into North/South, falls back to `continent`, and `.other` when
-    /// the host system can't classify the code.
+    /// Continent derived from the M49 region tree. Walks up `containingRegion`
+    /// until a known M49 continent / subcontinent identifier is found. Returns
+    /// `.other` when the host system can't classify the code.
+    ///
+    /// `Locale.Region.subcontinent` would be cleaner but is iOS 26+; the
+    /// chain walk works on iOS 16+ and naturally handles the Americas split
+    /// because a US's chain passes through `021` (Northern America) and a
+    /// BR's chain passes through `005` (South America) before reaching the
+    /// generic `019` Americas.
     var continent: Continent {
-        let region = Locale.Region(code)
-        let identifier = region.subContinent?.identifier ?? region.continent?.identifier
-        return identifier.flatMap(Self.m49ToContinent) ?? .other
+        var region: Locale.Region? = Locale.Region(code)
+        for _ in 0..<8 { // M49 tree is shallow; guards against bad data
+            guard let current = region else { break }
+            if let mapped = Self.m49ToContinent(current.identifier) {
+                return mapped
+            }
+            region = current.containingRegion
+        }
+        return .other
     }
 
+    /// Maps M49 region identifiers to product continents.
+    /// `003 North America`, `021 Northern America` and `029 Caribbean` all
+    /// roll up into `.northAmerica` to match the existing UI grouping.
     private static func m49ToContinent(_ identifier: String) -> Continent? {
         switch identifier {
-        case "002": return .africa
-        case "003": return .northAmerica
-        case "005": return .southAmerica
-        case "009": return .oceania
-        case "010": return .antarctica
-        case "142": return .asia
-        case "150": return .europe
-        default: return nil
+        case "002":                return .africa
+        case "003", "021", "029":  return .northAmerica
+        case "005":                return .southAmerica
+        case "009":                return .oceania
+        case "010":                return .antarctica
+        case "142":                return .asia
+        case "150":                return .europe
+        default:                   return nil
         }
     }
 }
