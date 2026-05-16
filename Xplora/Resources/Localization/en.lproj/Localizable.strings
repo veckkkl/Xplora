@@ -64,7 +64,7 @@
 "wishlist.add.title" = "Add Country";
 "wishlist.add.button" = "Add";
 "wishlist.search.placeholder" = "Search countries";
-"wishlist.city.optional" = "City (optional)";
+"wishlist.city.optional" = "City or place (optional)";
 "wishlist.empty.title" = "Your wishlist is empty";
 "wishlist.empty.subtitle" = "Tap + to add a country";
 "wishlist.duplicate.title" = "Already in wishlist";

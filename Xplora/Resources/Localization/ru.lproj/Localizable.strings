@@ -64,7 +64,7 @@
 "wishlist.add.title" = "Добавить страну";
 "wishlist.add.button" = "Добавить";
 "wishlist.search.placeholder" = "Искать страны";
-"wishlist.city.optional" = "Город (необязательно)";
+"wishlist.city.optional" = "Город или место (необязательно)";
 "wishlist.empty.title" = "Вишлист пуст";
 "wishlist.empty.subtitle" = "Нажмите +, чтобы добавить страну";
 "wishlist.duplicate.title" = "Уже в вишлисте";

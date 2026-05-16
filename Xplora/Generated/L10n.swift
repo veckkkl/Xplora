@@ -879,7 +879,7 @@ internal enum L10n {
     }
     internal enum City {
       /// City (optional)
-      internal static let `optional` = L10n.tr("Localizable", "wishlist.city.optional", fallback: "City (optional)")
+      internal static let `optional` = L10n.tr("Localizable", "wishlist.city.optional", fallback: "City or place (optional)")
     }
     internal enum Confirm {
       /// Add country
