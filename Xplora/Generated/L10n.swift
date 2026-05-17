@@ -595,6 +595,8 @@ internal enum L10n {
     internal static let northAmerica = L10n.tr("Localizable", "continent.northAmerica", fallback: "North America")
     /// Oceania
     internal static let oceania = L10n.tr("Localizable", "continent.oceania", fallback: "Oceania")
+    /// Other
+    internal static let other = L10n.tr("Localizable", "continent.other", fallback: "Other")
     /// South America
     internal static let southAmerica = L10n.tr("Localizable", "continent.southAmerica", fallback: "South America")
   }
@@ -878,7 +880,7 @@ internal enum L10n {
       internal static let title = L10n.tr("Localizable", "wishlist.add.title", fallback: "Add Country")
     }
     internal enum City {
-      /// City (optional)
+      /// City or place (optional)
       internal static let `optional` = L10n.tr("Localizable", "wishlist.city.optional", fallback: "City or place (optional)")
     }
     internal enum Confirm {

@@ -3,6 +3,7 @@
 //  XploraTests
 //
 
+import Foundation
 import Testing
 @testable import Xplora
 
