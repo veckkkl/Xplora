@@ -223,7 +223,9 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
     }
 
     private func refreshSections() {
-        sections = buildSections()
+        let newSections = buildSections()
+        guard newSections != sections else { return }
+        sections = newSections
         onSectionsChange?(sections)
     }
 }
