@@ -202,11 +202,18 @@ final class WishlistViewController: UIViewController {
     }
 
     private func showAddCountry() {
-        let vc = AddWishlistCountryViewController(
+        let addCountryViewModel = AddWishlistCountryViewModel(
             getCatalogPlacesUseCase: getCatalogPlacesUseCase,
             getCitiesForPlaceUseCase: getCitiesForPlaceUseCase
         )
-        vc.onSelect = { [weak self] country in self?.viewModel.didSelect(country: country) }
+        let vc = AddWishlistCountryViewController(viewModel: addCountryViewModel)
+        // Presentation lifecycle (dismiss) is the parent's concern; the
+        // child view model just reports the selection.
+        addCountryViewModel.onSelect = { [weak self, weak vc] country in
+            vc?.dismiss(animated: true) {
+                self?.viewModel.didSelect(country: country)
+            }
+        }
         let nav = UINavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
