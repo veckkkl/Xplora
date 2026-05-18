@@ -60,6 +60,370 @@
 "tab.timeline" = "Timeline";
 "tab.wishlist" = "Wishlist";
 
+"wishlist.title" = "Wishlist";
+"wishlist.add.title" = "Add Country";
+"wishlist.add.button" = "Add";
+"wishlist.search.placeholder" = "Search countries";
+"wishlist.city.optional" = "City or place (optional)";
+"wishlist.empty.title" = "Your wishlist is empty";
+"wishlist.empty.subtitle" = "Tap + to add a country";
+"wishlist.duplicate.title" = "Already in wishlist";
+"wishlist.select.title" = "Select destination";
+"wishlist.select.current_location" = "Add current location";
+"wishlist.select.error.load" = "Couldn't load countries. Check your internet connection.";
+"wishlist.select.retry" = "Retry";
+"wishlist.duplicate.message" = "This place is already in your wishlist.";
+
+"wishlist.confirm.countryOnlyExists.title" = "Country already added";
+"wishlist.confirm.countryOnlyExists.message" = "%@ is already in your wishlist without a city. Add %@ as a separate place?";
+"wishlist.confirm.countryHasCities.title" = "Places already added";
+"wishlist.confirm.countryHasCities.message" = "You already have places in %@. Add %@ as a separate country-level goal?";
+"wishlist.confirm.addPlace" = "Add place";
+"wishlist.confirm.addCountry" = "Add country";
+"wishlist.confirm.cancel" = "Cancel";
+
+"wishlist.currentLocation.permission.title" = "Location Permission Needed";
+"wishlist.currentLocation.permission.message" = "Allow location access to add your current country.";
+"wishlist.currentLocation.notFound.title" = "Location Not Found";
+"wishlist.currentLocation.notFound.message" = "Could not determine your current country.";
+"wishlist.currentLocation.settings" = "Settings";
+
+"continent.africa" = "Africa";
+"continent.asia" = "Asia";
+"continent.europe" = "Europe";
+"continent.northAmerica" = "North America";
+"continent.southAmerica" = "South America";
+"continent.oceania" = "Oceania";
+"continent.antarctica" = "Antarctica";
+"continent.other" = "Other";
+
+"country.AQ" = "Antarctica";
+"country.TF" = "French Southern Territories";
+"country.AR" = "Argentina";
+"country.AU" = "Australia";
+"country.AT" = "Austria";
+"country.BE" = "Belgium";
+"country.BR" = "Brazil";
+"country.CA" = "Canada";
+"country.CL" = "Chile";
+"country.CN" = "China";
+"country.CO" = "Colombia";
+"country.HR" = "Croatia";
+"country.CZ" = "Czech Republic";
+"country.DK" = "Denmark";
+"country.EG" = "Egypt";
+"country.FI" = "Finland";
+"country.FR" = "France";
+"country.DE" = "Germany";
+"country.GR" = "Greece";
+"country.HU" = "Hungary";
+"country.IS" = "Iceland";
+"country.IN" = "India";
+"country.ID" = "Indonesia";
+"country.IE" = "Ireland";
+"country.IL" = "Israel";
+"country.IT" = "Italy";
+"country.JP" = "Japan";
+"country.JO" = "Jordan";
+"country.KE" = "Kenya";
+"country.MX" = "Mexico";
+"country.MA" = "Morocco";
+"country.NL" = "Netherlands";
+"country.NZ" = "New Zealand";
+"country.NO" = "Norway";
+"country.PE" = "Peru";
+"country.PH" = "Philippines";
+"country.PL" = "Poland";
+"country.PT" = "Portugal";
+"country.RO" = "Romania";
+"country.RU" = "Russia";
+"country.SA" = "Saudi Arabia";
+"country.ZA" = "South Africa";
+"country.KR" = "South Korea";
+"country.ES" = "Spain";
+"country.SE" = "Sweden";
+"country.CH" = "Switzerland";
+"country.TH" = "Thailand";
+"country.TR" = "Turkey";
+"country.UA" = "Ukraine";
+"country.GB" = "United Kingdom";
+"country.US" = "United States";
+"country.VN" = "Vietnam";
+
+"city.AR.buenos_aires" = "Buenos Aires";
+"city.AR.patagonia" = "Patagonia";
+"city.AR.mendoza" = "Mendoza";
+"city.AR.bariloche" = "Bariloche";
+"city.AR.cordoba" = "Córdoba";
+
+"city.AU.sydney" = "Sydney";
+"city.AU.melbourne" = "Melbourne";
+"city.AU.brisbane" = "Brisbane";
+"city.AU.perth" = "Perth";
+"city.AU.cairns" = "Cairns";
+
+"city.AT.vienna" = "Vienna";
+"city.AT.salzburg" = "Salzburg";
+"city.AT.innsbruck" = "Innsbruck";
+"city.AT.graz" = "Graz";
+
+"city.BE.brussels" = "Brussels";
+"city.BE.bruges" = "Bruges";
+"city.BE.ghent" = "Ghent";
+"city.BE.antwerp" = "Antwerp";
+
+"city.BR.rio_de_janeiro" = "Rio de Janeiro";
+"city.BR.sao_paulo" = "São Paulo";
+"city.BR.salvador" = "Salvador";
+"city.BR.florianopolis" = "Florianópolis";
+"city.BR.manaus" = "Manaus";
+
+"city.CA.toronto" = "Toronto";
+"city.CA.vancouver" = "Vancouver";
+"city.CA.montreal" = "Montreal";
+"city.CA.quebec_city" = "Quebec City";
+"city.CA.banff" = "Banff";
+
+"city.CL.santiago" = "Santiago";
+"city.CL.patagonia" = "Patagonia";
+"city.CL.valparaiso" = "Valparaíso";
+"city.CL.san_pedro_de_atacama" = "San Pedro de Atacama";
+
+"city.CN.beijing" = "Beijing";
+"city.CN.shanghai" = "Shanghai";
+"city.CN.xian" = "Xi'an";
+"city.CN.chengdu" = "Chengdu";
+"city.CN.guilin" = "Guilin";
+
+"city.CO.bogota" = "Bogotá";
+"city.CO.cartagena" = "Cartagena";
+"city.CO.medellin" = "Medellín";
+"city.CO.santa_marta" = "Santa Marta";
+
+"city.HR.dubrovnik" = "Dubrovnik";
+"city.HR.split" = "Split";
+"city.HR.zagreb" = "Zagreb";
+"city.HR.hvar" = "Hvar";
+"city.HR.plitvice" = "Plitvice";
+
+"city.CZ.prague" = "Prague";
+"city.CZ.brno" = "Brno";
+"city.CZ.cesky_krumlov" = "Český Krumlov";
+
+"city.DK.copenhagen" = "Copenhagen";
+"city.DK.aarhus" = "Aarhus";
+"city.DK.odense" = "Odense";
+
+"city.EG.cairo" = "Cairo";
+"city.EG.luxor" = "Luxor";
+"city.EG.aswan" = "Aswan";
+"city.EG.alexandria" = "Alexandria";
+"city.EG.sharm_el_sheikh" = "Sharm el-Sheikh";
+
+"city.FI.helsinki" = "Helsinki";
+"city.FI.rovaniemi" = "Rovaniemi";
+"city.FI.turku" = "Turku";
+"city.FI.tampere" = "Tampere";
+
+"city.FR.paris" = "Paris";
+"city.FR.normandy" = "Normandy";
+"city.FR.nice" = "Nice";
+"city.FR.lyon" = "Lyon";
+"city.FR.marseille" = "Marseille";
+"city.FR.bordeaux" = "Bordeaux";
+
+"city.DE.berlin" = "Berlin";
+"city.DE.munich" = "Munich";
+"city.DE.hamburg" = "Hamburg";
+"city.DE.frankfurt" = "Frankfurt";
+"city.DE.cologne" = "Cologne";
+"city.DE.dresden" = "Dresden";
+
+"city.GR.athens" = "Athens";
+"city.GR.santorini" = "Santorini";
+"city.GR.mykonos" = "Mykonos";
+"city.GR.thessaloniki" = "Thessaloniki";
+"city.GR.crete" = "Crete";
+
+"city.HU.budapest" = "Budapest";
+"city.HU.pecs" = "Pécs";
+"city.HU.debrecen" = "Debrecen";
+"city.HU.eger" = "Eger";
+
+"city.IS.reykjavik" = "Reykjavik";
+"city.IS.akureyri" = "Akureyri";
+"city.IS.vik" = "Vík";
+"city.IS.snaefellsnes" = "Snæfellsnes";
+
+"city.IN.delhi" = "Delhi";
+"city.IN.mumbai" = "Mumbai";
+"city.IN.jaipur" = "Jaipur";
+"city.IN.goa" = "Goa";
+"city.IN.varanasi" = "Varanasi";
+"city.IN.agra" = "Agra";
+
+"city.ID.bali" = "Bali";
+"city.ID.jakarta" = "Jakarta";
+"city.ID.lombok" = "Lombok";
+"city.ID.komodo" = "Komodo";
+"city.ID.yogyakarta" = "Yogyakarta";
+
+"city.IE.dublin" = "Dublin";
+"city.IE.galway" = "Galway";
+"city.IE.cork" = "Cork";
+"city.IE.killarney" = "Killarney";
+
+"city.IL.jerusalem" = "Jerusalem";
+"city.IL.tel_aviv" = "Tel Aviv";
+"city.IL.haifa" = "Haifa";
+"city.IL.eilat" = "Eilat";
+
+"city.IT.rome" = "Rome";
+"city.IT.florence" = "Florence";
+"city.IT.venice" = "Venice";
+"city.IT.milan" = "Milan";
+"city.IT.amalfi" = "Amalfi";
+"city.IT.sicily" = "Sicily";
+
+"city.JP.tokyo" = "Tokyo";
+"city.JP.kyoto" = "Kyoto";
+"city.JP.osaka" = "Osaka";
+"city.JP.hiroshima" = "Hiroshima";
+"city.JP.nara" = "Nara";
+"city.JP.hokkaido" = "Hokkaido";
+
+"city.JO.amman" = "Amman";
+"city.JO.petra" = "Petra";
+"city.JO.wadi_rum" = "Wadi Rum";
+"city.JO.aqaba" = "Aqaba";
+
+"city.KE.nairobi" = "Nairobi";
+"city.KE.maasai_mara" = "Maasai Mara";
+"city.KE.mombasa" = "Mombasa";
+"city.KE.lamu" = "Lamu";
+
+"city.MX.mexico_city" = "Mexico City";
+"city.MX.cancun" = "Cancún";
+"city.MX.oaxaca" = "Oaxaca";
+"city.MX.tulum" = "Tulum";
+"city.MX.guadalajara" = "Guadalajara";
+
+"city.MA.marrakech" = "Marrakech";
+"city.MA.fes" = "Fes";
+"city.MA.casablanca" = "Casablanca";
+"city.MA.chefchaouen" = "Chefchaouen";
+"city.MA.essaouira" = "Essaouira";
+
+"city.NL.amsterdam" = "Amsterdam";
+"city.NL.rotterdam" = "Rotterdam";
+"city.NL.the_hague" = "The Hague";
+"city.NL.utrecht" = "Utrecht";
+
+"city.NZ.auckland" = "Auckland";
+"city.NZ.queenstown" = "Queenstown";
+"city.NZ.christchurch" = "Christchurch";
+"city.NZ.wellington" = "Wellington";
+
+"city.NO.oslo" = "Oslo";
+"city.NO.bergen" = "Bergen";
+"city.NO.tromso" = "Tromsø";
+"city.NO.stavanger" = "Stavanger";
+"city.NO.lofoten" = "Lofoten";
+
+"city.PE.lima" = "Lima";
+"city.PE.cusco" = "Cusco";
+"city.PE.machu_picchu" = "Machu Picchu";
+"city.PE.arequipa" = "Arequipa";
+
+"city.PH.manila" = "Manila";
+"city.PH.palawan" = "Palawan";
+"city.PH.cebu" = "Cebu";
+"city.PH.siargao" = "Siargao";
+"city.PH.boracay" = "Boracay";
+
+"city.PL.warsaw" = "Warsaw";
+"city.PL.krakow" = "Kraków";
+"city.PL.gdansk" = "Gdańsk";
+"city.PL.wroclaw" = "Wrocław";
+
+"city.PT.lisbon" = "Lisbon";
+"city.PT.porto" = "Porto";
+"city.PT.algarve" = "Algarve";
+"city.PT.sintra" = "Sintra";
+"city.PT.madeira" = "Madeira";
+
+"city.RO.bucharest" = "Bucharest";
+"city.RO.transylvania" = "Transylvania";
+"city.RO.sibiu" = "Sibiu";
+"city.RO.cluj_napoca" = "Cluj-Napoca";
+
+"city.RU.moscow" = "Moscow";
+"city.RU.st_petersburg" = "St. Petersburg";
+"city.RU.kazan" = "Kazan";
+"city.RU.sochi" = "Sochi";
+
+"city.SA.riyadh" = "Riyadh";
+"city.SA.jeddah" = "Jeddah";
+"city.SA.alula" = "AlUla";
+"city.SA.neom" = "Neom";
+
+"city.ZA.cape_town" = "Cape Town";
+"city.ZA.johannesburg" = "Johannesburg";
+"city.ZA.kruger" = "Kruger";
+"city.ZA.durban" = "Durban";
+
+"city.KR.seoul" = "Seoul";
+"city.KR.busan" = "Busan";
+"city.KR.jeju" = "Jeju";
+"city.KR.gyeongju" = "Gyeongju";
+
+"city.ES.madrid" = "Madrid";
+"city.ES.barcelona" = "Barcelona";
+"city.ES.seville" = "Seville";
+"city.ES.granada" = "Granada";
+"city.ES.valencia" = "Valencia";
+
+"city.SE.stockholm" = "Stockholm";
+"city.SE.gothenburg" = "Gothenburg";
+"city.SE.malmo" = "Malmö";
+"city.SE.uppsala" = "Uppsala";
+
+"city.CH.zurich" = "Zurich";
+"city.CH.geneva" = "Geneva";
+"city.CH.bern" = "Bern";
+"city.CH.interlaken" = "Interlaken";
+"city.CH.lucerne" = "Lucerne";
+
+"city.TH.bangkok" = "Bangkok";
+"city.TH.chiang_mai" = "Chiang Mai";
+"city.TH.phuket" = "Phuket";
+"city.TH.koh_samui" = "Koh Samui";
+
+"city.TR.istanbul" = "Istanbul";
+"city.TR.cappadocia" = "Cappadocia";
+"city.TR.antalya" = "Antalya";
+"city.TR.bodrum" = "Bodrum";
+
+"city.UA.kyiv" = "Kyiv";
+"city.UA.lviv" = "Lviv";
+"city.UA.odesa" = "Odesa";
+
+"city.GB.london" = "London";
+"city.GB.edinburgh" = "Edinburgh";
+"city.GB.oxford" = "Oxford";
+"city.GB.manchester" = "Manchester";
+"city.GB.bath" = "Bath";
+
+"city.US.new_york" = "New York";
+"city.US.los_angeles" = "Los Angeles";
+"city.US.san_francisco" = "San Francisco";
+"city.US.chicago" = "Chicago";
+"city.US.new_orleans" = "New Orleans";
+
+"city.VN.hanoi" = "Hanoi";
+"city.VN.ho_chi_minh_city" = "Ho Chi Minh City";
+"city.VN.hoi_an" = "Hội An";
+"city.VN.da_nang" = "Da Nang";
 "profile.tab.title" = "Settings";
 "profile.title" = "Settings";
 
