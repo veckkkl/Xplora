@@ -34,13 +34,13 @@ enum TripPhotoPresentationMetrics {
     static let notePlaceholderHeightRatio: CGFloat = 0.36
     static let notePlaceholderMinHeight: CGFloat = 92
 
-    static let listCardHorizontalInset: CGFloat = 6
-    static let listCardVerticalInset: CGFloat = 3
-    static let listContentInset: CGFloat = 9
-    static let listVerticalSpacing: CGFloat = 4
-    static let listTitleToPhotoSpacing: CGFloat = 6
-    static let listPhotoToMetadataSpacing: CGFloat = 6
-    static let listCollageHeightScale: CGFloat = 0.56
-    static let listCollageMaxHeight: CGFloat = 150
-    static let listCollageMinHeight: CGFloat = 108
+    static let listCardHorizontalInset: CGFloat = 16
+    static let listCardVerticalInset: CGFloat = 6
+    static let listContentInset: CGFloat = 14
+    static let listVerticalSpacing: CGFloat = 7
+    static let listPhotoToLocationSpacing: CGFloat = 9
+    static let listTitleToPreviewSpacing: CGFloat = 5
+    static let listCollageHeightScale: CGFloat = 0.84
+    static let listCollageMaxHeight: CGFloat = 225
+    static let listCollageMinHeight: CGFloat = 162
 }
