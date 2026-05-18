@@ -156,7 +156,7 @@ final class ProfileViewController: UIViewController {
         let section = self.sections[indexPath.section].section
 
         var content = UIListContentConfiguration.groupedFooter()
-        content.text = section == .data ? L10n.Profile.Data.footnote : nil
+        content.text = section == .data ? L10n.Profile.Danger.footnote : nil
         content.textProperties.color = .secondaryLabel
         content.textProperties.font = UIFont.preferredFont(forTextStyle: .footnote)
         content.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 6, leading: 20, bottom: 4, trailing: 20)

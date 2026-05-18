@@ -169,7 +169,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
             } catch {
                 isLoading = false
                 publish()
-                onError?("Couldn't save the note. Please try again.")
+                onError?(L10n.Notes.Editor.Error.save)
             }
         }
     }
@@ -192,7 +192,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
             } catch {
                 isLoading = false
                 publish()
-                onError?("Couldn't delete the note. Please try again.")
+                onError?(L10n.Notes.Editor.Error.delete)
             }
         }
     }
@@ -241,7 +241,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
                 draft = previous
                 isLoading = false
                 publish()
-                onError?("Couldn't update the bookmark. Please try again.")
+                onError?(L10n.Notes.Editor.Error.bookmark)
             }
         }
     }
@@ -254,7 +254,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         guard mode == .edit else { return }
         guard let current = draft else { return }
         guard current.photos.count < maxPhotoCount else {
-            onError?("You can add up to \(maxPhotoCount) photos.")
+            onError?(L10n.Notes.Editor.Photo.limit(maxPhotoCount))
             return
         }
         onPhotoSourceRequested?()
@@ -293,7 +293,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         var updatedPhotos = normalizedExistingPhotos
         let availableSlots = maxPhotoCount - updatedPhotos.count
         guard availableSlots > 0 else {
-            onError?("You can add up to \(maxPhotoCount) photos.")
+            onError?(L10n.Notes.Editor.Photo.limit(maxPhotoCount))
             return
         }
 
@@ -349,9 +349,9 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
 
         guard addedCount > 0 else {
             if duplicateCount > 0 {
-                onError?("This photo is already added.")
+                onError?(L10n.Notes.Editor.Error.Photo.Duplicate.single)
             } else if failedCount > 0 {
-                onError?("Couldn't add photos. Please try again.")
+                onError?(L10n.Notes.Editor.Error.Photo.addFailed)
             }
             return
         }
@@ -361,11 +361,11 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         publish()
 
         if limitReached {
-            onError?("You can add up to \(maxPhotoCount) photos.")
+            onError?(L10n.Notes.Editor.Photo.limit(maxPhotoCount))
         } else if duplicateCount > 0 {
-            onError?("Some photos were skipped because they are already added.")
+            onError?(L10n.Notes.Editor.Error.Photo.skippedDuplicates)
         } else if failedCount > 0 {
-            onError?("Some photos couldn't be added.")
+            onError?(L10n.Notes.Editor.Error.Photo.skippedFailed)
         }
     }
 
@@ -454,7 +454,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
             } catch {
                 isLoading = false
                 publish()
-                onError?("Couldn't load the note. Please try again.")
+                onError?(L10n.Notes.Editor.Error.load)
             }
         }
     }

@@ -180,7 +180,7 @@ final class AboutXploraViewController: UIViewController {
     private func configureContent() {
         appTitleLabel.text = "Xplora"
         subtitleLabel.text = L10n.Profile.About.subtitle
-        versionBuildLabel.text = L10n.Profile.About.versionBuild(appVersion, appBuild)
+        versionBuildLabel.text = L10n.Profile.About.versionBuildFormat(appVersion, appBuild)
         footerLabel.text = L10n.Profile.About.footer
 
         aboutCardView.configure(

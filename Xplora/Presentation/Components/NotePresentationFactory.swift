@@ -16,7 +16,7 @@ enum NotePresentationFactory {
             return placeName
         }
 
-        return "Untitled"
+        return L10n.Notes.Presentation.untitled
     }
 
     static func textPreview(for note: Note) -> String {

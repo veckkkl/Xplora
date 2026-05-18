@@ -30,9 +30,9 @@ enum AppLanguage: String, CaseIterable {
     var displayName: String {
         switch self {
         case .ru:
-            return L10n.Profile.Language.russianNative
+            return L10n.Profile.Language.nativeRussian
         case .en:
-            return L10n.Profile.Language.englishNative
+            return L10n.Profile.Language.nativeEnglish
         }
     }
 

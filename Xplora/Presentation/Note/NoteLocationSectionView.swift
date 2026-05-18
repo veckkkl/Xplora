@@ -59,7 +59,7 @@ final class NoteLocationSectionView: UIView {
                 subtitleLabel.text = state.subtitle
                 subtitleLabel.isHidden = state.subtitle.isEmpty
             } else {
-                titleLabel.text = "Add location"
+                titleLabel.text = L10n.Notes.Location.Section.add
                 titleLabel.textColor = .secondaryLabel
                 subtitleLabel.text = nil
                 subtitleLabel.isHidden = true
