@@ -8,7 +8,7 @@ enum AddCountryRow: Hashable {
     case cityEntry(countryCode: String)
 }
 
-struct CountrySection {
+struct CountrySection: Equatable {
     /// `nil`        → flat search-results section (no header).
     /// `.other`     → fallback bucket for supported places whose continent
     ///                couldn't be classified (header is "Other").
