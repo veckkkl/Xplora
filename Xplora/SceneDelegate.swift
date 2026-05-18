@@ -37,12 +37,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let placesRepo: PlacesRepo = PlacesRepoImpl(storage: storage)
         let settingsRepo: SettingsRepo = SettingsRepoImpl(storage: storage)
         let notesRepo: NotesRepo = NotesRepoImpl(coreDataStack: coreDataStack)
+        let authRepository: AuthRepository = AuthRepositoryImpl(storage: storage)
         let wishlistRepo: WishlistRepo = WishlistRepoImpl(storage: storage)
 
         locator.register(TripsRepo.self, instance: tripsRepo)
         locator.register(PlacesRepo.self, instance: placesRepo)
         locator.register(SettingsRepo.self, instance: settingsRepo)
         locator.register(NotesRepo.self, instance: notesRepo)
+        locator.register(AuthRepository.self, instance: authRepository)
         locator.register(WishlistRepo.self, instance: wishlistRepo)
 
         // Services
@@ -77,6 +79,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         locator.register(GetAllNotesUseCase.self, instance: getAllNotesUseCase)
         locator.register(SaveNoteUseCase.self, instance: saveNoteUseCase)
         locator.register(DeleteNoteUseCase.self, instance: deleteNoteUseCase)
+
+        // Auth use cases
+        let getCurrentUserUseCase: GetCurrentUserUseCase =
+            GetCurrentUserUseCaseImpl(authRepository: authRepository)
+        let completeOnboardingUseCase: CompleteOnboardingUseCase =
+            CompleteOnboardingUseCaseImpl(authRepository: authRepository)
+        let updateCurrentUserUseCase: UpdateCurrentUserUseCase =
+            UpdateCurrentUserUseCaseImpl(authRepository: authRepository)
+        let logoutUseCase: LogoutUseCase =
+            LogoutUseCaseImpl(authRepository: authRepository)
+
+        locator.register(GetCurrentUserUseCase.self, instance: getCurrentUserUseCase)
+        locator.register(CompleteOnboardingUseCase.self, instance: completeOnboardingUseCase)
+        locator.register(UpdateCurrentUserUseCase.self, instance: updateCurrentUserUseCase)
+        locator.register(LogoutUseCase.self, instance: logoutUseCase)
 
         // Wishlist
         let getWishlistUseCase: GetWishlistCountriesUseCase = GetWishlistCountriesUseCaseImpl(repo: wishlistRepo)

@@ -852,6 +852,24 @@ internal enum L10n {
       internal static let untitled = L10n.tr("Localizable", "notes.presentation.untitled", fallback: "Untitled")
     }
   }
+  internal enum Onboarding {
+    internal enum Country {
+      /// Country of Residence
+      internal static let pickerTitle = L10n.tr("Localizable", "onboarding.country.picker_title", fallback: "Country of Residence")
+      /// Select Country
+      internal static let placeholder = L10n.tr("Localizable", "onboarding.country.placeholder", fallback: "Select Country")
+    }
+    internal enum Error {
+      /// Please select a country or choose World Citizen
+      internal static let countryRequired = L10n.tr("Localizable", "onboarding.error.country_required", fallback: "Please select a country or choose World Citizen")
+    }
+    internal enum WorldCitizen {
+      /// I don't live in one country
+      internal static let subtitle = L10n.tr("Localizable", "onboarding.world_citizen.subtitle", fallback: "I don't live in one country")
+      /// World Citizen
+      internal static let title = L10n.tr("Localizable", "onboarding.world_citizen.title", fallback: "World Citizen")
+    }
+  }
   internal enum Placeholder {
     /// %@ (stub)
     internal static func stubFormat(_ p1: Any) -> String {
@@ -880,6 +898,10 @@ internal enum L10n {
       internal static let title = L10n.tr("Localizable", "profile.about.title", fallback: "About Xplora")
       /// Version
       internal static let version = L10n.tr("Localizable", "profile.about.version", fallback: "Version")
+      /// Version %@ · Build %@
+      internal static func versionBuild(_ p1: Any, _ p2: Any) -> String {
+        return L10n.tr("Localizable", "profile.about.version_build", String(describing: p1), String(describing: p2), fallback: "Version %@ · Build %@")
+      }
       /// Version %@ · Build %@
       internal static func versionBuildFormat(_ p1: Any, _ p2: Any) -> String {
         return L10n.tr("Localizable", "profile.about.version_build_format", String(describing: p1), String(describing: p2), fallback: "Version %@ · Build %@")
@@ -922,6 +944,10 @@ internal enum L10n {
     internal enum Danger {
       /// Deleting data is permanent and cannot be undone.
       internal static let footnote = L10n.tr("Localizable", "profile.danger.footnote", fallback: "Deleting data is permanent and cannot be undone.")
+    }
+    internal enum Data {
+      /// Deleting data is permanent and cannot be undone.
+      internal static let footnote = L10n.tr("Localizable", "profile.data.footnote", fallback: "Deleting data is permanent and cannot be undone.")
     }
     internal enum Delete {
       /// This action cannot be undone.
@@ -1004,16 +1030,22 @@ internal enum L10n {
       internal static let share = L10n.tr("Localizable", "profile.item.share", fallback: "Share")
       /// Share with Friends
       internal static let shareWithFriends = L10n.tr("Localizable", "profile.item.share_with_friends", fallback: "Share with Friends")
+      /// Sign Out
+      internal static let signOut = L10n.tr("Localizable", "profile.item.sign_out", fallback: "Sign Out")
     }
     internal enum Language {
       /// English
       internal static let english = L10n.tr("Localizable", "profile.language.english", fallback: "English")
+      /// English
+      internal static let englishNative = L10n.tr("Localizable", "profile.language.english_native", fallback: "English")
       /// English
       internal static let nativeEnglish = L10n.tr("Localizable", "profile.language.native_english", fallback: "English")
       /// Русский
       internal static let nativeRussian = L10n.tr("Localizable", "profile.language.native_russian", fallback: "Русский")
       /// Russian
       internal static let russian = L10n.tr("Localizable", "profile.language.russian", fallback: "Russian")
+      /// Русский
+      internal static let russianNative = L10n.tr("Localizable", "profile.language.russian_native", fallback: "Русский")
     }
     internal enum LanguageSelection {
       /// Language selection will be implemented in the next step.

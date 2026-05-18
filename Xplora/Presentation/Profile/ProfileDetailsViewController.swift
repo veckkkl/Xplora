@@ -8,6 +8,8 @@ import SnapKit
 import UIKit
 
 final class ProfileDetailsViewController: UIViewController {
+    var onNameSaved: ((String) -> Void)?
+
     private let viewModel = ProfileDetailsViewModel()
 
     private enum Constants {
@@ -419,6 +421,7 @@ final class ProfileDetailsViewController: UIViewController {
         switch viewModel.validateName(input) {
         case .valid(let normalizedName):
             ProfileUserSettings.saveName(normalizedName)
+            onNameSaved?(normalizedName)
             refreshProfileData()
             clearEditNameAlertState()
         case .empty, .tooLong, .invalidCharacters:

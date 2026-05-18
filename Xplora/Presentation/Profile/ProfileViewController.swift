@@ -164,6 +164,8 @@ final class ProfileViewController: UIViewController {
         view.backgroundConfiguration = .clear()
     }
 
+    var onLogout: (() -> Void)?
+
     init(viewModel: ProfileViewModelInput & ProfileViewModelOutput) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -327,8 +329,13 @@ final class ProfileViewController: UIViewController {
 
     private func handle(route: ProfileRoute) {
         switch route {
+        case .logout:
+            onLogout?()
         case .openProfileDetails:
             let viewController = ProfileDetailsViewController()
+            viewController.onNameSaved = { [weak self] name in
+                self?.viewModel.didUpdateUserName(name)
+            }
             viewController.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(viewController, animated: true)
         case .openLanguageSelection:

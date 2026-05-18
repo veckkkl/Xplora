@@ -517,3 +517,15 @@
 "profile.stub.privacy_policy" = "Экран политики конфиденциальности будет реализован на следующем этапе.";
 "profile.stub.share_with_friends" = "Функция «Поделиться» будет реализована на следующем этапе.";
 "profile.stub.delete_data" = "Сценарий удаления данных будет реализован на следующем этапе.";
+
+"onboarding.country.picker_title" = "Страна проживания";
+"onboarding.country.placeholder" = "Выберите страну";
+"onboarding.error.country_required" = "Выберите страну или отметьте «Гражданин мира»";
+"onboarding.world_citizen.subtitle" = "Я не живу в одной стране";
+"onboarding.world_citizen.title" = "Гражданин мира";
+
+"profile.about.version_build" = "Версия %@ · Сборка %@";
+"profile.data.footnote" = "Удаление данных необратимо и не может быть отменено.";
+"profile.item.sign_out" = "Выйти";
+"profile.language.english_native" = "English";
+"profile.language.russian_native" = "Русский";

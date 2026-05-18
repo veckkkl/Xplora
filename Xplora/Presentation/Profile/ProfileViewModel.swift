@@ -13,6 +13,7 @@ enum ProfileRoute {
     case shareApp
     case rateApp
     case confirmDeleteData
+    case logout
 }
 
 @MainActor
@@ -20,6 +21,7 @@ protocol ProfileViewModelInput: AnyObject {
     func viewDidLoad()
     func didSelectItem(at indexPath: IndexPath)
     func didToggleDarkTheme(_ isOn: Bool)
+    func didUpdateUserName(_ name: String)
 }
 
 @MainActor
@@ -33,10 +35,25 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
     var onSectionsChange: (([ProfileSectionModel]) -> Void)?
     var onRoute: ((ProfileRoute) -> Void)?
 
+    private let getCurrentUser: GetCurrentUserUseCase
+    private let updateCurrentUser: UpdateCurrentUserUseCase
+
     private var sections: [ProfileSectionModel] = []
     private var isDarkThemeEnabled = AppThemeManager.isDarkThemeEnabled
 
+    init(
+        getCurrentUser: GetCurrentUserUseCase,
+        updateCurrentUser: UpdateCurrentUserUseCase
+    ) {
+        self.getCurrentUser = getCurrentUser
+        self.updateCurrentUser = updateCurrentUser
+    }
+
     func viewDidLoad() {
+        guard getCurrentUser.execute() != nil else {
+            onRoute?(.logout)
+            return
+        }
         refreshSections()
     }
 
@@ -50,11 +67,14 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         case .profileCard:
             onRoute?(.openProfileDetails)
         case .action(let actionItem):
-            guard actionItem.action != .darkTheme else {
+            switch actionItem.action {
+            case .darkTheme:
                 didToggleDarkTheme(!isDarkThemeEnabled)
-                return
+            case .logout:
+                onRoute?(.logout)
+            default:
+                onRoute?(route(for: actionItem.action))
             }
-            onRoute?(route(for: actionItem.action))
         }
     }
 
@@ -64,16 +84,23 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         refreshSections()
     }
 
+    func didUpdateUserName(_ name: String) {
+        updateCurrentUser.execute(name: name)
+        ProfileUserSettings.saveName(name)
+        refreshSections()
+    }
+
     private func buildSections() -> [ProfileSectionModel] {
-        [
+        let userName = getCurrentUser.execute()?.name ?? ProfileUserSettings.currentName
+        return [
             ProfileSectionModel(
                 section: .profileCard,
                 items: [
                     .profileCard(
                         ProfileCardItem(
-                            initials: ProfileUserSettings.initials(from: ProfileUserSettings.currentName),
+                            initials: ProfileUserSettings.initials(from: userName),
                             avatarFileName: ProfileUserSettings.currentAvatarFileName,
-                            name: ProfileUserSettings.currentName,
+                            name: userName,
                             status: ProfileUserSettings.currentStatus,
                             isStatusVisible: ProfileUserSettings.isStatusVisible,
                             stats: makeProfileStats()
@@ -84,93 +111,88 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
             ProfileSectionModel(
                 section: .appearance,
                 items: [
-                    .action(
-                        ProfileActionItem(
-                            action: .darkTheme,
-                            title: L10n.Profile.Item.darkTheme,
-                            value: nil,
-                            style: .standard,
-                            accessory: .toggle(isDarkThemeEnabled),
-                            iconSystemName: "moon.fill",
-                            iconTint: .blue
-                        )
-                    ),
-                    .action(
-                        ProfileActionItem(
-                            action: .language,
-                            title: L10n.Profile.Item.language,
-                            value: currentLanguageDisplayValue(),
-                            style: .standard,
-                            accessory: .disclosure,
-                            iconSystemName: "globe",
-                            iconTint: .green
-                        )
-                    )
+                    .action(ProfileActionItem(
+                        action: .darkTheme,
+                        title: L10n.Profile.Item.darkTheme,
+                        value: nil,
+                        style: .standard,
+                        accessory: .toggle(isDarkThemeEnabled),
+                        iconSystemName: "moon.fill",
+                        iconTint: .blue
+                    )),
+                    .action(ProfileActionItem(
+                        action: .language,
+                        title: L10n.Profile.Item.language,
+                        value: currentLanguageDisplayValue(),
+                        style: .standard,
+                        accessory: .disclosure,
+                        iconSystemName: "globe",
+                        iconTint: .green
+                    ))
                 ]
             ),
             ProfileSectionModel(
                 section: .app,
                 items: [
-                    .action(
-                        ProfileActionItem(
-                            action: .shareWithFriends,
-                            title: L10n.Profile.Item.share,
-                            value: nil,
-                            style: .standard,
-                            accessory: .none,
-                            iconSystemName: "square.and.arrow.up",
-                            iconTint: .blue
-                        )
-                    ),
-                    .action(
-                        ProfileActionItem(
-                            action: .rateApp,
-                            title: L10n.Profile.Item.rateApp,
-                            value: nil,
-                            style: .standard,
-                            accessory: .none,
-                            iconSystemName: "star.fill",
-                            iconTint: .yellow
-                        )
-                    ),
-                    .action(
-                        ProfileActionItem(
-                            action: .about,
-                            title: L10n.Profile.Item.aboutXplora,
-                            value: nil,
-                            style: .standard,
-                            accessory: .disclosure,
-                            iconSystemName: "info.circle",
-                            iconTint: .blue
-                        )
-                    ),
-                    .action(
-                        ProfileActionItem(
-                            action: .privacyPolicy,
-                            title: L10n.Profile.Item.privacyPolicy,
-                            value: nil,
-                            style: .standard,
-                            accessory: .disclosure,
-                            iconSystemName: "lock.shield",
-                            iconTint: .gray
-                        )
-                    )
+                    .action(ProfileActionItem(
+                        action: .shareWithFriends,
+                        title: L10n.Profile.Item.share,
+                        value: nil,
+                        style: .standard,
+                        accessory: .none,
+                        iconSystemName: "square.and.arrow.up",
+                        iconTint: .blue
+                    )),
+                    .action(ProfileActionItem(
+                        action: .rateApp,
+                        title: L10n.Profile.Item.rateApp,
+                        value: nil,
+                        style: .standard,
+                        accessory: .none,
+                        iconSystemName: "star.fill",
+                        iconTint: .yellow
+                    )),
+                    .action(ProfileActionItem(
+                        action: .about,
+                        title: L10n.Profile.Item.aboutXplora,
+                        value: nil,
+                        style: .standard,
+                        accessory: .disclosure,
+                        iconSystemName: "info.circle",
+                        iconTint: .blue
+                    )),
+                    .action(ProfileActionItem(
+                        action: .privacyPolicy,
+                        title: L10n.Profile.Item.privacyPolicy,
+                        value: nil,
+                        style: .standard,
+                        accessory: .disclosure,
+                        iconSystemName: "lock.shield",
+                        iconTint: .gray
+                    ))
                 ]
             ),
             ProfileSectionModel(
                 section: .data,
                 items: [
-                    .action(
-                        ProfileActionItem(
-                            action: .deleteData,
-                            title: L10n.Profile.Item.deleteData,
-                            value: nil,
-                            style: .destructive,
-                            accessory: .none,
-                            iconSystemName: "trash",
-                            iconTint: .red
-                        )
-                    )
+                    .action(ProfileActionItem(
+                        action: .logout,
+                        title: L10n.Profile.Item.signOut,
+                        value: nil,
+                        style: .standard,
+                        accessory: .none,
+                        iconSystemName: "rectangle.portrait.and.arrow.right",
+                        iconTint: .red
+                    )),
+                    .action(ProfileActionItem(
+                        action: .deleteData,
+                        title: L10n.Profile.Item.deleteData,
+                        value: nil,
+                        style: .destructive,
+                        accessory: .none,
+                        iconSystemName: "trash",
+                        iconTint: .red
+                    ))
                 ]
             )
         ]
@@ -182,43 +204,22 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
 
     private func makeProfileStats() -> [ProfileCardItem.Stat] {
         [
-            .init(
-                iconSystemName: "location.fill",
-                value: "23",
-                label: L10n.Profile.Card.Stat.places,
-                tint: .blue
-            ),
-            .init(
-                iconSystemName: "flag.fill",
-                value: "7",
-                label: L10n.Profile.Card.Stat.countries,
-                tint: .green
-            ),
-            .init(
-                iconSystemName: "globe.europe.africa.fill",
-                value: "12",
-                label: L10n.Profile.Card.Stat.trips,
-                tint: .purple
-            )
+            .init(iconSystemName: "location.fill", value: "23", label: L10n.Profile.Card.Stat.places, tint: .blue),
+            .init(iconSystemName: "flag.fill", value: "7", label: L10n.Profile.Card.Stat.countries, tint: .green),
+            .init(iconSystemName: "globe.europe.africa.fill", value: "12", label: L10n.Profile.Card.Stat.trips, tint: .purple)
         ]
     }
 
     private func route(for action: ProfileItemAction) -> ProfileRoute {
         switch action {
-        case .darkTheme:
-            preconditionFailure("Dark theme action is handled directly via toggle.")
-        case .language:
-            return .openLanguageSelection
-        case .rateApp:
-            return .rateApp
-        case .about:
-            return .openAboutXplora
-        case .privacyPolicy:
-            return .openPrivacyPolicy
-        case .shareWithFriends:
-            return .shareApp
-        case .deleteData:
-            return .confirmDeleteData
+        case .darkTheme, .logout:
+            preconditionFailure("Handled before route(for:) is called.")
+        case .language:       return .openLanguageSelection
+        case .rateApp:        return .rateApp
+        case .about:          return .openAboutXplora
+        case .privacyPolicy:  return .openPrivacyPolicy
+        case .shareWithFriends: return .shareApp
+        case .deleteData:     return .confirmDeleteData
         }
     }
 
