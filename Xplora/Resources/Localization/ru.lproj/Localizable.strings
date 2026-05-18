@@ -59,3 +59,97 @@
 "tab.statistics" = "Статистика";
 "tab.timeline" = "Хронология";
 "tab.wishlist" = "Вишлист";
+
+"profile.tab.title" = "Настройки";
+"profile.title" = "Настройки";
+
+"profile.card.subtitle" = "Дневник путешествий и впечатлений";
+"profile.card.status.world_explorer" = "Исследователь мира";
+"profile.card.status.place_collector" = "Коллекционер мест";
+"profile.card.status.adventure_traveler" = "Путешественник мира";
+"profile.card.stat.places" = "места";
+"profile.card.stat.countries" = "страны";
+"profile.card.stat.trips" = "поездки";
+
+"profile.section.app_settings" = "Настройки приложения";
+"profile.section.support" = "Поддержка";
+"profile.section.danger_zone" = "Опасная зона";
+"profile.section.appearance" = "Внешний вид";
+"profile.section.app" = "Приложение";
+"profile.section.data" = "Данные";
+
+"profile.item.dark_theme" = "Тёмная тема";
+"profile.item.language" = "Язык";
+"profile.item.share" = "Поделиться";
+"profile.item.rate_app" = "Оценить приложение";
+"profile.item.about_xplora" = "О Xplora";
+"profile.item.privacy_policy" = "Политика конфиденциальности";
+"profile.item.share_with_friends" = "Поделиться с друзьями";
+"profile.item.delete_data" = "Удалить данные";
+
+"profile.danger.footnote" = "Удаление данных необратимо и не может быть отменено.";
+
+"profile.details.title" = "Профиль";
+"profile.details.placeholder" = "Экран профиля будет реализован на следующем этапе.";
+"profile.details.change_photo" = "Изменить фото";
+"profile.details.change_photo_stub" = "Изменение фото будет добавлено позже.";
+"profile.details.name" = "Имя";
+"profile.details.status" = "Статус";
+"profile.details.status_note" = "Статус обновляется автоматически по статистике путешествий.";
+"profile.details.show_status" = "Показывать статус";
+"profile.details.about_status" = "Подробнее про статус";
+"profile.details.status_info.title" = "Статус профиля";
+"profile.details.status_info.message" = "Статус определяется автоматически на основе количества мест, стран и поездок.";
+"profile.details.edit_name.title" = "Изменить имя";
+"profile.details.edit_name.placeholder" = "Введите имя";
+"profile.details.edit_name.save" = "Сохранить";
+"profile.details.validation.empty_name" = "Введите имя";
+"profile.details.validation.too_long_name" = "Имя должно быть не длиннее %d символов.";
+"profile.details.validation.invalid_characters" = "Имя может содержать только буквы, пробел, дефис, апостроф и точку.";
+"profile.details.avatar.choose_photo" = "Медиатека";
+"profile.details.avatar.take_photo" = "Камера";
+"profile.details.avatar.camera_unavailable" = "Камера недоступна";
+"profile.details.avatar.preview_title" = "Новое фото профиля";
+"profile.language_selection.title" = "Язык";
+"profile.language_selection.placeholder" = "Выбор языка будет реализован на следующем этапе.";
+"profile.language_selection.restart_message" = "Язык применится после перезапуска приложения.";
+"profile.about.title" = "О Xplora";
+"profile.about.placeholder" = "Экран «О Xplora» будет реализован на следующем этапе.";
+"profile.about.subtitle" = "Дневник путешествий и впечатлений";
+"profile.about.footer" = "Создано для сохранения мест, впечатлений и путешествий.";
+"profile.about.version" = "Версия";
+"profile.about.build" = "Сборка";
+"profile.about.version_build_format" = "Версия %@ · Сборка %@";
+"profile.about.card.about_title" = "О приложении";
+"profile.about.card.about_text" = "Xplora помогает сохранять места, впечатления и истории путешествий.";
+"profile.about.card.features_title" = "Возможности";
+"profile.about.card.features_text" = "Сохраняйте места, ведите заметки о поездках, отмечайте важные воспоминания и просматривайте путешествия на карте.";
+"profile.about.card.technologies_title" = "Технологии";
+"profile.about.card.technologies_text" = "Проект построен на UIKit, MVVM, Clean Architecture, SnapKit и локальном хранении данных.";
+"profile.about.developer_resources_title" = "Для разработчиков";
+"profile.about.github_repository" = "GitHub Repository";
+"profile.about.readme_guide" = "README / Руководство";
+"profile.privacy.title" = "Политика конфиденциальности";
+"profile.privacy.placeholder" = "Экран политики конфиденциальности будет реализован на следующем этапе.";
+"profile.privacy.fallback_title" = "Политика конфиденциальности";
+"profile.privacy.fallback_message" = "Ссылка на политику конфиденциальности будет добавлена позже.";
+"profile.share.text" = "Попробуй Xplora";
+"profile.rate.title" = "Оценить приложение";
+"profile.rate.fallback_message" = "Сейчас не удалось открыть окно оценки.";
+"profile.delete.confirmation_title" = "Удалить данные?";
+"profile.delete.confirmation_message" = "Это действие нельзя отменить.";
+"profile.delete.stub_title" = "Пока недоступно";
+"profile.delete.stub_message" = "Удаление данных будет реализовано на следующем этапе.";
+
+"profile.language.english" = "Английский";
+"profile.language.russian" = "Русский";
+"profile.language.native_english" = "English";
+"profile.language.native_russian" = "Русский";
+
+"profile.stub.title" = "Пока недоступно";
+"profile.stub.profile_card" = "Экран данных аккаунта будет добавлен на следующем этапе.";
+"profile.stub.language" = "Выбор языка будет реализован на следующем этапе.";
+"profile.stub.about" = "Экран «О Xplora» будет реализован на следующем этапе.";
+"profile.stub.privacy_policy" = "Экран политики конфиденциальности будет реализован на следующем этапе.";
+"profile.stub.share_with_friends" = "Функция «Поделиться» будет реализована на следующем этапе.";
+"profile.stub.delete_data" = "Сценарий удаления данных будет реализован на следующем этапе.";

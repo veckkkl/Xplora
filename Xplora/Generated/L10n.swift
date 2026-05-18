@@ -184,6 +184,226 @@ internal enum L10n {
       return L10n.tr("Localizable", "placeholder.stub_format", String(describing: p1), fallback: "%@ (stub)")
     }
   }
+  internal enum Profile {
+    /// Settings
+    internal static let title = L10n.tr("Localizable", "profile.title", fallback: "Settings")
+    internal enum About {
+      /// Build
+      internal static let build = L10n.tr("Localizable", "profile.about.build", fallback: "Build")
+      /// Developer Resources
+      internal static let developerResourcesTitle = L10n.tr("Localizable", "profile.about.developer_resources_title", fallback: "Developer Resources")
+      /// Designed for capturing places, memories and trips.
+      internal static let footer = L10n.tr("Localizable", "profile.about.footer", fallback: "Designed for capturing places, memories and trips.")
+      /// GitHub Repository
+      internal static let githubRepository = L10n.tr("Localizable", "profile.about.github_repository", fallback: "GitHub Repository")
+      /// About Xplora screen will be implemented in the next step.
+      internal static let placeholder = L10n.tr("Localizable", "profile.about.placeholder", fallback: "About Xplora screen will be implemented in the next step.")
+      /// README / Guide
+      internal static let readmeGuide = L10n.tr("Localizable", "profile.about.readme_guide", fallback: "README / Guide")
+      /// Travel journal for your experiences
+      internal static let subtitle = L10n.tr("Localizable", "profile.about.subtitle", fallback: "Travel journal for your experiences")
+      /// About Xplora
+      internal static let title = L10n.tr("Localizable", "profile.about.title", fallback: "About Xplora")
+      /// Version
+      internal static let version = L10n.tr("Localizable", "profile.about.version", fallback: "Version")
+      /// Version %@ · Build %@
+      internal static func versionBuildFormat(_ p1: Any, _ p2: Any) -> String {
+        return L10n.tr("Localizable", "profile.about.version_build_format", String(describing: p1), String(describing: p2), fallback: "Version %@ · Build %@")
+      }
+      internal enum Card {
+        /// Xplora helps you save places, memories and travel stories.
+        internal static let aboutText = L10n.tr("Localizable", "profile.about.card.about_text", fallback: "Xplora helps you save places, memories and travel stories.")
+        /// About Xplora
+        internal static let aboutTitle = L10n.tr("Localizable", "profile.about.card.about_title", fallback: "About Xplora")
+        /// Save places, keep travel notes, mark important memories and view your journeys on the map.
+        internal static let featuresText = L10n.tr("Localizable", "profile.about.card.features_text", fallback: "Save places, keep travel notes, mark important memories and view your journeys on the map.")
+        /// Features
+        internal static let featuresTitle = L10n.tr("Localizable", "profile.about.card.features_title", fallback: "Features")
+        /// Built with UIKit, MVVM, Clean Architecture, SnapKit and local data storage.
+        internal static let technologiesText = L10n.tr("Localizable", "profile.about.card.technologies_text", fallback: "Built with UIKit, MVVM, Clean Architecture, SnapKit and local data storage.")
+        /// Technologies
+        internal static let technologiesTitle = L10n.tr("Localizable", "profile.about.card.technologies_title", fallback: "Technologies")
+      }
+    }
+    internal enum Card {
+      /// Travel journal and memories
+      internal static let subtitle = L10n.tr("Localizable", "profile.card.subtitle", fallback: "Travel journal and memories")
+      internal enum Stat {
+        /// countries
+        internal static let countries = L10n.tr("Localizable", "profile.card.stat.countries", fallback: "countries")
+        /// places
+        internal static let places = L10n.tr("Localizable", "profile.card.stat.places", fallback: "places")
+        /// trips
+        internal static let trips = L10n.tr("Localizable", "profile.card.stat.trips", fallback: "trips")
+      }
+      internal enum Status {
+        /// Adventure Traveler
+        internal static let adventureTraveler = L10n.tr("Localizable", "profile.card.status.adventure_traveler", fallback: "Adventure Traveler")
+        /// Place Collector
+        internal static let placeCollector = L10n.tr("Localizable", "profile.card.status.place_collector", fallback: "Place Collector")
+        /// World Explorer
+        internal static let worldExplorer = L10n.tr("Localizable", "profile.card.status.world_explorer", fallback: "World Explorer")
+      }
+    }
+    internal enum Danger {
+      /// Deleting data is permanent and cannot be undone.
+      internal static let footnote = L10n.tr("Localizable", "profile.danger.footnote", fallback: "Deleting data is permanent and cannot be undone.")
+    }
+    internal enum Delete {
+      /// This action cannot be undone.
+      internal static let confirmationMessage = L10n.tr("Localizable", "profile.delete.confirmation_message", fallback: "This action cannot be undone.")
+      /// Delete Data?
+      internal static let confirmationTitle = L10n.tr("Localizable", "profile.delete.confirmation_title", fallback: "Delete Data?")
+      /// Data deletion will be implemented in the next step.
+      internal static let stubMessage = L10n.tr("Localizable", "profile.delete.stub_message", fallback: "Data deletion will be implemented in the next step.")
+      /// Not Available Yet
+      internal static let stubTitle = L10n.tr("Localizable", "profile.delete.stub_title", fallback: "Not Available Yet")
+    }
+    internal enum Details {
+      /// About status
+      internal static let aboutStatus = L10n.tr("Localizable", "profile.details.about_status", fallback: "About status")
+      /// Change Photo
+      internal static let changePhoto = L10n.tr("Localizable", "profile.details.change_photo", fallback: "Change Photo")
+      /// Changing profile photo will be added later.
+      internal static let changePhotoStub = L10n.tr("Localizable", "profile.details.change_photo_stub", fallback: "Changing profile photo will be added later.")
+      /// Name
+      internal static let name = L10n.tr("Localizable", "profile.details.name", fallback: "Name")
+      /// Profile details screen will be implemented in the next step.
+      internal static let placeholder = L10n.tr("Localizable", "profile.details.placeholder", fallback: "Profile details screen will be implemented in the next step.")
+      /// Show Status
+      internal static let showStatus = L10n.tr("Localizable", "profile.details.show_status", fallback: "Show Status")
+      /// Status
+      internal static let status = L10n.tr("Localizable", "profile.details.status", fallback: "Status")
+      /// Status updates automatically based on travel statistics.
+      internal static let statusNote = L10n.tr("Localizable", "profile.details.status_note", fallback: "Status updates automatically based on travel statistics.")
+      /// Profile
+      internal static let title = L10n.tr("Localizable", "profile.details.title", fallback: "Profile")
+      internal enum Avatar {
+        /// Camera is unavailable
+        internal static let cameraUnavailable = L10n.tr("Localizable", "profile.details.avatar.camera_unavailable", fallback: "Camera is unavailable")
+        /// Photo Library
+        internal static let choosePhoto = L10n.tr("Localizable", "profile.details.avatar.choose_photo", fallback: "Photo Library")
+        /// New Profile Photo
+        internal static let previewTitle = L10n.tr("Localizable", "profile.details.avatar.preview_title", fallback: "New Profile Photo")
+        /// Camera
+        internal static let takePhoto = L10n.tr("Localizable", "profile.details.avatar.take_photo", fallback: "Camera")
+      }
+      internal enum EditName {
+        /// Enter name
+        internal static let placeholder = L10n.tr("Localizable", "profile.details.edit_name.placeholder", fallback: "Enter name")
+        /// Save
+        internal static let save = L10n.tr("Localizable", "profile.details.edit_name.save", fallback: "Save")
+        /// Edit Name
+        internal static let title = L10n.tr("Localizable", "profile.details.edit_name.title", fallback: "Edit Name")
+      }
+      internal enum StatusInfo {
+        /// Status is automatically calculated based on your places, countries, and trips.
+        internal static let message = L10n.tr("Localizable", "profile.details.status_info.message", fallback: "Status is automatically calculated based on your places, countries, and trips.")
+        /// Profile Status
+        internal static let title = L10n.tr("Localizable", "profile.details.status_info.title", fallback: "Profile Status")
+      }
+      internal enum Validation {
+        /// Please enter a name
+        internal static let emptyName = L10n.tr("Localizable", "profile.details.validation.empty_name", fallback: "Please enter a name")
+        /// Name can only contain letters, spaces, hyphens, apostrophes, and periods.
+        internal static let invalidCharacters = L10n.tr("Localizable", "profile.details.validation.invalid_characters", fallback: "Name can only contain letters, spaces, hyphens, apostrophes, and periods.")
+        /// Name must be %d characters or fewer.
+        internal static func tooLongName(_ p1: Int) -> String {
+          return L10n.tr("Localizable", "profile.details.validation.too_long_name", p1, fallback: "Name must be %d characters or fewer.")
+        }
+      }
+    }
+    internal enum Item {
+      /// About Xplora
+      internal static let aboutXplora = L10n.tr("Localizable", "profile.item.about_xplora", fallback: "About Xplora")
+      /// Dark Theme
+      internal static let darkTheme = L10n.tr("Localizable", "profile.item.dark_theme", fallback: "Dark Theme")
+      /// Delete Data
+      internal static let deleteData = L10n.tr("Localizable", "profile.item.delete_data", fallback: "Delete Data")
+      /// Language
+      internal static let language = L10n.tr("Localizable", "profile.item.language", fallback: "Language")
+      /// Privacy Policy
+      internal static let privacyPolicy = L10n.tr("Localizable", "profile.item.privacy_policy", fallback: "Privacy Policy")
+      /// Rate App
+      internal static let rateApp = L10n.tr("Localizable", "profile.item.rate_app", fallback: "Rate App")
+      /// Share
+      internal static let share = L10n.tr("Localizable", "profile.item.share", fallback: "Share")
+      /// Share with Friends
+      internal static let shareWithFriends = L10n.tr("Localizable", "profile.item.share_with_friends", fallback: "Share with Friends")
+    }
+    internal enum Language {
+      /// English
+      internal static let english = L10n.tr("Localizable", "profile.language.english", fallback: "English")
+      /// English
+      internal static let nativeEnglish = L10n.tr("Localizable", "profile.language.native_english", fallback: "English")
+      /// Русский
+      internal static let nativeRussian = L10n.tr("Localizable", "profile.language.native_russian", fallback: "Русский")
+      /// Russian
+      internal static let russian = L10n.tr("Localizable", "profile.language.russian", fallback: "Russian")
+    }
+    internal enum LanguageSelection {
+      /// Language selection will be implemented in the next step.
+      internal static let placeholder = L10n.tr("Localizable", "profile.language_selection.placeholder", fallback: "Language selection will be implemented in the next step.")
+      /// Language will be applied after restarting the app.
+      internal static let restartMessage = L10n.tr("Localizable", "profile.language_selection.restart_message", fallback: "Language will be applied after restarting the app.")
+      /// Language
+      internal static let title = L10n.tr("Localizable", "profile.language_selection.title", fallback: "Language")
+    }
+    internal enum Privacy {
+      /// Privacy Policy link will be added later.
+      internal static let fallbackMessage = L10n.tr("Localizable", "profile.privacy.fallback_message", fallback: "Privacy Policy link will be added later.")
+      /// Privacy Policy
+      internal static let fallbackTitle = L10n.tr("Localizable", "profile.privacy.fallback_title", fallback: "Privacy Policy")
+      /// Privacy Policy screen will be implemented in the next step.
+      internal static let placeholder = L10n.tr("Localizable", "profile.privacy.placeholder", fallback: "Privacy Policy screen will be implemented in the next step.")
+      /// Privacy Policy
+      internal static let title = L10n.tr("Localizable", "profile.privacy.title", fallback: "Privacy Policy")
+    }
+    internal enum Rate {
+      /// Unable to open the review prompt right now.
+      internal static let fallbackMessage = L10n.tr("Localizable", "profile.rate.fallback_message", fallback: "Unable to open the review prompt right now.")
+      /// Rate App
+      internal static let title = L10n.tr("Localizable", "profile.rate.title", fallback: "Rate App")
+    }
+    internal enum Section {
+      /// App
+      internal static let app = L10n.tr("Localizable", "profile.section.app", fallback: "App")
+      /// App Settings
+      internal static let appSettings = L10n.tr("Localizable", "profile.section.app_settings", fallback: "App Settings")
+      /// Appearance
+      internal static let appearance = L10n.tr("Localizable", "profile.section.appearance", fallback: "Appearance")
+      /// Danger Zone
+      internal static let dangerZone = L10n.tr("Localizable", "profile.section.danger_zone", fallback: "Danger Zone")
+      /// Data
+      internal static let data = L10n.tr("Localizable", "profile.section.data", fallback: "Data")
+      /// Support
+      internal static let support = L10n.tr("Localizable", "profile.section.support", fallback: "Support")
+    }
+    internal enum Share {
+      /// Check out Xplora
+      internal static let text = L10n.tr("Localizable", "profile.share.text", fallback: "Check out Xplora")
+    }
+    internal enum Stub {
+      /// About screen will be implemented in the next step.
+      internal static let about = L10n.tr("Localizable", "profile.stub.about", fallback: "About screen will be implemented in the next step.")
+      /// Delete data flow will be implemented in the next step.
+      internal static let deleteData = L10n.tr("Localizable", "profile.stub.delete_data", fallback: "Delete data flow will be implemented in the next step.")
+      /// Language selection will be implemented in the next step.
+      internal static let language = L10n.tr("Localizable", "profile.stub.language", fallback: "Language selection will be implemented in the next step.")
+      /// Privacy Policy screen will be implemented in the next step.
+      internal static let privacyPolicy = L10n.tr("Localizable", "profile.stub.privacy_policy", fallback: "Privacy Policy screen will be implemented in the next step.")
+      /// Account details screen will be added in the next step.
+      internal static let profileCard = L10n.tr("Localizable", "profile.stub.profile_card", fallback: "Account details screen will be added in the next step.")
+      /// Share flow will be implemented in the next step.
+      internal static let shareWithFriends = L10n.tr("Localizable", "profile.stub.share_with_friends", fallback: "Share flow will be implemented in the next step.")
+      /// Not Available Yet
+      internal static let title = L10n.tr("Localizable", "profile.stub.title", fallback: "Not Available Yet")
+    }
+    internal enum Tab {
+      /// Settings
+      internal static let title = L10n.tr("Localizable", "profile.tab.title", fallback: "Settings")
+    }
+  }
   internal enum Tab {
     /// Profile
     internal static let profile = L10n.tr("Localizable", "tab.profile", fallback: "Profile")
