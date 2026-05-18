@@ -326,8 +326,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y7P8TX96Q5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Xplora/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Allow camera access to attach photos to your notes.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to show your position on the map.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allow photo library access to attach photos to your notes.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -338,7 +342,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = coursework.Xplora;
+				PRODUCT_BUNDLE_IDENTIFIER = coursework.Xplora.me;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -357,8 +361,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y7P8TX96Q5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Xplora/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Allow camera access to attach photos to your notes.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to show your position on the map.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allow photo library access to attach photos to your notes.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -369,7 +377,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = coursework.Xplora;
+				PRODUCT_BUNDLE_IDENTIFIER = coursework.Xplora.me;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;

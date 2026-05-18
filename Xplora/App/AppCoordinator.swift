@@ -65,7 +65,7 @@ final class AppCoordinator {
     private func makeMainTabBar() -> MainTabBarController {
         let tabBarController = MainTabBarController()
 
-        let wishlistNav = makePlaceholderNav(title: L10n.Tab.wishlist, systemImageName: "heart")
+        let wishlistNav = makeWishlistNav()
         let timelineNav = makePlaceholderNav(title: L10n.Tab.timeline, systemImageName: "clock")
         let statisticsNav = makePlaceholderNav(title: L10n.Tab.statistics, systemImageName: "chart.bar.xaxis")
         let profileNav = makeProfileNav()
@@ -105,6 +105,34 @@ final class AppCoordinator {
                 animations: { self.window.rootViewController = viewController }
             )
         }
+    }
+
+    private func makeWishlistNav() -> UINavigationController {
+        let getUseCase: GetWishlistCountriesUseCase = locator.resolve(GetWishlistCountriesUseCase.self)
+        let addUseCase: AddWishlistCountryUseCase = locator.resolve(AddWishlistCountryUseCase.self)
+        let removeUseCase: RemoveWishlistCountryUseCase = locator.resolve(RemoveWishlistCountryUseCase.self)
+        let toggleUseCase: ToggleWishlistCountryUseCase = locator.resolve(ToggleWishlistCountryUseCase.self)
+        let getCatalogPlacesUseCase: GetCatalogPlacesUseCase = locator.resolve(GetCatalogPlacesUseCase.self)
+        let getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase = locator.resolve(GetCitiesForPlaceUseCase.self)
+
+        let viewModel = WishlistViewModel(
+            getUseCase: getUseCase,
+            addUseCase: addUseCase,
+            removeUseCase: removeUseCase,
+            toggleUseCase: toggleUseCase
+        )
+        let viewController = WishlistViewController(
+            viewModel: viewModel,
+            getCatalogPlacesUseCase: getCatalogPlacesUseCase,
+            getCitiesForPlaceUseCase: getCitiesForPlaceUseCase
+        )
+        let nav = UINavigationController(rootViewController: viewController)
+        nav.tabBarItem = UITabBarItem(
+            title: L10n.Tab.wishlist,
+            image: UIImage(systemName: "heart"),
+            selectedImage: UIImage(systemName: "heart.fill")
+        )
+        return nav
     }
 
     private func makePlaceholderNav(title: String, systemImageName: String) -> UINavigationController {

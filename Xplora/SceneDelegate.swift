@@ -38,12 +38,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let settingsRepo: SettingsRepo = SettingsRepoImpl(storage: storage)
         let notesRepo: NotesRepo = NotesRepoImpl(coreDataStack: coreDataStack)
         let authRepository: AuthRepository = AuthRepositoryImpl(storage: storage)
+        let wishlistRepo: WishlistRepo = WishlistRepoImpl(storage: storage)
 
         locator.register(TripsRepo.self, instance: tripsRepo)
         locator.register(PlacesRepo.self, instance: placesRepo)
         locator.register(SettingsRepo.self, instance: settingsRepo)
         locator.register(NotesRepo.self, instance: notesRepo)
         locator.register(AuthRepository.self, instance: authRepository)
+        locator.register(WishlistRepo.self, instance: wishlistRepo)
 
         // Services
         let locationService: LocationService = LocationServiceImpl()
@@ -92,6 +94,39 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         locator.register(CompleteOnboardingUseCase.self, instance: completeOnboardingUseCase)
         locator.register(UpdateCurrentUserUseCase.self, instance: updateCurrentUserUseCase)
         locator.register(LogoutUseCase.self, instance: logoutUseCase)
+
+        // Wishlist
+        let getWishlistUseCase: GetWishlistCountriesUseCase = GetWishlistCountriesUseCaseImpl(repo: wishlistRepo)
+        let addWishlistUseCase: AddWishlistCountryUseCase = AddWishlistCountryUseCaseImpl(repo: wishlistRepo)
+        let removeWishlistUseCase: RemoveWishlistCountryUseCase = RemoveWishlistCountryUseCaseImpl(repo: wishlistRepo)
+        let toggleWishlistUseCase: ToggleWishlistCountryUseCase = ToggleWishlistCountryUseCaseImpl(repo: wishlistRepo)
+
+        locator.register(GetWishlistCountriesUseCase.self, instance: getWishlistUseCase)
+        locator.register(AddWishlistCountryUseCase.self, instance: addWishlistUseCase)
+        locator.register(RemoveWishlistCountryUseCase.self, instance: removeWishlistUseCase)
+        locator.register(ToggleWishlistCountryUseCase.self, instance: toggleWishlistUseCase)
+
+        // Place catalog. The source of truth is `CatalogPlacePolicy`; the API
+        // client refreshes the cache in the background as a validation step.
+        let countriesAPIClient: CountriesAPIClient = CountriesNowAPIClient()
+        let catalogPlacesRepo: CatalogPlacesRepo =
+            CatalogPlacesRepoImpl(api: countriesAPIClient, storage: storage)
+        let getCatalogPlacesUseCase: GetCatalogPlacesUseCase =
+            GetCatalogPlacesUseCaseImpl(repo: catalogPlacesRepo)
+
+        locator.register(CatalogPlacesRepo.self, instance: catalogPlacesRepo)
+        locator.register(GetCatalogPlacesUseCase.self, instance: getCatalogPlacesUseCase)
+
+        // Cities catalog (bundled, gated by CatalogPlacePolicy)
+        let citiesCatalogRepo: CitiesCatalogRepo = CitiesCatalogRepoImpl()
+        let getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase =
+            GetCitiesForPlaceUseCaseImpl(repo: citiesCatalogRepo)
+        let searchCitiesUseCase: SearchCitiesUseCase =
+            SearchCitiesUseCaseImpl(repo: citiesCatalogRepo)
+
+        locator.register(CitiesCatalogRepo.self, instance: citiesCatalogRepo)
+        locator.register(GetCitiesForPlaceUseCase.self, instance: getCitiesForPlaceUseCase)
+        locator.register(SearchCitiesUseCase.self, instance: searchCitiesUseCase)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
