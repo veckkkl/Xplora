@@ -8,8 +8,7 @@ import UIKit
 final class WishlistViewController: UIViewController {
     private let viewModel: WishlistViewModelInput & WishlistViewModelOutput
     private let getCatalogPlacesUseCase: GetCatalogPlacesUseCase
-    private let getSuggestedCitiesUseCase: GetSuggestedCitiesForPlaceUseCase
-    private let autocompleteCitiesUseCase: AutocompleteCitiesUseCase
+    private let getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase
 
     private var collectionView: UICollectionView!
     private var dataSource: UICollectionViewDiffableDataSource<Int, WishlistCountry>!
@@ -18,13 +17,11 @@ final class WishlistViewController: UIViewController {
     init(
         viewModel: WishlistViewModelInput & WishlistViewModelOutput,
         getCatalogPlacesUseCase: GetCatalogPlacesUseCase,
-        getSuggestedCitiesUseCase: GetSuggestedCitiesForPlaceUseCase,
-        autocompleteCitiesUseCase: AutocompleteCitiesUseCase
+        getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase
     ) {
         self.viewModel = viewModel
         self.getCatalogPlacesUseCase = getCatalogPlacesUseCase
-        self.getSuggestedCitiesUseCase = getSuggestedCitiesUseCase
-        self.autocompleteCitiesUseCase = autocompleteCitiesUseCase
+        self.getCitiesForPlaceUseCase = getCitiesForPlaceUseCase
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -207,8 +204,7 @@ final class WishlistViewController: UIViewController {
     private func showAddCountry() {
         let vc = AddWishlistCountryViewController(
             getCatalogPlacesUseCase: getCatalogPlacesUseCase,
-            getSuggestedCitiesUseCase: getSuggestedCitiesUseCase,
-            autocompleteCitiesUseCase: autocompleteCitiesUseCase
+            getCitiesForPlaceUseCase: getCitiesForPlaceUseCase
         )
         vc.onSelect = { [weak self] country in self?.viewModel.didSelect(country: country) }
         let nav = UINavigationController(rootViewController: vc)

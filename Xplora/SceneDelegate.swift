@@ -99,19 +99,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         locator.register(CatalogPlacesRepo.self, instance: catalogPlacesRepo)
         locator.register(GetCatalogPlacesUseCase.self, instance: getCatalogPlacesUseCase)
 
-        // Cities catalog. Curated bundled + remote API (capital, full list for
-        // autocomplete). Repo caches API responses per place in memory.
-        let citiesCatalogRepo: CitiesCatalogRepo = CitiesCatalogRepoImpl(api: countriesAPIClient)
-        let getSuggestedCitiesUseCase: GetSuggestedCitiesForPlaceUseCase =
-            GetSuggestedCitiesForPlaceUseCaseImpl(repo: citiesCatalogRepo)
-        let autocompleteCitiesUseCase: AutocompleteCitiesUseCase =
-            AutocompleteCitiesUseCaseImpl(repo: citiesCatalogRepo)
+        // Cities catalog (bundled, gated by CatalogPlacePolicy)
+        let citiesCatalogRepo: CitiesCatalogRepo = CitiesCatalogRepoImpl()
+        let getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase =
+            GetCitiesForPlaceUseCaseImpl(repo: citiesCatalogRepo)
         let searchCitiesUseCase: SearchCitiesUseCase =
             SearchCitiesUseCaseImpl(repo: citiesCatalogRepo)
 
         locator.register(CitiesCatalogRepo.self, instance: citiesCatalogRepo)
-        locator.register(GetSuggestedCitiesForPlaceUseCase.self, instance: getSuggestedCitiesUseCase)
-        locator.register(AutocompleteCitiesUseCase.self, instance: autocompleteCitiesUseCase)
+        locator.register(GetCitiesForPlaceUseCase.self, instance: getCitiesForPlaceUseCase)
         locator.register(SearchCitiesUseCase.self, instance: searchCitiesUseCase)
     }
 

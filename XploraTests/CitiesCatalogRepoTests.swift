@@ -3,17 +3,16 @@
 //  XploraTests
 //
 
-import Foundation
 import Testing
 @testable import Xplora
 
 struct CitiesCatalogRepoTests {
 
-    // MARK: - curatedCities(forPlaceCode:)
+    // MARK: - cities(forPlaceCode:)
 
-    @Test func returnsCuratedForSupportedPlace() async throws {
+    @Test func returnsCitiesForSupportedPlace() async throws {
         let repo = CitiesCatalogRepoImpl()
-        let cities = try await repo.curatedCities(forPlaceCode: "FR")
+        let cities = try await repo.cities(forPlaceCode: "FR")
         let fallbacks = cities.map(\.fallbackName)
 
         #expect(!cities.isEmpty)
@@ -21,19 +20,23 @@ struct CitiesCatalogRepoTests {
         #expect(cities.allSatisfy { $0.placeCode == "FR" })
     }
 
-    @Test func returnsEmptyCuratedForSupportedTerritory() async throws {
+    @Test func returnsCitiesForSupportedTerritory() async throws {
+        // Greenland is in policy as .territory and seeded with no curated
+        // cities in the bundled source — should return empty, not error.
         let repo = CitiesCatalogRepoImpl()
-        let cities = try await repo.curatedCities(forPlaceCode: "GL")
+        let cities = try await repo.cities(forPlaceCode: "GL")
         #expect(cities.isEmpty)
     }
 
-    @Test func returnsEmptyCuratedForUnsupportedPlaceCode() async throws {
+    @Test func returnsEmptyForUnsupportedPlaceCode() async throws {
         let repo = CitiesCatalogRepoImpl()
-        let cities = try await repo.curatedCities(forPlaceCode: "ZZ")
+        let cities = try await repo.cities(forPlaceCode: "ZZ")
         #expect(cities.isEmpty)
     }
 
-    @Test func dropsCuratedCitiesWhosePlaceIsNotSupported() async throws {
+    @Test func dropsCitiesWhosePlaceIsNotSupported() async throws {
+        // Build a synthetic repo where the bundled source contains a place
+        // that's NOT in the policy (`ZZ`). The repo must filter it out.
         let synthetic: [String: [CatalogCity]] = [
             "FR": [CatalogCity(id: "FR-paris", fallbackName: "Paris", placeCode: "FR")],
             "ZZ": [CatalogCity(id: "ZZ-x", fallbackName: "X", placeCode: "ZZ")]
@@ -42,87 +45,15 @@ struct CitiesCatalogRepoTests {
             supportedPlaceCodes: ["FR"],
             bundledCities: synthetic
         )
-        #expect(try await repo.curatedCities(forPlaceCode: "FR").map(\.id) == ["FR-paris"])
-        #expect(try await repo.curatedCities(forPlaceCode: "ZZ").isEmpty)
+        #expect(try await repo.cities(forPlaceCode: "FR").map(\.id) == ["FR-paris"])
+        #expect(try await repo.cities(forPlaceCode: "ZZ").isEmpty)
     }
 
-    @Test func curatedLookupIsCaseInsensitive() async throws {
+    @Test func placeCodeLookupIsCaseInsensitive() async throws {
         let repo = CitiesCatalogRepoImpl()
-        let lower = try await repo.curatedCities(forPlaceCode: "fr")
-        let upper = try await repo.curatedCities(forPlaceCode: "FR")
+        let lower = try await repo.cities(forPlaceCode: "fr")
+        let upper = try await repo.cities(forPlaceCode: "FR")
         #expect(lower.map(\.id) == upper.map(\.id))
-    }
-
-    // MARK: - capital(forPlaceCode:)
-
-    @Test func capitalReturnsAPIResult() async throws {
-        let api = StubCountriesAPIClient(capital: ["France": "Paris"])
-        let repo = Self.makeRepoBackedBy(api: api)
-
-        let capital = try await repo.capital(forPlaceCode: "FR")
-        #expect(capital?.fallbackName == "Paris")
-        #expect(capital?.placeCode == "FR")
-    }
-
-    @Test func capitalReturnsNilWhenAPIErrors() async throws {
-        let api = StubCountriesAPIClient(capitalError: TestError.boom)
-        let repo = Self.makeRepoBackedBy(api: api)
-
-        #expect(try await repo.capital(forPlaceCode: "FR") == nil)
-    }
-
-    @Test func capitalReturnsNilWhenAPIReturnsEmpty() async throws {
-        let api = StubCountriesAPIClient(capital: ["France": nil])
-        let repo = Self.makeRepoBackedBy(api: api)
-
-        #expect(try await repo.capital(forPlaceCode: "FR") == nil)
-    }
-
-    @Test func capitalIsCachedAcrossCalls() async throws {
-        let api = StubCountriesAPIClient(capital: ["France": "Paris"])
-        let repo = Self.makeRepoBackedBy(api: api)
-
-        _ = try await repo.capital(forPlaceCode: "FR")
-        _ = try await repo.capital(forPlaceCode: "FR")
-        #expect(api.capitalCallCount == 1)
-    }
-
-    @Test func capitalReturnsNilForUnsupportedPlace() async throws {
-        let api = StubCountriesAPIClient(capital: ["Atlantis": "Pearl"])
-        let repo = CitiesCatalogRepoImpl(
-            supportedPlaceCodes: ["FR"],
-            bundledCities: [:],
-            api: api,
-            countryNameProvider: { _ in "Atlantis" }
-        )
-        #expect(try await repo.capital(forPlaceCode: "ZZ") == nil)
-    }
-
-    // MARK: - allCities(forPlaceCode:)
-
-    @Test func allCitiesReturnsAPIResult() async throws {
-        let api = StubCountriesAPIClient(cities: ["France": ["Paris", "Lyon", "Marseille"]])
-        let repo = Self.makeRepoBackedBy(api: api)
-
-        let cities = try await repo.allCities(forPlaceCode: "FR")
-        #expect(cities.map(\.fallbackName) == ["Paris", "Lyon", "Marseille"])
-        #expect(cities.allSatisfy { $0.placeCode == "FR" })
-    }
-
-    @Test func allCitiesReturnsEmptyOnAPIError() async throws {
-        let api = StubCountriesAPIClient(citiesError: TestError.boom)
-        let repo = Self.makeRepoBackedBy(api: api)
-
-        #expect(try await repo.allCities(forPlaceCode: "FR").isEmpty)
-    }
-
-    @Test func allCitiesIsCachedAcrossCalls() async throws {
-        let api = StubCountriesAPIClient(cities: ["France": ["Paris"]])
-        let repo = Self.makeRepoBackedBy(api: api)
-
-        _ = try await repo.allCities(forPlaceCode: "FR")
-        _ = try await repo.allCities(forPlaceCode: "FR")
-        #expect(api.citiesCallCount == 1)
     }
 
     // MARK: - search
@@ -135,6 +66,7 @@ struct CitiesCatalogRepoTests {
 
     @Test func searchIsDiacriticInsensitive() async throws {
         let repo = CitiesCatalogRepoImpl()
+        // "São Paulo" -> match plain "sao"
         let results = try await repo.search(query: "sao")
         #expect(results.contains { $0.id == "BR-sao_paulo" })
     }
@@ -154,6 +86,7 @@ struct CitiesCatalogRepoTests {
     @Test func searchReturnsUniqueIDs() async throws {
         let repo = CitiesCatalogRepoImpl()
         let results = try await repo.search(query: "patagonia")
+        // "Patagonia" exists for both AR and CL — distinct ids, both expected.
         let ids = results.map(\.id)
         #expect(Set(ids).count == ids.count)
         #expect(ids.contains("AR-patagonia"))
@@ -163,6 +96,7 @@ struct CitiesCatalogRepoTests {
     @Test func searchSortsByDisplayName() async throws {
         let repo = CitiesCatalogRepoImpl()
         let results = try await repo.search(query: "san ")
+        // "San Pedro de Atacama" and "San Francisco" both match.
         let displayNames = results.map(\.displayName)
         let sorted = displayNames.sorted { $0.localizedCompare($1) == .orderedAscending }
         #expect(displayNames == sorted)
@@ -172,18 +106,5 @@ struct CitiesCatalogRepoTests {
         let repo = CitiesCatalogRepoImpl()
         #expect(try await repo.search(query: "").isEmpty)
         #expect(try await repo.search(query: "   ").isEmpty)
-    }
-
-    // MARK: - Helpers
-
-    /// Repo wired with a single supported place "FR" mapped to "France" so
-    /// stubs can key responses by country name.
-    private static func makeRepoBackedBy(api: CountriesAPIClient) -> CitiesCatalogRepoImpl {
-        CitiesCatalogRepoImpl(
-            supportedPlaceCodes: ["FR"],
-            bundledCities: [:],
-            api: api,
-            countryNameProvider: { _ in "France" }
-        )
     }
 }

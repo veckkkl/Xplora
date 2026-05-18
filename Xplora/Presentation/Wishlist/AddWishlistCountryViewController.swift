@@ -9,8 +9,7 @@ final class AddWishlistCountryViewController: UIViewController {
     var onSelect: ((WishlistCountry) -> Void)?
 
     private let getCatalogPlacesUseCase: GetCatalogPlacesUseCase
-    private let getSuggestedCitiesUseCase: GetSuggestedCitiesForPlaceUseCase
-    private let autocompleteCitiesUseCase: AutocompleteCitiesUseCase
+    private let getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase
 
     private let searchBar = UISearchBar()
     private let tableView = UITableView(frame: .zero, style: .plain)
@@ -30,26 +29,17 @@ final class AddWishlistCountryViewController: UIViewController {
 
     private var selectedPlace: CatalogPlace? { didSet { updateAddButton() } }
     private var selectedCity: CatalogCity?
-    /// Curated suggestions / capital fallback shown when the city field is empty.
-    private var initialCitySuggestions: [CatalogCity] = []
-    /// Whatever's currently displayed as chips in the city entry cell — either
-    /// `initialCitySuggestions` or live autocomplete results.
-    private var displayedCitySuggestions: [CatalogCity] = []
+    private var citiesForSelectedPlace: [CatalogCity] = []
     private var cityText = ""
-    /// Cancellable handle so a slow autocomplete result doesn't overwrite a
-    /// newer one (or stale state after the user clears the field).
-    private var autocompleteTask: Task<Void, Never>?
 
     private let screenBackground = UIColor.systemBackground
 
     init(
         getCatalogPlacesUseCase: GetCatalogPlacesUseCase,
-        getSuggestedCitiesUseCase: GetSuggestedCitiesForPlaceUseCase,
-        autocompleteCitiesUseCase: AutocompleteCitiesUseCase
+        getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase
     ) {
         self.getCatalogPlacesUseCase = getCatalogPlacesUseCase
-        self.getSuggestedCitiesUseCase = getSuggestedCitiesUseCase
-        self.autocompleteCitiesUseCase = autocompleteCitiesUseCase
+        self.getCitiesForPlaceUseCase = getCitiesForPlaceUseCase
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -279,98 +269,23 @@ final class AddWishlistCountryViewController: UIViewController {
         searchBar.text = ""
         selectedPlace = place
         selectedCity = nil
-        initialCitySuggestions = []
-        displayedCitySuggestions = []
+        citiesForSelectedPlace = []
         cityText = ""
-        autocompleteTask?.cancel()
-        autocompleteTask = nil
         rebuildSections()
         scrollToSelectedPlace()
-        loadInitialSuggestions(for: place)
-        prefetchAutocomplete(for: place)
+        loadCities(for: place)
     }
 
-    /// Fetches the initial chips (curated suggestions, otherwise capital
-    /// fallback) and shows them when the field is still empty.
-    private func loadInitialSuggestions(for place: CatalogPlace) {
+    private func loadCities(for place: CatalogPlace) {
         let placeCode = place.code
         Task { [weak self] in
             guard let self else { return }
-            let result = (try? await self.getSuggestedCitiesUseCase.execute(placeCode: placeCode)) ?? []
-            // Drop the result if the user navigated away or already typed text.
+            let result = (try? await self.getCitiesForPlaceUseCase.execute(placeCode: placeCode)) ?? []
+            // Drop the result if the selection moved on while loading.
             guard self.selectedPlace?.code == placeCode else { return }
-            self.initialCitySuggestions = result
-            if self.cityText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                self.displayedCitySuggestions = result
-                self.refreshCityEntryCell()
-            }
+            self.citiesForSelectedPlace = result
+            self.rebuildSections()
         }
-    }
-
-    /// Warms the autocomplete cache so the first keystroke lands instantly.
-    private func prefetchAutocomplete(for place: CatalogPlace) {
-        let placeCode = place.code
-        Task { [autocompleteCitiesUseCase] in
-            await autocompleteCitiesUseCase.prefetch(placeCode: placeCode)
-        }
-    }
-
-    private func handleCityTextChange(_ text: String) {
-        autocompleteTask?.cancel()
-
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty {
-            displayedCitySuggestions = initialCitySuggestions
-            refreshCityEntryCell()
-            return
-        }
-
-        guard let placeCode = selectedPlace?.code else { return }
-
-        autocompleteTask = Task { [weak self] in
-            guard let self else { return }
-            let results = (try? await self.autocompleteCitiesUseCase.execute(
-                query: trimmed,
-                placeCode: placeCode
-            )) ?? []
-            if Task.isCancelled { return }
-            guard self.selectedPlace?.code == placeCode,
-                  self.cityText.trimmingCharacters(in: .whitespacesAndNewlines) == trimmed else {
-                return
-            }
-            self.displayedCitySuggestions = results
-            self.refreshCityEntryCell()
-        }
-    }
-
-    /// Updates only the city entry cell's chips, keeping the text field's
-    /// first-responder status and avoiding a full table reload.
-    private func refreshCityEntryCell() {
-        guard let indexPath = cityEntryIndexPath(),
-              let cell = tableView.cellForRow(at: indexPath) as? CityEntryCell else {
-            return
-        }
-        cell.configure(
-            cityText: cityText,
-            selectedCity: selectedCity,
-            cities: displayedCitySuggestions
-        )
-        // Let the table reflow if the chips count changed the cell height.
-        UIView.performWithoutAnimation {
-            tableView.beginUpdates()
-            tableView.endUpdates()
-        }
-    }
-
-    private func cityEntryIndexPath() -> IndexPath? {
-        for (si, section) in sections.enumerated() {
-            for (ri, row) in section.rows.enumerated() {
-                if case .cityEntry = row {
-                    return IndexPath(row: ri, section: si)
-                }
-            }
-        }
-        return nil
     }
 
     private func scrollToSelectedPlace() {
@@ -494,10 +409,8 @@ extension AddWishlistCountryViewController: UISearchBarDelegate {
         searchQuery = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         selectedPlace = nil
         selectedCity = nil
-        initialCitySuggestions = []
-        displayedCitySuggestions = []
+        citiesForSelectedPlace = []
         cityText = ""
-        autocompleteTask?.cancel()
         rebuildSections()
     }
 
@@ -574,11 +487,8 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
         cell.backgroundColor = selectedTint
         cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
 
-        cell.configure(
-            cityText: cityText,
-            selectedCity: selectedCity,
-            cities: displayedCitySuggestions
-        )
+        let cities = citiesForSelectedPlace
+        cell.configure(cityText: cityText, selectedCity: selectedCity, cities: cities)
 
         cell.onCityTextChanged = { [weak self] text in
             guard let self else { return }
@@ -588,16 +498,14 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
                 selectedCity = nil
                 (tableView.cellForRow(at: indexPath) as? CityEntryCell)?.updateChipSelection(nil)
             }
-            handleCityTextChange(text)
         }
 
         cell.onCitySelected = { [weak self] city in
             guard let self else { return }
             selectedCity = city
             cityText = city.displayName
-            autocompleteTask?.cancel()
-            displayedCitySuggestions = initialCitySuggestions
-            refreshCityEntryCell()
+            (tableView.cellForRow(at: indexPath) as? CityEntryCell)?
+                .configure(cityText: cityText, selectedCity: selectedCity, cities: cities)
         }
 
         return cell
@@ -613,15 +521,10 @@ extension AddWishlistCountryViewController: UITableViewDelegate {
         let isSame = place.code == selectedPlace?.code
         selectedPlace = isSame ? nil : place
         selectedCity = nil
-        initialCitySuggestions = []
-        displayedCitySuggestions = []
+        citiesForSelectedPlace = []
         cityText = ""
-        autocompleteTask?.cancel()
         rebuildSections()
-        if let newPlace = selectedPlace {
-            loadInitialSuggestions(for: newPlace)
-            prefetchAutocomplete(for: newPlace)
-        }
+        if let newPlace = selectedPlace { loadCities(for: newPlace) }
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
