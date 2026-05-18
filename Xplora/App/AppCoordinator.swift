@@ -65,9 +65,9 @@ final class AppCoordinator {
     private func makeMainTabBar() -> MainTabBarController {
         let tabBarController = MainTabBarController()
 
-        let wishlistNav = makePlaceholderNav(title: "Wishlist", systemImageName: "heart")
-        let timelineNav = makePlaceholderNav(title: "Timeline", systemImageName: "clock")
-        let statisticsNav = makePlaceholderNav(title: "Statistics", systemImageName: "chart.bar.xaxis")
+        let wishlistNav = makePlaceholderNav(title: L10n.Tab.wishlist, systemImageName: "heart")
+        let timelineNav = makePlaceholderNav(title: L10n.Tab.timeline, systemImageName: "clock")
+        let statisticsNav = makePlaceholderNav(title: L10n.Tab.statistics, systemImageName: "chart.bar.xaxis")
         let profileNav = makeProfileNav()
 
         let mapNav = UINavigationController()

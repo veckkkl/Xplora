@@ -86,7 +86,7 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
                 isLoading = false
                 notes = []
                 publish()
-                onError?("Couldn't load notes. Please try again.")
+                onError?(L10n.Notes.List.Error.load)
             }
         }
     }

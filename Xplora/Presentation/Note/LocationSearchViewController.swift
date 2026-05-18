@@ -19,7 +19,7 @@ final class LocationSearchViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        title = "Location"
+        title = L10n.Notes.Location.Search.title
         configureSearchBar()
         configureTableView()
         configureCompleter()
@@ -32,7 +32,7 @@ final class LocationSearchViewController: UIViewController {
     }
 
     private func configureSearchBar() {
-        searchBar.placeholder = "Search location"
+        searchBar.placeholder = L10n.Notes.Location.Search.placeholder
         searchBar.autocapitalizationType = .words
         searchBar.delegate = self
     }
@@ -90,11 +90,11 @@ final class LocationSearchViewController: UIViewController {
 
     private func showError() {
         let alert = UIAlertController(
-            title: "Location unavailable",
-            message: "Couldn't fetch this location. Try another one.",
+            title: L10n.Notes.Location.Search.Error.title,
+            message: L10n.Notes.Location.Search.Error.message,
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
         present(alert, animated: true)
     }
 }
