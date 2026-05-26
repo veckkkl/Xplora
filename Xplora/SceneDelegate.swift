@@ -52,6 +52,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         locator.register(FogOverlayProviding.self, instance: fogOverlayProvider)
 
         // UseCases
+        let getAllCountriesUseCase: GetAllCountriesUseCase = GetAllCountriesUseCaseImpl()
+
         let getVisitedCountriesUseCase: GetVisitedCountriesUseCase =
             GetVisitedCountriesUseCaseImpl(placesRepo: placesRepo)
 
@@ -76,6 +78,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let tripNotesCountProvider: TripNotesCountProviding =
             StoredTripNotesCountProvider(tripsRepo: tripsRepo)
 
+        locator.register(GetAllCountriesUseCase.self, instance: getAllCountriesUseCase)
         locator.register(GetVisitedCountriesUseCase.self, instance: getVisitedCountriesUseCase)
         locator.register(AddVisitedPlaceUseCase.self, instance: addVisitedPlaceUseCase)
         locator.register(ValidateTripDateRangeUseCase.self, instance: validateTripDateRangeUseCase)

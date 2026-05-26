@@ -180,7 +180,7 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
     private func notesText(for count: Int) -> String? {
         guard count > 0 else { return nil }
         return count == 1
-            ? L10n.Timeline.Trip.notesOne
-            : L10n.Timeline.Trip.notesOther(count)
+            ? L10n.Timeline.Trip.Notes.one
+            : L10n.Timeline.Trip.Notes.other(count)
     }
 }

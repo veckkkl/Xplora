@@ -64,6 +64,10 @@
 "timeline.delete.alert.title" = "Delete trip?";
 "timeline.delete.alert.message" = "This action can't be undone. Notes from this trip will be kept.";
 "timeline.delete.error" = "Couldn't delete the trip. Please try again.";
+"timeline.country_picker.title" = "Select Country";
+"timeline.country_picker.search.placeholder" = "Search";
+"timeline.country_picker.empty.no_results" = "No countries found";
+
 "timeline.date_range.title.edit" = "Edit dates";
 "timeline.date_range.title.create" = "New trip";
 "timeline.date_range.start" = "Start date";

@@ -64,6 +64,10 @@
 "timeline.delete.alert.title" = "Удалить поездку?";
 "timeline.delete.alert.message" = "Это действие нельзя отменить. Заметки этой поездки сохранятся.";
 "timeline.delete.error" = "Не удалось удалить поездку. Попробуйте ещё раз.";
+"timeline.country_picker.title" = "Выбрать страну";
+"timeline.country_picker.search.placeholder" = "Поиск";
+"timeline.country_picker.empty.no_results" = "Страны не найдены";
+
 "timeline.date_range.title.edit" = "Изменить даты";
 "timeline.date_range.title.create" = "Новая поездка";
 "timeline.date_range.start" = "Начало";
