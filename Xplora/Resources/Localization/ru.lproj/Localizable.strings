@@ -80,3 +80,473 @@
 "tab.statistics" = "Статистика";
 "tab.timeline" = "Хронология";
 "tab.wishlist" = "Вишлист";
+
+"wishlist.title" = "Вишлист";
+"wishlist.add.title" = "Добавить страну";
+"wishlist.add.button" = "Добавить";
+"wishlist.search.placeholder" = "Искать страны";
+"wishlist.city.optional" = "Город или место (необязательно)";
+"wishlist.empty.title" = "Вишлист пуст";
+"wishlist.empty.subtitle" = "Нажмите +, чтобы добавить страну";
+"wishlist.duplicate.title" = "Уже в вишлисте";
+"wishlist.select.title" = "Выбор направления";
+"wishlist.select.current_location" = "Добавить текущее местоположение";
+"wishlist.select.error.load" = "Не удалось загрузить страны. Проверьте интернет.";
+"wishlist.select.retry" = "Повторить";
+"wishlist.duplicate.message" = "Это место уже есть в вишлисте.";
+
+"wishlist.confirm.countryOnlyExists.title" = "Страна уже добавлена";
+"wishlist.confirm.countryOnlyExists.message" = "%@ уже есть в вишлисте без города. Добавить %@ как отдельное место?";
+"wishlist.confirm.countryHasCities.title" = "Места уже добавлены";
+"wishlist.confirm.countryHasCities.message" = "У вас уже есть места в стране %@. Добавить %@ как отдельную цель на уровне страны?";
+"wishlist.confirm.addPlace" = "Добавить место";
+"wishlist.confirm.addCountry" = "Добавить страну";
+"wishlist.confirm.cancel" = "Отмена";
+
+"wishlist.currentLocation.permission.title" = "Нужен доступ к геолокации";
+"wishlist.currentLocation.permission.message" = "Разрешите доступ к геолокации, чтобы добавить текущую страну.";
+"wishlist.currentLocation.notFound.title" = "Геолокация не найдена";
+"wishlist.currentLocation.notFound.message" = "Не удалось определить текущую страну.";
+"wishlist.currentLocation.settings" = "Настройки";
+
+"continent.africa" = "Африка";
+"continent.asia" = "Азия";
+"continent.europe" = "Европа";
+"continent.northAmerica" = "Северная Америка";
+"continent.southAmerica" = "Южная Америка";
+"continent.oceania" = "Океания";
+"continent.antarctica" = "Антарктида";
+"continent.other" = "Другое";
+
+"country.AQ" = "Антарктида";
+"country.TF" = "Французские Южные территории";
+"country.AR" = "Аргентина";
+"country.AU" = "Австралия";
+"country.AT" = "Австрия";
+"country.BE" = "Бельгия";
+"country.BR" = "Бразилия";
+"country.CA" = "Канада";
+"country.CL" = "Чили";
+"country.CN" = "Китай";
+"country.CO" = "Колумбия";
+"country.HR" = "Хорватия";
+"country.CZ" = "Чехия";
+"country.DK" = "Дания";
+"country.EG" = "Египет";
+"country.FI" = "Финляндия";
+"country.FR" = "Франция";
+"country.DE" = "Германия";
+"country.GR" = "Греция";
+"country.HU" = "Венгрия";
+"country.IS" = "Исландия";
+"country.IN" = "Индия";
+"country.ID" = "Индонезия";
+"country.IE" = "Ирландия";
+"country.IL" = "Израиль";
+"country.IT" = "Италия";
+"country.JP" = "Япония";
+"country.JO" = "Иордания";
+"country.KE" = "Кения";
+"country.MX" = "Мексика";
+"country.MA" = "Марокко";
+"country.NL" = "Нидерланды";
+"country.NZ" = "Новая Зеландия";
+"country.NO" = "Норвегия";
+"country.PE" = "Перу";
+"country.PH" = "Филиппины";
+"country.PL" = "Польша";
+"country.PT" = "Португалия";
+"country.RO" = "Румыния";
+"country.RU" = "Россия";
+"country.SA" = "Саудовская Аравия";
+"country.ZA" = "ЮАР";
+"country.KR" = "Южная Корея";
+"country.ES" = "Испания";
+"country.SE" = "Швеция";
+"country.CH" = "Швейцария";
+"country.TH" = "Таиланд";
+"country.TR" = "Турция";
+"country.UA" = "Украина";
+"country.GB" = "Великобритания";
+"country.US" = "США";
+"country.VN" = "Вьетнам";
+
+"city.AR.buenos_aires" = "Буэнос-Айрес";
+"city.AR.patagonia" = "Патагония";
+"city.AR.mendoza" = "Мендоса";
+"city.AR.bariloche" = "Барилоче";
+"city.AR.cordoba" = "Кордова";
+
+"city.AU.sydney" = "Сидней";
+"city.AU.melbourne" = "Мельбурн";
+"city.AU.brisbane" = "Брисбен";
+"city.AU.perth" = "Перт";
+"city.AU.cairns" = "Кэрнс";
+
+"city.AT.vienna" = "Вена";
+"city.AT.salzburg" = "Зальцбург";
+"city.AT.innsbruck" = "Инсбрук";
+"city.AT.graz" = "Грац";
+
+"city.BE.brussels" = "Брюссель";
+"city.BE.bruges" = "Брюгге";
+"city.BE.ghent" = "Гент";
+"city.BE.antwerp" = "Антверпен";
+
+"city.BR.rio_de_janeiro" = "Рио-де-Жанейро";
+"city.BR.sao_paulo" = "Сан-Паулу";
+"city.BR.salvador" = "Салвадор";
+"city.BR.florianopolis" = "Флорианополис";
+"city.BR.manaus" = "Манаус";
+
+"city.CA.toronto" = "Торонто";
+"city.CA.vancouver" = "Ванкувер";
+"city.CA.montreal" = "Монреаль";
+"city.CA.quebec_city" = "Квебек-Сити";
+"city.CA.banff" = "Банф";
+
+"city.CL.santiago" = "Сантьяго";
+"city.CL.patagonia" = "Патагония";
+"city.CL.valparaiso" = "Вальпараисо";
+"city.CL.san_pedro_de_atacama" = "Сан-Педро-де-Атакама";
+
+"city.CN.beijing" = "Пекин";
+"city.CN.shanghai" = "Шанхай";
+"city.CN.xian" = "Сиань";
+"city.CN.chengdu" = "Чэнду";
+"city.CN.guilin" = "Гуйлинь";
+
+"city.CO.bogota" = "Богота";
+"city.CO.cartagena" = "Картахена";
+"city.CO.medellin" = "Медельин";
+"city.CO.santa_marta" = "Санта-Марта";
+
+"city.HR.dubrovnik" = "Дубровник";
+"city.HR.split" = "Сплит";
+"city.HR.zagreb" = "Загреб";
+"city.HR.hvar" = "Хвар";
+"city.HR.plitvice" = "Плитвица";
+
+"city.CZ.prague" = "Прага";
+"city.CZ.brno" = "Брно";
+"city.CZ.cesky_krumlov" = "Чески-Крумлов";
+
+"city.DK.copenhagen" = "Копенгаген";
+"city.DK.aarhus" = "Орхус";
+"city.DK.odense" = "Оденсе";
+
+"city.EG.cairo" = "Каир";
+"city.EG.luxor" = "Луксор";
+"city.EG.aswan" = "Асуан";
+"city.EG.alexandria" = "Александрия";
+"city.EG.sharm_el_sheikh" = "Шарм-эль-Шейх";
+
+"city.FI.helsinki" = "Хельсинки";
+"city.FI.rovaniemi" = "Рованиеми";
+"city.FI.turku" = "Турку";
+"city.FI.tampere" = "Тампере";
+
+"city.FR.paris" = "Париж";
+"city.FR.normandy" = "Нормандия";
+"city.FR.nice" = "Ницца";
+"city.FR.lyon" = "Лион";
+"city.FR.marseille" = "Марсель";
+"city.FR.bordeaux" = "Бордо";
+
+"city.DE.berlin" = "Берлин";
+"city.DE.munich" = "Мюнхен";
+"city.DE.hamburg" = "Гамбург";
+"city.DE.frankfurt" = "Франкфурт";
+"city.DE.cologne" = "Кёльн";
+"city.DE.dresden" = "Дрезден";
+
+"city.GR.athens" = "Афины";
+"city.GR.santorini" = "Санторини";
+"city.GR.mykonos" = "Миконос";
+"city.GR.thessaloniki" = "Салоники";
+"city.GR.crete" = "Крит";
+
+"city.HU.budapest" = "Будапешт";
+"city.HU.pecs" = "Печ";
+"city.HU.debrecen" = "Дебрецен";
+"city.HU.eger" = "Эгер";
+
+"city.IS.reykjavik" = "Рейкьявик";
+"city.IS.akureyri" = "Акюрейри";
+"city.IS.vik" = "Вик";
+"city.IS.snaefellsnes" = "Снайфедльснес";
+
+"city.IN.delhi" = "Дели";
+"city.IN.mumbai" = "Мумбаи";
+"city.IN.jaipur" = "Джайпур";
+"city.IN.goa" = "Гоа";
+"city.IN.varanasi" = "Варанаси";
+"city.IN.agra" = "Агра";
+
+"city.ID.bali" = "Бали";
+"city.ID.jakarta" = "Джакарта";
+"city.ID.lombok" = "Ломбок";
+"city.ID.komodo" = "Комодо";
+"city.ID.yogyakarta" = "Джокьякарта";
+
+"city.IE.dublin" = "Дублин";
+"city.IE.galway" = "Голуэй";
+"city.IE.cork" = "Корк";
+"city.IE.killarney" = "Килларни";
+
+"city.IL.jerusalem" = "Иерусалим";
+"city.IL.tel_aviv" = "Тель-Авив";
+"city.IL.haifa" = "Хайфа";
+"city.IL.eilat" = "Эйлат";
+
+"city.IT.rome" = "Рим";
+"city.IT.florence" = "Флоренция";
+"city.IT.venice" = "Венеция";
+"city.IT.milan" = "Милан";
+"city.IT.amalfi" = "Амальфи";
+"city.IT.sicily" = "Сицилия";
+
+"city.JP.tokyo" = "Токио";
+"city.JP.kyoto" = "Киото";
+"city.JP.osaka" = "Осака";
+"city.JP.hiroshima" = "Хиросима";
+"city.JP.nara" = "Нара";
+"city.JP.hokkaido" = "Хоккайдо";
+
+"city.JO.amman" = "Амман";
+"city.JO.petra" = "Петра";
+"city.JO.wadi_rum" = "Вади-Рам";
+"city.JO.aqaba" = "Акаба";
+
+"city.KE.nairobi" = "Найроби";
+"city.KE.maasai_mara" = "Масаи-Мара";
+"city.KE.mombasa" = "Момбаса";
+"city.KE.lamu" = "Ламу";
+
+"city.MX.mexico_city" = "Мехико";
+"city.MX.cancun" = "Канкун";
+"city.MX.oaxaca" = "Оахака";
+"city.MX.tulum" = "Тулум";
+"city.MX.guadalajara" = "Гвадалахара";
+
+"city.MA.marrakech" = "Марракеш";
+"city.MA.fes" = "Фес";
+"city.MA.casablanca" = "Касабланка";
+"city.MA.chefchaouen" = "Шефшауэн";
+"city.MA.essaouira" = "Эссауира";
+
+"city.NL.amsterdam" = "Амстердам";
+"city.NL.rotterdam" = "Роттердам";
+"city.NL.the_hague" = "Гаага";
+"city.NL.utrecht" = "Утрехт";
+
+"city.NZ.auckland" = "Окленд";
+"city.NZ.queenstown" = "Квинстаун";
+"city.NZ.christchurch" = "Крайстчерч";
+"city.NZ.wellington" = "Веллингтон";
+
+"city.NO.oslo" = "Осло";
+"city.NO.bergen" = "Берген";
+"city.NO.tromso" = "Тромсё";
+"city.NO.stavanger" = "Ставангер";
+"city.NO.lofoten" = "Лофотен";
+
+"city.PE.lima" = "Лима";
+"city.PE.cusco" = "Куско";
+"city.PE.machu_picchu" = "Мачу-Пикчу";
+"city.PE.arequipa" = "Арекипа";
+
+"city.PH.manila" = "Манила";
+"city.PH.palawan" = "Палаван";
+"city.PH.cebu" = "Себу";
+"city.PH.siargao" = "Сиаргао";
+"city.PH.boracay" = "Бораккай";
+
+"city.PL.warsaw" = "Варшава";
+"city.PL.krakow" = "Краков";
+"city.PL.gdansk" = "Гданьск";
+"city.PL.wroclaw" = "Вроцлав";
+
+"city.PT.lisbon" = "Лиссабон";
+"city.PT.porto" = "Порту";
+"city.PT.algarve" = "Алгарве";
+"city.PT.sintra" = "Синтра";
+"city.PT.madeira" = "Мадейра";
+
+"city.RO.bucharest" = "Бухарест";
+"city.RO.transylvania" = "Трансильвания";
+"city.RO.sibiu" = "Сибиу";
+"city.RO.cluj_napoca" = "Клуж-Напока";
+
+"city.RU.moscow" = "Москва";
+"city.RU.st_petersburg" = "Санкт-Петербург";
+"city.RU.kazan" = "Казань";
+"city.RU.sochi" = "Сочи";
+
+"city.SA.riyadh" = "Эр-Рияд";
+"city.SA.jeddah" = "Джидда";
+"city.SA.alula" = "Аль-Ула";
+"city.SA.neom" = "Неом";
+
+"city.ZA.cape_town" = "Кейптаун";
+"city.ZA.johannesburg" = "Йоханнесбург";
+"city.ZA.kruger" = "Крюгер";
+"city.ZA.durban" = "Дурбан";
+
+"city.KR.seoul" = "Сеул";
+"city.KR.busan" = "Пусан";
+"city.KR.jeju" = "Чеджу";
+"city.KR.gyeongju" = "Кёнджу";
+
+"city.ES.madrid" = "Мадрид";
+"city.ES.barcelona" = "Барселона";
+"city.ES.seville" = "Севилья";
+"city.ES.granada" = "Гранада";
+"city.ES.valencia" = "Валенсия";
+
+"city.SE.stockholm" = "Стокгольм";
+"city.SE.gothenburg" = "Гётеборг";
+"city.SE.malmo" = "Мальмё";
+"city.SE.uppsala" = "Упсала";
+
+"city.CH.zurich" = "Цюрих";
+"city.CH.geneva" = "Женева";
+"city.CH.bern" = "Берн";
+"city.CH.interlaken" = "Интерлакен";
+"city.CH.lucerne" = "Люцерн";
+
+"city.TH.bangkok" = "Бангкок";
+"city.TH.chiang_mai" = "Чиангмай";
+"city.TH.phuket" = "Пхукет";
+"city.TH.koh_samui" = "Самуи";
+
+"city.TR.istanbul" = "Стамбул";
+"city.TR.cappadocia" = "Каппадокия";
+"city.TR.antalya" = "Анталья";
+"city.TR.bodrum" = "Бодрум";
+
+"city.UA.kyiv" = "Киев";
+"city.UA.lviv" = "Львов";
+"city.UA.odesa" = "Одесса";
+
+"city.GB.london" = "Лондон";
+"city.GB.edinburgh" = "Эдинбург";
+"city.GB.oxford" = "Оксфорд";
+"city.GB.manchester" = "Манчестер";
+"city.GB.bath" = "Бат";
+
+"city.US.new_york" = "Нью-Йорк";
+"city.US.los_angeles" = "Лос-Анджелес";
+"city.US.san_francisco" = "Сан-Франциско";
+"city.US.chicago" = "Чикаго";
+"city.US.new_orleans" = "Новый Орлеан";
+
+"city.VN.hanoi" = "Ханой";
+"city.VN.ho_chi_minh_city" = "Хошимин";
+"city.VN.hoi_an" = "Хойан";
+"city.VN.da_nang" = "Дананг";
+"profile.tab.title" = "Настройки";
+"profile.title" = "Настройки";
+
+"profile.card.subtitle" = "Дневник путешествий и впечатлений";
+"profile.card.status.world_explorer" = "Исследователь мира";
+"profile.card.status.place_collector" = "Коллекционер мест";
+"profile.card.status.adventure_traveler" = "Путешественник мира";
+"profile.card.stat.places" = "места";
+"profile.card.stat.countries" = "страны";
+"profile.card.stat.trips" = "поездки";
+
+"profile.section.app_settings" = "Настройки приложения";
+"profile.section.support" = "Поддержка";
+"profile.section.danger_zone" = "Опасная зона";
+"profile.section.appearance" = "Внешний вид";
+"profile.section.app" = "Приложение";
+"profile.section.data" = "Данные";
+
+"profile.item.dark_theme" = "Тёмная тема";
+"profile.item.language" = "Язык";
+"profile.item.share" = "Поделиться";
+"profile.item.rate_app" = "Оценить приложение";
+"profile.item.about_xplora" = "О Xplora";
+"profile.item.privacy_policy" = "Политика конфиденциальности";
+"profile.item.share_with_friends" = "Поделиться с друзьями";
+"profile.item.delete_data" = "Удалить данные";
+
+"profile.danger.footnote" = "Удаление данных необратимо и не может быть отменено.";
+
+"profile.details.title" = "Профиль";
+"profile.details.placeholder" = "Экран профиля будет реализован на следующем этапе.";
+"profile.details.change_photo" = "Изменить фото";
+"profile.details.change_photo_stub" = "Изменение фото будет добавлено позже.";
+"profile.details.name" = "Имя";
+"profile.details.status" = "Статус";
+"profile.details.status_note" = "Статус обновляется автоматически по статистике путешествий.";
+"profile.details.show_status" = "Показывать статус";
+"profile.details.about_status" = "Подробнее про статус";
+"profile.details.status_info.title" = "Статус профиля";
+"profile.details.status_info.message" = "Статус определяется автоматически на основе количества мест, стран и поездок.";
+"profile.details.edit_name.title" = "Изменить имя";
+"profile.details.edit_name.placeholder" = "Введите имя";
+"profile.details.edit_name.save" = "Сохранить";
+"profile.details.validation.empty_name" = "Введите имя";
+"profile.details.validation.too_long_name" = "Имя должно быть не длиннее %d символов.";
+"profile.details.validation.invalid_characters" = "Имя может содержать только буквы, пробел, дефис, апостроф и точку.";
+"profile.details.avatar.choose_photo" = "Медиатека";
+"profile.details.avatar.take_photo" = "Камера";
+"profile.details.avatar.camera_unavailable" = "Камера недоступна";
+"profile.details.avatar.preview_title" = "Новое фото профиля";
+"profile.language_selection.title" = "Язык";
+"profile.language_selection.placeholder" = "Выбор языка будет реализован на следующем этапе.";
+"profile.language_selection.restart_message" = "Язык применится после перезапуска приложения.";
+"profile.about.title" = "О Xplora";
+"profile.about.placeholder" = "Экран «О Xplora» будет реализован на следующем этапе.";
+"profile.about.subtitle" = "Дневник путешествий и впечатлений";
+"profile.about.footer" = "Создано для сохранения мест, впечатлений и путешествий.";
+"profile.about.version" = "Версия";
+"profile.about.build" = "Сборка";
+"profile.about.version_build_format" = "Версия %@ · Сборка %@";
+"profile.about.card.about_title" = "О приложении";
+"profile.about.card.about_text" = "Xplora помогает сохранять места, впечатления и истории путешествий.";
+"profile.about.card.features_title" = "Возможности";
+"profile.about.card.features_text" = "Сохраняйте места, ведите заметки о поездках, отмечайте важные воспоминания и просматривайте путешествия на карте.";
+"profile.about.card.technologies_title" = "Технологии";
+"profile.about.card.technologies_text" = "Проект построен на UIKit, MVVM, Clean Architecture, SnapKit и локальном хранении данных.";
+"profile.about.developer_resources_title" = "Для разработчиков";
+"profile.about.github_repository" = "GitHub Repository";
+"profile.about.readme_guide" = "README / Руководство";
+"profile.privacy.title" = "Политика конфиденциальности";
+"profile.privacy.placeholder" = "Экран политики конфиденциальности будет реализован на следующем этапе.";
+"profile.privacy.fallback_title" = "Политика конфиденциальности";
+"profile.privacy.fallback_message" = "Ссылка на политику конфиденциальности будет добавлена позже.";
+"profile.share.text" = "Попробуй Xplora";
+"profile.rate.title" = "Оценить приложение";
+"profile.rate.fallback_message" = "Сейчас не удалось открыть окно оценки.";
+"profile.delete.confirmation_title" = "Удалить данные?";
+"profile.delete.confirmation_message" = "Это действие нельзя отменить.";
+"profile.delete.stub_title" = "Пока недоступно";
+"profile.delete.stub_message" = "Удаление данных будет реализовано на следующем этапе.";
+
+"profile.language.english" = "Английский";
+"profile.language.russian" = "Русский";
+"profile.language.native_english" = "English";
+"profile.language.native_russian" = "Русский";
+
+"profile.stub.title" = "Пока недоступно";
+"profile.stub.profile_card" = "Экран данных аккаунта будет добавлен на следующем этапе.";
+"profile.stub.language" = "Выбор языка будет реализован на следующем этапе.";
+"profile.stub.about" = "Экран «О Xplora» будет реализован на следующем этапе.";
+"profile.stub.privacy_policy" = "Экран политики конфиденциальности будет реализован на следующем этапе.";
+"profile.stub.share_with_friends" = "Функция «Поделиться» будет реализована на следующем этапе.";
+"profile.stub.delete_data" = "Сценарий удаления данных будет реализован на следующем этапе.";
+
+"onboarding.country.picker_title" = "Страна проживания";
+"onboarding.country.placeholder" = "Выберите страну";
+"onboarding.error.country_required" = "Выберите страну или отметьте «Гражданин мира»";
+"onboarding.world_citizen.subtitle" = "Я не живу в одной стране";
+"onboarding.world_citizen.title" = "Гражданин мира";
+
+"profile.about.version_build" = "Версия %@ · Сборка %@";
+"profile.data.footnote" = "Удаление данных необратимо и не может быть отменено.";
+"profile.item.sign_out" = "Выйти";
+"profile.language.english_native" = "English";
+"profile.language.russian_native" = "Русский";

@@ -1,7 +1,5 @@
-//
-//  WishlistRepo.swift
-//  Xplora
-//
+// WishlistRepo.swift
+// Xplora
 
 import Foundation
 

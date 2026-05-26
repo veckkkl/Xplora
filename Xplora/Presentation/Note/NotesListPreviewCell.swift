@@ -11,13 +11,13 @@ final class NotesListPreviewCell: UITableViewCell {
 
     private let cardView = UIView()
     private let contentStack = UIStackView()
+    private let locationRow = UIStackView()
+    private let locationIconView = UIImageView()
     private let titleRow = UIStackView()
     private let titleLabel = UILabel()
     private let titleSpacer = UIView()
     private let bookmarkImageView = UIImageView()
     private let dateLabel = UILabel()
-    private let locationChip = UIView()
-    private let locationIcon = UIImageView()
     private let locationLabel = UILabel()
     private let previewLabel = UILabel()
     private let collageView = TripPhotoCollageView()
@@ -45,10 +45,12 @@ final class NotesListPreviewCell: UITableViewCell {
         dateLabel.text = nil
         dateLabel.isHidden = false
         locationLabel.text = nil
+        locationLabel.isHidden = false
+        locationRow.isHidden = false
         previewLabel.text = nil
         previewLabel.isHidden = false
         bookmarkImageView.isHidden = true
-        locationChip.isHidden = true
+        collageView.isHidden = true
         hasPhotos = false
     }
 
@@ -65,11 +67,11 @@ final class NotesListPreviewCell: UITableViewCell {
             dateLabel.text = trimmedDate
         }
 
-        if let chipText = item.locationChipText, !chipText.isEmpty {
-            locationLabel.text = chipText
-            locationChip.isHidden = false
+        if let locationText = item.locationChipText?.trimmingCharacters(in: .whitespacesAndNewlines), !locationText.isEmpty {
+            locationLabel.text = locationText
+            locationRow.isHidden = false
         } else {
-            locationChip.isHidden = true
+            locationRow.isHidden = true
             locationLabel.text = nil
         }
 
@@ -83,7 +85,6 @@ final class NotesListPreviewCell: UITableViewCell {
 
         hasPhotos = !item.photoURLs.isEmpty
         collageView.isHidden = !hasPhotos
-        previewLabel.numberOfLines = hasPhotos ? 2 : 3
 
         if hasPhotos {
             collageView.configure(urls: item.photoURLs, mode: .preview)
@@ -101,65 +102,69 @@ final class NotesListPreviewCell: UITableViewCell {
         selectedBackground.backgroundColor = .clear
         selectedBackgroundView = selectedBackground
 
-        cardView.backgroundColor = .secondarySystemBackground
-        cardView.layer.cornerRadius = 14
+        cardView.backgroundColor = .secondarySystemGroupedBackground
+        cardView.layer.cornerRadius = 16
         cardView.layer.cornerCurve = .continuous
+        cardView.layer.borderWidth = 0.6
+        cardView.layer.borderColor = UIColor.separator.withAlphaComponent(0.22).cgColor
         cardView.clipsToBounds = true
 
+        locationRow.axis = .horizontal
+        locationRow.alignment = .center
+        locationRow.spacing = 8
+
+        locationIconView.image = UIImage(systemName: "mappin.and.ellipse")
+        locationIconView.tintColor = .secondaryLabel
+
         titleRow.axis = .horizontal
-        titleRow.alignment = .center
+        titleRow.alignment = .firstBaseline
         titleRow.spacing = 6
 
         titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         titleLabel.textColor = .label
         titleLabel.numberOfLines = 2
+        titleLabel.lineBreakMode = .byTruncatingTail
 
         bookmarkImageView.image = UIImage(systemName: "bookmark.fill")
         bookmarkImageView.tintColor = .systemOrange
         bookmarkImageView.isHidden = true
+        bookmarkImageView.setContentCompressionResistancePriority(.required, for: .horizontal)
 
-        dateLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        dateLabel.textColor = .secondaryLabel
-
-        locationChip.backgroundColor = UIColor.tertiarySystemFill
-        locationChip.layer.cornerRadius = 9
-        locationChip.layer.cornerCurve = .continuous
-        locationChip.clipsToBounds = true
-
-        locationIcon.image = UIImage(systemName: "mappin.and.ellipse")
-        locationIcon.tintColor = .secondaryLabel
-
-        locationLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        locationLabel.textColor = .secondaryLabel
+        locationLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        locationLabel.textColor = .label
         locationLabel.numberOfLines = 1
 
-        previewLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        previewLabel.font = UIFont.systemFont(ofSize: 15, weight: .regular)
         previewLabel.textColor = .secondaryLabel
+        previewLabel.numberOfLines = 2
         previewLabel.lineBreakMode = .byTruncatingTail
 
-        collageView.layer.cornerRadius = 10
+        dateLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        dateLabel.textColor = .tertiaryLabel
+
+        collageView.layer.cornerRadius = 12
         collageView.clipsToBounds = true
 
         contentView.addSubview(cardView)
         cardView.addSubview(contentStack)
 
+        locationRow.addArrangedSubview(locationIconView)
+        locationRow.addArrangedSubview(locationLabel)
+
         titleRow.addArrangedSubview(titleLabel)
         titleRow.addArrangedSubview(titleSpacer)
         titleRow.addArrangedSubview(bookmarkImageView)
 
-        locationChip.addSubview(locationIcon)
-        locationChip.addSubview(locationLabel)
-
         contentStack.axis = .vertical
         contentStack.spacing = TripPhotoPresentationMetrics.listVerticalSpacing
-        contentStack.addArrangedSubview(titleRow)
         contentStack.addArrangedSubview(collageView)
-        contentStack.addArrangedSubview(locationChip)
-        contentStack.addArrangedSubview(dateLabel)
+        contentStack.addArrangedSubview(locationRow)
+        contentStack.addArrangedSubview(titleRow)
         contentStack.addArrangedSubview(previewLabel)
+        contentStack.addArrangedSubview(dateLabel)
 
-        contentStack.setCustomSpacing(TripPhotoPresentationMetrics.listTitleToPhotoSpacing, after: titleRow)
-        contentStack.setCustomSpacing(TripPhotoPresentationMetrics.listPhotoToMetadataSpacing, after: collageView)
+        contentStack.setCustomSpacing(TripPhotoPresentationMetrics.listPhotoToLocationSpacing, after: collageView)
+        contentStack.setCustomSpacing(TripPhotoPresentationMetrics.listTitleToPreviewSpacing, after: titleRow)
 
         cardView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(TripPhotoPresentationMetrics.listCardVerticalInset)
@@ -175,17 +180,8 @@ final class NotesListPreviewCell: UITableViewCell {
             make.size.equalTo(CGSize(width: 15, height: 15))
         }
 
-        locationIcon.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(8)
-            make.centerY.equalToSuperview()
-            make.size.equalTo(CGSize(width: 12, height: 12))
-        }
-
-        locationLabel.snp.makeConstraints { make in
-            make.leading.equalTo(locationIcon.snp.trailing).offset(5)
-            make.trailing.equalToSuperview().offset(-8)
-            make.top.equalToSuperview().offset(4)
-            make.bottom.equalToSuperview().offset(-4)
+        locationIconView.snp.makeConstraints { make in
+            make.size.equalTo(CGSize(width: 16, height: 16))
         }
 
         collageView.snp.makeConstraints { make in

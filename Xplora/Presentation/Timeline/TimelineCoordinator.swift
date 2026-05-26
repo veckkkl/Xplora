@@ -59,10 +59,10 @@ final class TimelineCoordinator {
 
     private func presentCountryPicker() {
         let getAllCountries: GetAllCountriesUseCase = locator.resolve(GetAllCountriesUseCase.self)
-        let viewModel = CountryPickerViewModel(getAllCountries: getAllCountries)
+        let viewModel = TripCountryPickerViewModel(getAllCountries: getAllCountries)
         viewModel.output = self
 
-        let viewController = CountryPickerViewController(viewModel: viewModel)
+        let viewController = TripCountryPickerViewController(viewModel: viewModel)
         let nav = UINavigationController(rootViewController: viewController)
         nav.modalPresentationStyle = .formSheet
 
@@ -92,8 +92,8 @@ final class TimelineCoordinator {
     }
 }
 
-extension TimelineCoordinator: CountryPickerModuleOutput {
-    func countryPickerDidSelect(country: Country) {
+extension TimelineCoordinator: TripCountryPickerModuleOutput {
+    func tripCountryPickerDidSelect(country: Country) {
         let createTrip: CreateTripUseCase = locator.resolve(CreateTripUseCase.self)
         let updateTripDates: UpdateTripDatesUseCase = locator.resolve(UpdateTripDatesUseCase.self)
         let validateDates: ValidateTripDateRangeUseCase = locator.resolve(ValidateTripDateRangeUseCase.self)
@@ -110,7 +110,7 @@ extension TimelineCoordinator: CountryPickerModuleOutput {
         presentedNavigationController?.pushViewController(viewController, animated: true)
     }
 
-    func countryPickerDidCancel() {
+    func tripCountryPickerDidCancel() {
         presentedNavigationController?.dismiss(animated: true)
     }
 }

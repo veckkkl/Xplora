@@ -1,5 +1,5 @@
 //
-//  CountryPickerViewController.swift
+//  TripCountryPickerViewController.swift
 //  Xplora
 //
 
@@ -7,8 +7,8 @@ import SnapKit
 import UIKit
 
 @MainActor
-final class CountryPickerViewController: UIViewController {
-    private let viewModel: CountryPickerViewModel
+final class TripCountryPickerViewController: UIViewController {
+    private let viewModel: TripCountryPickerViewModel
 
     private let searchController = UISearchController(searchResultsController: nil)
     private let tableView = UITableView(frame: .zero, style: .plain)
@@ -23,7 +23,7 @@ final class CountryPickerViewController: UIViewController {
         searchController.isActive && !(searchController.searchBar.text?.isEmpty ?? true)
     }
 
-    init(viewModel: CountryPickerViewModel) {
+    init(viewModel: TripCountryPickerViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -118,7 +118,7 @@ final class CountryPickerViewController: UIViewController {
 
 // MARK: - UISearchResultsUpdating
 
-extension CountryPickerViewController: UISearchResultsUpdating {
+extension TripCountryPickerViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         viewModel.search(query: searchController.searchBar.text ?? "")
         tableView.reloadData()
@@ -128,7 +128,7 @@ extension CountryPickerViewController: UISearchResultsUpdating {
 
 // MARK: - UITableViewDataSource
 
-extension CountryPickerViewController: UITableViewDataSource {
+extension TripCountryPickerViewController: UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int {
         isFiltering ? 1 : sections.count
     }
@@ -175,7 +175,7 @@ extension CountryPickerViewController: UITableViewDataSource {
 
 // MARK: - UITableViewDelegate
 
-extension CountryPickerViewController: UITableViewDelegate {
+extension TripCountryPickerViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let country = isFiltering

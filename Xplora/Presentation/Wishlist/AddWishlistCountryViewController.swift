@@ -1,0 +1,461 @@
+// AddWishlistCountryViewController.swift
+// Xplora
+
+import SnapKit
+import UIKit
+
+@MainActor
+final class AddWishlistCountryViewController: UIViewController {
+    private let viewModel: AddWishlistCountryViewModelInput & AddWishlistCountryViewModelOutput
+
+    private let searchBar = UISearchBar()
+    private let tableView = UITableView(frame: .zero, style: .plain)
+    private let addButton = UIButton(type: .system)
+
+    private let loadingIndicator = UIActivityIndicatorView(style: .large)
+    private let errorContainer = UIView()
+    private let errorLabel = UILabel()
+    private let retryButton = UIButton(type: .system)
+    private var currentLocationBarButton: UIBarButtonItem?
+
+    // Locally cached snapshot of the last applied state, used to render the
+    // table data source and to compute minimal in-place cell updates.
+    private var currentState: AddWishlistCountryViewState?
+    private var sections: [CountrySection] { currentState?.sections ?? [] }
+
+    private let screenBackground = UIColor.systemBackground
+
+    init(viewModel: AddWishlistCountryViewModelInput & AddWishlistCountryViewModelOutput) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        bind()
+        viewModel.viewDidLoad()
+    }
+
+    // MARK: - Setup
+
+    private func setupUI() {
+        view.backgroundColor = screenBackground
+        title = L10n.Wishlist.Select.title
+        navigationItem.largeTitleDisplayMode = .never
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            systemItem: .close,
+            primaryAction: UIAction { [weak self] _ in
+                self?.dismiss(animated: true)
+            }
+        )
+        let currentLocationItem = UIBarButtonItem(
+            title: L10n.Wishlist.Select.currentLocation,
+            style: .plain,
+            target: self,
+            action: #selector(didTapAddCurrentLocation)
+        )
+        currentLocationItem.isEnabled = false
+        navigationItem.rightBarButtonItem = currentLocationItem
+        currentLocationBarButton = currentLocationItem
+
+        searchBar.placeholder = L10n.Wishlist.Search.placeholder
+        searchBar.searchBarStyle = .minimal
+        searchBar.backgroundColor = .clear
+        searchBar.backgroundImage = UIImage()
+        searchBar.searchTextField.backgroundColor = screenBackground
+        searchBar.delegate = self
+
+        tableView.backgroundColor = .clear
+        tableView.backgroundView = nil
+        tableView.separatorStyle = .singleLine
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 52
+        tableView.keyboardDismissMode = .onDrag
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "CountryCell")
+        tableView.register(CityEntryCell.self, forCellReuseIdentifier: CityEntryCell.reuseIdentifier)
+        tableView.sectionHeaderTopPadding = 0
+        tableView.tableFooterView = UIView()
+        tableView.tableFooterView?.backgroundColor = .clear
+
+        var btnConfig = UIButton.Configuration.filled()
+        btnConfig.title = L10n.Wishlist.Add.button
+        btnConfig.cornerStyle = .large
+        btnConfig.baseBackgroundColor = .systemBlue
+        btnConfig.baseForegroundColor = .white
+        addButton.configuration = btnConfig
+        addButton.isHidden = true
+        addButton.addTarget(self, action: #selector(didTapAdd), for: .touchUpInside)
+
+        loadingIndicator.hidesWhenStopped = true
+
+        errorContainer.isHidden = true
+        errorLabel.font = .systemFont(ofSize: 15, weight: .regular)
+        errorLabel.textColor = .secondaryLabel
+        errorLabel.textAlignment = .center
+        errorLabel.numberOfLines = 0
+        errorLabel.text = L10n.Wishlist.Select.Error.load
+        var retryConfig = UIButton.Configuration.borderedTinted()
+        retryConfig.title = L10n.Wishlist.Select.retry
+        retryConfig.cornerStyle = .large
+        retryButton.configuration = retryConfig
+        retryButton.addTarget(self, action: #selector(didTapRetry), for: .touchUpInside)
+
+        let errorStack = UIStackView(arrangedSubviews: [errorLabel, retryButton])
+        errorStack.axis = .vertical
+        errorStack.spacing = 16
+        errorStack.alignment = .center
+        errorContainer.addSubview(errorStack)
+        errorStack.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.leading.greaterThanOrEqualToSuperview().offset(24)
+            make.trailing.lessThanOrEqualToSuperview().offset(-24)
+        }
+
+        view.addSubview(searchBar)
+        view.addSubview(tableView)
+        view.addSubview(addButton)
+        view.addSubview(loadingIndicator)
+        view.addSubview(errorContainer)
+
+        searchBar.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
+            make.leading.trailing.equalToSuperview()
+        }
+        tableView.snp.makeConstraints { make in
+            make.top.equalTo(searchBar.snp.bottom)
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview()
+        }
+        addButton.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(24)
+            make.trailing.equalToSuperview().offset(-24)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-8)
+            make.height.equalTo(52)
+        }
+        loadingIndicator.snp.makeConstraints { make in
+            make.center.equalTo(view.safeAreaLayoutGuide)
+        }
+        errorContainer.snp.makeConstraints { make in
+            make.edges.equalTo(view.safeAreaLayoutGuide)
+        }
+    }
+
+    // MARK: - Binding
+
+    private func bind() {
+        viewModel.onStateChange = { [weak self] state in
+            self?.apply(state)
+        }
+        viewModel.onLocationError = { [weak self] error in
+            self?.presentLocationError(error)
+        }
+        viewModel.onScrollToPlace = { [weak self] code in
+            self?.scrollToPlace(code: code)
+        }
+        // `onSelect` is owned by the parent that constructs the view model.
+    }
+
+    // MARK: - State rendering
+
+    private func apply(_ state: AddWishlistCountryViewState) {
+        let previous = currentState
+        currentState = state
+
+        // 1. Loading / loaded / error visibility
+        if previous?.loadingState != state.loadingState {
+            applyLoadingState(state.loadingState)
+        }
+
+        // 2. Buttons
+        currentLocationBarButton?.isEnabled = state.currentLocationButtonEnabled
+        let addActive = state.addButtonEnabled
+        addButton.isHidden = !addActive
+        let inset: CGFloat = addActive ? 52 + 32 : 0
+        tableView.contentInset.bottom = inset
+        tableView.verticalScrollIndicatorInsets.bottom = inset
+
+        // 3. Table — reload only when section/structure data changed; this
+        // keeps the in-place city text field focus untouched while the user
+        // is typing (state changes that don't change sections shouldn't
+        // recreate cells).
+        let sectionsChanged = previous?.sections != state.sections
+        if sectionsChanged {
+            tableView.reloadData()
+        }
+
+        // 4. City entry cell — minimal in-place update for chip selection
+        // changes that aren't accompanied by a section reload.
+        if !sectionsChanged {
+            let citySelectionChanged = previous?.selectedCity != state.selectedCity
+            let citiesChanged = previous?.citiesForSelectedPlace != state.citiesForSelectedPlace
+            if citiesChanged, let cell = visibleCityEntryCell() {
+                cell.configure(
+                    cityText: state.cityText,
+                    selectedCity: state.selectedCity,
+                    cities: state.citiesForSelectedPlace
+                )
+            } else if citySelectionChanged, let cell = visibleCityEntryCell() {
+                cell.updateChipSelection(state.selectedCity)
+            }
+            // Pure cityText changes (user typing) don't require any cell update
+            // — the text field is the source of truth during typing.
+        }
+    }
+
+    private func applyLoadingState(_ state: AddWishlistCountryLoadingState) {
+        switch state {
+        case .loading:
+            searchBar.isHidden = true
+            tableView.isHidden = true
+            addButton.isHidden = true
+            errorContainer.isHidden = true
+            loadingIndicator.startAnimating()
+        case .loaded:
+            loadingIndicator.stopAnimating()
+            errorContainer.isHidden = true
+            searchBar.isHidden = false
+            tableView.isHidden = false
+        case .error:
+            loadingIndicator.stopAnimating()
+            searchBar.isHidden = true
+            tableView.isHidden = true
+            addButton.isHidden = true
+            errorContainer.isHidden = false
+        }
+    }
+
+    private func visibleCityEntryCell() -> CityEntryCell? {
+        tableView.visibleCells.compactMap { $0 as? CityEntryCell }.first
+    }
+
+    private func scrollToPlace(code: String) {
+        for (si, section) in sections.enumerated() {
+            for (ri, row) in section.rows.enumerated() {
+                if case .country(let p) = row, p.code == code {
+                    tableView.scrollToRow(at: IndexPath(row: ri, section: si), at: .middle, animated: true)
+                    return
+                }
+            }
+        }
+    }
+
+    private func presentLocationError(_ error: CurrentLocationError) {
+        let title: String
+        let message: String
+        switch error {
+        case .permissionDenied:
+            title = L10n.Wishlist.CurrentLocation.Permission.title
+            message = L10n.Wishlist.CurrentLocation.Permission.message
+        case .locationUnavailable, .geocodingFailed, .countryNotFound:
+            title = L10n.Wishlist.CurrentLocation.NotFound.title
+            message = L10n.Wishlist.CurrentLocation.NotFound.message
+        }
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
+        if case .permissionDenied = error {
+            alert.addAction(UIAlertAction(title: L10n.Wishlist.CurrentLocation.settings, style: .default) { _ in
+                guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                UIApplication.shared.open(url)
+            })
+        }
+        present(alert, animated: true)
+    }
+
+    // MARK: - Actions
+
+    @objc private func didTapAddCurrentLocation() {
+        viewModel.didTapCurrentLocation()
+    }
+
+    @objc private func didTapAdd() {
+        viewModel.didTapAdd()
+    }
+
+    @objc private func didTapRetry() {
+        viewModel.didTapRetry()
+    }
+
+    // MARK: - Accessory view
+
+    private func makeAccessoryView(badge: String?, isSelected: Bool) -> UIView? {
+        let badgeView: CatalogPlaceBadgeView? = badge.map { CatalogPlaceBadgeView(text: $0) }
+        let checkmark: UIImageView? = isSelected
+            ? {
+                let cfg = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
+                let imageView = UIImageView(image: UIImage(systemName: "checkmark", withConfiguration: cfg))
+                imageView.tintColor = .systemBlue
+                imageView.contentMode = .center
+                return imageView
+            }()
+            : nil
+
+        let parts: [UIView] = [badgeView, checkmark].compactMap { $0 }
+        guard !parts.isEmpty else { return nil }
+
+        if parts.count == 1 {
+            let view = parts[0]
+            view.frame = CGRect(origin: .zero, size: view.intrinsicContentSize)
+            return view
+        }
+
+        // Explicit frame math: `accessoryView` is sized from `frame.size`, and
+        // `systemLayoutSizeFitting` on a standalone view (no parent in the
+        // Auto Layout engine) is unreliable. Compose manually using each
+        // child's intrinsic size.
+        let spacing: CGFloat = 6
+        let sizes = parts.map { $0.intrinsicContentSize }
+        let totalWidth = sizes.reduce(0) { $0 + $1.width } + CGFloat(parts.count - 1) * spacing
+        let maxHeight = sizes.map(\.height).max() ?? 0
+
+        let container = UIView(frame: CGRect(x: 0, y: 0, width: totalWidth, height: maxHeight))
+        var x: CGFloat = 0
+        for (view, size) in zip(parts, sizes) {
+            view.frame = CGRect(
+                x: x,
+                y: (maxHeight - size.height) / 2,
+                width: size.width,
+                height: size.height
+            )
+            container.addSubview(view)
+            x += size.width + spacing
+        }
+        return container
+    }
+}
+
+// MARK: - UISearchBarDelegate
+
+extension AddWishlistCountryViewController: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        viewModel.didChangeSearchQuery(searchText)
+    }
+
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+    }
+}
+
+// MARK: - UITableViewDataSource
+
+extension AddWishlistCountryViewController: UITableViewDataSource {
+    func numberOfSections(in tableView: UITableView) -> Int { sections.count }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        sections[section].rows.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        switch sections[indexPath.section].rows[indexPath.row] {
+        case .country(let place):
+            return countryCell(for: place, at: indexPath)
+        case .cityEntry(let countryCode):
+            return cityEntryCell(countryCode: countryCode, at: indexPath)
+        }
+    }
+
+    private func countryCell(for place: CatalogPlace, at indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "CountryCell", for: indexPath)
+        let isSelected = place.code == currentState?.selectedPlace?.code
+
+        var content = cell.defaultContentConfiguration()
+        content.text = "\(place.flag)  \(place.localizedName)"
+        content.textProperties.font = .systemFont(ofSize: 20)
+        cell.contentConfiguration = content
+        cell.accessoryType = .none
+        cell.accessoryView = makeAccessoryView(badge: place.status.badgeLabel, isSelected: isSelected)
+        cell.tintColor = .systemBlue
+
+        let cellBackground: UIColor = isSelected ? UIColor.systemBlue.withAlphaComponent(0.08) : .clear
+        var bg = UIBackgroundConfiguration.clear()
+        bg.backgroundColor = cellBackground
+        cell.backgroundConfiguration = bg
+        cell.backgroundColor = cellBackground
+        cell.contentView.backgroundColor = .clear
+
+        // Hide separator on the selected row AND on the row immediately above it,
+        // so no gray line appears above the blue expanded block.
+        let precedesSelected = nextRowIsSelected(after: indexPath)
+        cell.separatorInset = (isSelected || precedesSelected)
+            ? UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
+            : tableView.separatorInset
+
+        return cell
+    }
+
+    private func nextRowIsSelected(after indexPath: IndexPath) -> Bool {
+        let nextRow = indexPath.row + 1
+        guard nextRow < sections[indexPath.section].rows.count else { return false }
+        if case .country(let next) = sections[indexPath.section].rows[nextRow] {
+            return next.code == currentState?.selectedPlace?.code
+        }
+        return false
+    }
+
+    private func cityEntryCell(countryCode: String, at indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: CityEntryCell.reuseIdentifier, for: indexPath
+        ) as? CityEntryCell else { return UITableViewCell() }
+
+        let selectedTint = UIColor.systemBlue.withAlphaComponent(0.08)
+        var tintBg = UIBackgroundConfiguration.clear()
+        tintBg.backgroundColor = selectedTint
+        cell.backgroundConfiguration = tintBg
+        cell.backgroundColor = selectedTint
+        cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
+
+        let state = currentState
+        cell.configure(
+            cityText: state?.cityText ?? "",
+            selectedCity: state?.selectedCity,
+            cities: state?.citiesForSelectedPlace ?? []
+        )
+
+        cell.onCityTextChanged = { [weak self] text in
+            self?.viewModel.didChangeCityText(text)
+        }
+        cell.onCitySelected = { [weak self] city in
+            self?.viewModel.didSelectCity(city)
+        }
+
+        return cell
+    }
+}
+
+// MARK: - UITableViewDelegate
+
+extension AddWishlistCountryViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        guard case .country(let place) = sections[indexPath.section].rows[indexPath.row] else { return }
+        viewModel.didTapPlaceRow(place)
+    }
+
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        UITableView.automaticDimension
+    }
+
+    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
+        switch sections[indexPath.section].rows[indexPath.row] {
+        case .cityEntry: return 220
+        case .country: return 52
+        }
+    }
+
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        sections[section].continent?.localizedName
+    }
+
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        sections[section].continent == nil
+            ? CGFloat.leastNonzeroMagnitude
+            : UITableView.automaticDimension
+    }
+}

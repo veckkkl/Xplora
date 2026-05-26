@@ -1,20 +1,20 @@
 //
-//  CountryPickerViewModel.swift
+//  TripCountryPickerViewModel.swift
 //  Xplora
 //
 
 import Foundation
 
 @MainActor
-protocol CountryPickerModuleOutput: AnyObject {
-    func countryPickerDidSelect(country: Country)
-    func countryPickerDidCancel()
+protocol TripCountryPickerModuleOutput: AnyObject {
+    func tripCountryPickerDidSelect(country: Country)
+    func tripCountryPickerDidCancel()
 }
 
 @MainActor
-final class CountryPickerViewModel {
+final class TripCountryPickerViewModel {
     var onCountriesLoaded: (([Country]) -> Void)?
-    weak var output: CountryPickerModuleOutput?
+    weak var output: TripCountryPickerModuleOutput?
 
     private let getAllCountries: GetAllCountriesUseCase
     private var allCountries: [Country] = []
@@ -40,10 +40,10 @@ final class CountryPickerViewModel {
     }
 
     func didSelect(country: Country) {
-        output?.countryPickerDidSelect(country: country)
+        output?.tripCountryPickerDidSelect(country: country)
     }
 
     func didTapCancel() {
-        output?.countryPickerDidCancel()
+        output?.tripCountryPickerDidCancel()
     }
 }

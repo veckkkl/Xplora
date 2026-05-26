@@ -1,7 +1,5 @@
-//
-//  WishlistCountry.swift
-//  Xplora
-//
+// WishlistCountry.swift
+// Xplora
 
 import Foundation
 
