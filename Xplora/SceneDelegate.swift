@@ -140,6 +140,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         locator.register(CatalogPlacesRepo.self, instance: catalogPlacesRepo)
         locator.register(GetCatalogPlacesUseCase.self, instance: getCatalogPlacesUseCase)
 
+        let getStatisticsUseCase: GetStatisticsUseCase = GetStatisticsUseCaseImpl(
+            getCatalogPlaces: getCatalogPlacesUseCase,
+            getVisitedCountries: getVisitedCountriesUseCase
+        )
+        locator.register(GetStatisticsUseCase.self, instance: getStatisticsUseCase)
+
         // Cities catalog (bundled, gated by CatalogPlacePolicy)
         let citiesCatalogRepo: CitiesCatalogRepo = CitiesCatalogRepoImpl()
         let getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase =

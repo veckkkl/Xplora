@@ -67,7 +67,7 @@ final class AppCoordinator {
         let tabBarController = MainTabBarController()
 
         let wishlistNav = makeWishlistNav()
-        let statisticsNav = makePlaceholderNav(title: L10n.Tab.statistics, systemImageName: "chart.bar.xaxis")
+        let statisticsNav = makeStatisticsNav()
         let profileNav = makeProfileNav()
 
         let timelineNav = UINavigationController()
@@ -141,6 +141,20 @@ final class AppCoordinator {
             title: L10n.Tab.wishlist,
             image: UIImage(systemName: "heart"),
             selectedImage: UIImage(systemName: "heart.fill")
+        )
+        return nav
+    }
+
+    private func makeStatisticsNav() -> UINavigationController {
+        let viewModel = StatisticsViewModel(
+            getStatisticsUseCase: locator.resolve(GetStatisticsUseCase.self)
+        )
+        let viewController = StatisticsViewController(viewModel: viewModel)
+        let nav = UINavigationController(rootViewController: viewController)
+        nav.tabBarItem = UITabBarItem(
+            title: L10n.Tab.statistics,
+            image: UIImage(systemName: "chart.bar.xaxis"),
+            selectedImage: UIImage(systemName: "chart.bar.xaxis")
         )
         return nav
     }
