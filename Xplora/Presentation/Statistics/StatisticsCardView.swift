@@ -11,8 +11,10 @@ final class StatisticsCardView: UIView {
 
     private let titleLabel: UILabel = {
         let l = UILabel()
-        l.font = .systemFont(ofSize: 20, weight: .bold)
+        l.font = .systemFont(ofSize: 26, weight: .bold)
         l.textColor = .label
+        l.textAlignment = .center
+        l.numberOfLines = 0
         return l
     }()
 
@@ -20,6 +22,7 @@ final class StatisticsCardView: UIView {
         let l = UILabel()
         l.font = .systemFont(ofSize: 13)
         l.textColor = .secondaryLabel
+        l.textAlignment = .center
         return l
     }()
 
@@ -67,12 +70,15 @@ final class StatisticsCardView: UIView {
         return l
     }()
 
+    private let circularProgressView = CircularProgressView()
+
     private lazy var totalValuesStack: UIStackView = {
         let left = makeColumn(value: leftValueLabel, caption: leftCaptionLabel)
         let right = makeColumn(value: rightValueLabel, caption: rightCaptionLabel)
-        let sv = UIStackView(arrangedSubviews: [left, right])
+        let sv = UIStackView(arrangedSubviews: [left, circularProgressView, right])
         sv.axis = .horizontal
         sv.distribution = .fillEqually
+        sv.alignment = .center
         return sv
     }()
 
@@ -112,6 +118,7 @@ final class StatisticsCardView: UIView {
         leftCaptionLabel.text = data.leftCaption
         rightValueLabel.text = data.rightValue
         rightCaptionLabel.text = data.rightCaption
+        circularProgressView.configure(progress: data.progress)
         valueLabel.isHidden = true
         totalValuesStack.isHidden = false
     }

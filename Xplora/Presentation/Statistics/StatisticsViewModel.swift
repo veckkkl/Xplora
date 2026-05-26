@@ -44,7 +44,8 @@ final class StatisticsViewModel {
                 leftValue: "\(summary.worldProgressPercent) %",
                 leftCaption: "Мир",
                 rightValue: "\(summary.visitedUNCount)",
-                rightCaption: "Страны"
+                rightCaption: "Страны",
+                progress: Double(summary.worldProgressPercent) / 100.0
             ),
             continentsCard: StatisticsSingleValueCardViewData(
                 title: "Континенты",
@@ -53,13 +54,13 @@ final class StatisticsViewModel {
             ),
             countriesCard: StatisticsSingleValueCardViewData(
                 title: "Страны",
-                subtitle: "Среди \(summary.totalUNCount) стран ООН",
+                subtitle: "Страны, признанные ООН",
                 value: "\(summary.visitedUNCount) / \(summary.totalUNCount)"
             ),
             continentCards: summary.continentItems.map { item in
                 StatisticsSingleValueCardViewData(
                     title: item.continent.russianName,
-                    subtitle: "Среди \(item.totalCount) стран ООН",
+                    subtitle: item.continent.subtitleText,
                     value: "\(item.visitedCount) / \(item.totalCount)"
                 )
             }
@@ -81,5 +82,9 @@ private extension Continent {
         case .antarctica:   return "Антарктика"
         case .other:        return "Другое"
         }
+    }
+
+    var subtitleText: String {
+        self == .antarctica ? "Все территории" : "Страны, признанные ООН"
     }
 }

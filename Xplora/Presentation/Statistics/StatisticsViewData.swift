@@ -19,6 +19,7 @@ struct StatisticsTotalCardViewData {
     let leftCaption: String
     let rightValue: String
     let rightCaption: String
+    let progress: Double
 }
 
 struct StatisticsSingleValueCardViewData {
