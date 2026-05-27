@@ -188,7 +188,18 @@ final class AddWishlistCountryViewController: UIViewController {
         // recreate cells).
         let sectionsChanged = previous?.sections != state.sections
         if sectionsChanged {
-            tableView.reloadData()
+            // If the only structural change is the city-entry row toggling
+            // (i.e. the user selected/deselected/switched country), animate
+            // the insert/delete so the input field slides in/out smoothly —
+            // matching the chip-expansion animation that countries with
+            // top-5 cities already get. Falls back to reloadData when the
+            // section shape changed for other reasons (search, retry, etc.).
+            if let previous,
+               let plan = cityRowTogglePlan(from: previous.sections, to: state.sections) {
+                animateCityRowToggle(plan: plan, previous: previous, current: state)
+            } else {
+                tableView.reloadData()
+            }
         }
 
         // 4. City entry cell — minimal in-place update for chip selection
@@ -214,6 +225,104 @@ final class AddWishlistCountryViewController: UIViewController {
             // Pure cityText changes (user typing) don't require any cell update
             // — the text field is the source of truth during typing.
         }
+    }
+
+    // MARK: - City-row expand/collapse animation
+
+    /// Describes an isolated city-row toggle between two consecutive states.
+    /// Index paths refer to: `removed` in the OLD section indexing, `inserted`
+    /// in the NEW. Country rows that toggle highlight are listed in OLD
+    /// indexing (reloadRows inside performBatchUpdates uses pre-update paths).
+    private struct CityRowTogglePlan {
+        let removed: IndexPath?
+        let inserted: IndexPath?
+        let countryRowsToReload: [IndexPath]
+    }
+
+    /// Returns an animation plan when the only structural difference between
+    /// `oldSections` and `newSections` is the position of the single
+    /// `cityEntry` row (i.e. the user changed their country selection).
+    /// Returns `nil` for broader changes (search query, catalog reload) so the
+    /// caller falls back to `tableView.reloadData()`.
+    private func cityRowTogglePlan(
+        from oldSections: [CountrySection],
+        to newSections: [CountrySection]
+    ) -> CityRowTogglePlan? {
+        // 1. After stripping city rows, both shapes must match — otherwise
+        //    something more than a selection toggle changed.
+        guard Self.stripCityRows(oldSections) == Self.stripCityRows(newSections) else {
+            return nil
+        }
+        let oldPath = Self.findCityEntryIndexPath(in: oldSections)
+        let newPath = Self.findCityEntryIndexPath(in: newSections)
+        guard oldPath != newPath else { return nil }
+
+        // 2. Collect country rows that change highlight, in OLD-section paths.
+        //    The country row sits at `cityEntry.row - 1`, and stays at the same
+        //    OLD-side index path because city insertions go AFTER it.
+        var reloads: [IndexPath] = []
+        if let oldPath {
+            let countryPath = IndexPath(row: oldPath.row - 1, section: oldPath.section)
+            reloads.append(countryPath)
+        }
+        if let newPath {
+            // Translate the new-side country path back to old-side indexing.
+            // Adding/removing the city row doesn't shift the country row that
+            // sits right above it, so the integer indices are stable.
+            let countryPath = IndexPath(row: newPath.row - 1, section: newPath.section)
+            if !reloads.contains(countryPath) {
+                reloads.append(countryPath)
+            }
+        }
+        return CityRowTogglePlan(
+            removed: oldPath,
+            inserted: newPath,
+            countryRowsToReload: reloads
+        )
+    }
+
+    private func animateCityRowToggle(
+        plan: CityRowTogglePlan,
+        previous: AddWishlistCountryViewState,
+        current: AddWishlistCountryViewState
+    ) {
+        tableView.performBatchUpdates {
+            if let removed = plan.removed {
+                tableView.deleteRows(at: [removed], with: .fade)
+            }
+            if let inserted = plan.inserted {
+                tableView.insertRows(at: [inserted], with: .fade)
+            }
+            // Reload the country rows that gain/lose the selection tint. `.none`
+            // keeps it visually quiet — the eye-catching motion stays on the
+            // city row itself.
+            if !plan.countryRowsToReload.isEmpty {
+                tableView.reloadRows(at: plan.countryRowsToReload, with: .none)
+            }
+        }
+    }
+
+    private static func stripCityRows(_ sections: [CountrySection]) -> [CountrySection] {
+        sections.map { section in
+            CountrySection(
+                continent: section.continent,
+                rows: section.rows.filter {
+                    if case .cityEntry = $0 { return false }
+                    return true
+                }
+            )
+        }
+    }
+
+    private static func findCityEntryIndexPath(in sections: [CountrySection]) -> IndexPath? {
+        for (s, section) in sections.enumerated() {
+            for (r, row) in section.rows.enumerated() {
+                if case .cityEntry = row {
+                    return IndexPath(row: r, section: s)
+                }
+            }
+        }
+        return nil
     }
 
     private func applyLoadingState(_ state: AddWishlistCountryLoadingState) {
