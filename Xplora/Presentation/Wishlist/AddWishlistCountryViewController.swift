@@ -201,7 +201,7 @@ final class AddWishlistCountryViewController: UIViewController {
                    to: state.sections,
                    newSelected: state.selectedPlace
                ) {
-                animateCityRowToggle(plan: plan)
+                animateCityRowToggle(plan: plan, oldSections: previous.sections)
             } else {
                 tableView.reloadData()
             }
@@ -235,13 +235,12 @@ final class AddWishlistCountryViewController: UIViewController {
     // MARK: - City-row expand/collapse animation
 
     /// Describes an isolated city-row toggle between two consecutive states.
-    /// `removedCityPath` is in OLD indexing, `insertedCityPath` in NEW indexing,
-    /// `countryRowsToRefresh` in OLD indexing (matches `reloadRows` contract
-    /// inside `performBatchUpdates`).
+    /// `removedCityPath` is in OLD indexing; `insertedCityPath` in NEW indexing.
+    /// Country-row refreshes are no longer index-based — they happen via
+    /// in-place mutation of visible cells (see `animateCityRowToggle`).
     private struct CityRowTogglePlan {
         let removedCityPath: IndexPath?
         let insertedCityPath: IndexPath?
-        let countryRowsToRefresh: [IndexPath]
     }
 
     /// Returns an animation plan when the only structural difference between
@@ -263,46 +262,40 @@ final class AddWishlistCountryViewController: UIViewController {
         let removedCity = Self.findCityEntryIndexPath(in: oldSections)
         let insertedCity = Self.findCityEntryIndexPath(in: newSections)
         guard removedCity != insertedCity else { return nil }
+        // Callers (oldSelected/newSelected args) drive the in-place country
+        // refresh, so we don't need to bake their paths into the plan.
+        _ = oldSelected
+        _ = newSelected
 
-        // 2. Country rows that change highlight must be expressed in OLD
-        //    indexing. Looking them up by code inside `oldSections` gives the
-        //    correct pre-update integer path even when the previous selection
-        //    pushed indices around (the buggy `newPath.row - 1` shortcut
-        //    collided with the deleted city row at certain positions).
-        var reloads: [IndexPath] = []
-        if let prev = oldSelected,
-           let path = Self.countryIndexPath(forCode: prev.code, in: oldSections) {
-            reloads.append(path)
-        }
-        if let new = newSelected,
-           let path = Self.countryIndexPath(forCode: new.code, in: oldSections),
-           !reloads.contains(path) {
-            reloads.append(path)
-        }
-        // Never touch the row we're already deleting — UITableView treats
-        // delete + reload of the same path as a hard error.
-        if let removed = removedCity {
-            reloads.removeAll { $0 == removed }
-        }
         return CityRowTogglePlan(
             removedCityPath: removedCity,
-            insertedCityPath: insertedCity,
-            countryRowsToRefresh: reloads
+            insertedCityPath: insertedCity
         )
     }
 
-    private func animateCityRowToggle(plan: CityRowTogglePlan) {
+    private func animateCityRowToggle(plan: CityRowTogglePlan, oldSections: [CountrySection]) {
+        // Mutate every visible country cell in place to match `currentState`
+        // (already updated to the new state by the caller). Done BEFORE the
+        // batch begins so badge/checkmark/separator update on the same frame
+        // as the tap — there's no perceptible lag where the old highlight
+        // hangs around while the city row is fading.
+        for cell in tableView.visibleCells {
+            guard let oldPath = tableView.indexPath(for: cell),
+                  oldPath.section < oldSections.count,
+                  oldPath.row < oldSections[oldPath.section].rows.count else { continue }
+            guard case .country(let place) = oldSections[oldPath.section].rows[oldPath.row] else {
+                continue
+            }
+            applyCountryCellConfig(cell, place: place)
+        }
+
+        // City row fades in/out on its own.
         tableView.performBatchUpdates {
             if let removed = plan.removedCityPath {
                 tableView.deleteRows(at: [removed], with: .fade)
             }
             if let inserted = plan.insertedCityPath {
                 tableView.insertRows(at: [inserted], with: .fade)
-            }
-            // `.none` keeps things visually quiet — the motion stays on the
-            // city row; country rows just swap their tint without flicker.
-            if !plan.countryRowsToRefresh.isEmpty {
-                tableView.reloadRows(at: plan.countryRowsToRefresh, with: .none)
             }
         }
     }
@@ -323,20 +316,6 @@ final class AddWishlistCountryViewController: UIViewController {
         for (s, section) in sections.enumerated() {
             for (r, row) in section.rows.enumerated() {
                 if case .cityEntry = row {
-                    return IndexPath(row: r, section: s)
-                }
-            }
-        }
-        return nil
-    }
-
-    private static func countryIndexPath(
-        forCode code: String,
-        in sections: [CountrySection]
-    ) -> IndexPath? {
-        for (s, section) in sections.enumerated() {
-            for (r, row) in section.rows.enumerated() {
-                if case .country(let place) = row, place.code == code {
                     return IndexPath(row: r, section: s)
                 }
             }
@@ -451,6 +430,15 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
 
     private func countryCell(for place: CatalogPlace, at indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CountryCell", for: indexPath)
+        applyCountryCellConfig(cell, place: place)
+        return cell
+    }
+
+    /// Applies all visual state for a country cell. Pulled out of the dequeue
+    /// path so the city-row animation can refresh visible country cells in
+    /// place — without `reloadRows`, which would lag a beat behind the
+    /// fade-in/out and leave the badge / checkmark / separator looking stale.
+    fileprivate func applyCountryCellConfig(_ cell: UITableViewCell, place: CatalogPlace) {
         let isSelected = place.code == currentState?.selectedPlace?.code
 
         var content = cell.defaultContentConfiguration()
@@ -468,21 +456,30 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
         cell.backgroundColor = cellBackground
         cell.contentView.backgroundColor = .clear
 
-        // Hide separator on the selected row AND on the row immediately above it,
-        // so no gray line appears above the blue expanded block.
-        let precedesSelected = nextRowIsSelected(after: indexPath)
-        cell.separatorInset = (isSelected || precedesSelected)
+        // Hide separator on the selected row AND on the row immediately above
+        // it, so no gray line appears above the blue expanded block.
+        let precedes = precedesSelectedCountry(place)
+        cell.separatorInset = (isSelected || precedes)
             ? UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
             : tableView.separatorInset
-
-        return cell
     }
 
-    private func nextRowIsSelected(after indexPath: IndexPath) -> Bool {
-        let nextRow = indexPath.row + 1
-        guard nextRow < sections[indexPath.section].rows.count else { return false }
-        if case .country(let next) = sections[indexPath.section].rows[nextRow] {
-            return next.code == currentState?.selectedPlace?.code
+    /// True when the country immediately following `place` in its section is
+    /// the currently selected place — i.e. `place` sits directly above the
+    /// expanded card and should hide its bottom separator.
+    private func precedesSelectedCountry(_ place: CatalogPlace) -> Bool {
+        guard let selectedCode = currentState?.selectedPlace?.code else { return false }
+        for section in sections {
+            for (idx, row) in section.rows.enumerated() {
+                if case .country(let p) = row, p.code == place.code {
+                    let nextRowIndex = idx + 1
+                    guard nextRowIndex < section.rows.count else { return false }
+                    if case .country(let next) = section.rows[nextRowIndex] {
+                        return next.code == selectedCode
+                    }
+                    return false
+                }
+            }
         }
         return false
     }
