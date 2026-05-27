@@ -64,7 +64,7 @@ final class TripCountryPickerViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 56
+        tableView.estimatedRowHeight = 52
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         tableView.keyboardDismissMode = .onDrag
         tableView.sectionHeaderTopPadding = 0
@@ -162,14 +162,15 @@ extension TripCountryPickerViewController: UITableViewDataSource {
             return cell
         }
 
-        var config = UIListContentConfiguration.subtitleCell()
+        // Status surfaces as a trailing pill (same component as Wishlist), not
+        // as a subtitle. The main Timeline screen still shows no status — this
+        // is only the picker.
+        var config = cell.defaultContentConfiguration()
         config.text = "\(place.flag)  \(place.localizedName)"
         config.textProperties.font = UIFont.systemFont(ofSize: 17)
-        config.secondaryText = place.status.subtitleLabel
-        config.secondaryTextProperties.font = UIFont.systemFont(ofSize: 13)
-        config.secondaryTextProperties.color = .secondaryLabel
         cell.contentConfiguration = config
         cell.accessoryType = .none
+        cell.accessoryView = CatalogPlaceBadgeView.accessoryView(for: place.status, isSelected: false)
         return cell
     }
 }

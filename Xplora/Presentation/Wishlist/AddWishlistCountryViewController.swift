@@ -202,6 +202,12 @@ final class AddWishlistCountryViewController: UIViewController {
                     selectedCity: state.selectedCity,
                     cities: state.citiesForSelectedPlace
                 )
+                // Cities arrive async after the cell is already laid out at
+                // input-only height. Adding chips changes the cell's intrinsic
+                // size, but the table won't re-measure rows on its own — the
+                // empty-updates pair forces height recalculation without
+                // recreating cells (and without losing text-field focus).
+                tableView.performBatchUpdates(nil)
             } else if citySelectionChanged, let cell = visibleCityEntryCell() {
                 cell.updateChipSelection(state.selectedCity)
             }
@@ -283,52 +289,6 @@ final class AddWishlistCountryViewController: UIViewController {
         viewModel.didTapRetry()
     }
 
-    // MARK: - Accessory view
-
-    private func makeAccessoryView(badge: String?, isSelected: Bool) -> UIView? {
-        let badgeView: CatalogPlaceBadgeView? = badge.map { CatalogPlaceBadgeView(text: $0) }
-        let checkmark: UIImageView? = isSelected
-            ? {
-                let cfg = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
-                let imageView = UIImageView(image: UIImage(systemName: "checkmark", withConfiguration: cfg))
-                imageView.tintColor = .systemBlue
-                imageView.contentMode = .center
-                return imageView
-            }()
-            : nil
-
-        let parts: [UIView] = [badgeView, checkmark].compactMap { $0 }
-        guard !parts.isEmpty else { return nil }
-
-        if parts.count == 1 {
-            let view = parts[0]
-            view.frame = CGRect(origin: .zero, size: view.intrinsicContentSize)
-            return view
-        }
-
-        // Explicit frame math: `accessoryView` is sized from `frame.size`, and
-        // `systemLayoutSizeFitting` on a standalone view (no parent in the
-        // Auto Layout engine) is unreliable. Compose manually using each
-        // child's intrinsic size.
-        let spacing: CGFloat = 6
-        let sizes = parts.map { $0.intrinsicContentSize }
-        let totalWidth = sizes.reduce(0) { $0 + $1.width } + CGFloat(parts.count - 1) * spacing
-        let maxHeight = sizes.map(\.height).max() ?? 0
-
-        let container = UIView(frame: CGRect(x: 0, y: 0, width: totalWidth, height: maxHeight))
-        var x: CGFloat = 0
-        for (view, size) in zip(parts, sizes) {
-            view.frame = CGRect(
-                x: x,
-                y: (maxHeight - size.height) / 2,
-                width: size.width,
-                height: size.height
-            )
-            container.addSubview(view)
-            x += size.width + spacing
-        }
-        return container
-    }
 }
 
 // MARK: - UISearchBarDelegate
@@ -370,7 +330,7 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
         content.textProperties.font = .systemFont(ofSize: 20)
         cell.contentConfiguration = content
         cell.accessoryType = .none
-        cell.accessoryView = makeAccessoryView(badge: place.status.badgeLabel, isSelected: isSelected)
+        cell.accessoryView = CatalogPlaceBadgeView.accessoryView(for: place.status, isSelected: isSelected)
         cell.tintColor = .systemBlue
 
         let cellBackground: UIColor = isSelected ? UIColor.systemBlue.withAlphaComponent(0.08) : .clear

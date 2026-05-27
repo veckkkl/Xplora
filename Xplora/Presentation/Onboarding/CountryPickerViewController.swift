@@ -40,12 +40,8 @@ final class CountryPickerViewController: UIViewController {
         super.viewDidLoad()
         title = L10n.Onboarding.Country.pickerTitle
         view.backgroundColor = .systemBackground
-
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .cancel,
-            target: self,
-            action: #selector(cancelTapped)
-        )
+        // Pushed onto the onboarding nav — the system back button handles
+        // cancel. No explicit left bar button needed.
 
         loadingIndicator.hidesWhenStopped = true
 
@@ -58,10 +54,6 @@ final class CountryPickerViewController: UIViewController {
         loadingIndicator.snp.makeConstraints { $0.center.equalTo(view.safeAreaLayoutGuide) }
 
         loadCatalog()
-    }
-
-    @objc private func cancelTapped() {
-        dismiss(animated: true)
     }
 
     private func loadCatalog() {
@@ -129,6 +121,6 @@ extension CountryPickerViewController: UITableViewDataSource, UITableViewDelegat
         tableView.deselectRow(at: indexPath, animated: true)
         let place = sections[indexPath.section].places[indexPath.row]
         onSelect?(place)
-        dismiss(animated: true)
+        navigationController?.popViewController(animated: true)
     }
 }
