@@ -195,8 +195,13 @@ final class AddWishlistCountryViewController: UIViewController {
             // top-5 cities already get. Falls back to reloadData when the
             // section shape changed for other reasons (search, retry, etc.).
             if let previous,
-               let plan = cityRowTogglePlan(from: previous.sections, to: state.sections) {
-                animateCityRowToggle(plan: plan, previous: previous, current: state)
+               let plan = cityRowTogglePlan(
+                   from: previous.sections,
+                   oldSelected: previous.selectedPlace,
+                   to: state.sections,
+                   newSelected: state.selectedPlace
+               ) {
+                animateCityRowToggle(plan: plan)
             } else {
                 tableView.reloadData()
             }
@@ -230,13 +235,13 @@ final class AddWishlistCountryViewController: UIViewController {
     // MARK: - City-row expand/collapse animation
 
     /// Describes an isolated city-row toggle between two consecutive states.
-    /// Index paths refer to: `removed` in the OLD section indexing, `inserted`
-    /// in the NEW. Country rows that toggle highlight are listed in OLD
-    /// indexing (reloadRows inside performBatchUpdates uses pre-update paths).
+    /// `removedCityPath` is in OLD indexing, `insertedCityPath` in NEW indexing,
+    /// `countryRowsToRefresh` in OLD indexing (matches `reloadRows` contract
+    /// inside `performBatchUpdates`).
     private struct CityRowTogglePlan {
-        let removed: IndexPath?
-        let inserted: IndexPath?
-        let countryRowsToReload: [IndexPath]
+        let removedCityPath: IndexPath?
+        let insertedCityPath: IndexPath?
+        let countryRowsToRefresh: [IndexPath]
     }
 
     /// Returns an animation plan when the only structural difference between
@@ -246,58 +251,58 @@ final class AddWishlistCountryViewController: UIViewController {
     /// caller falls back to `tableView.reloadData()`.
     private func cityRowTogglePlan(
         from oldSections: [CountrySection],
-        to newSections: [CountrySection]
+        oldSelected: CatalogPlace?,
+        to newSections: [CountrySection],
+        newSelected: CatalogPlace?
     ) -> CityRowTogglePlan? {
         // 1. After stripping city rows, both shapes must match — otherwise
         //    something more than a selection toggle changed.
         guard Self.stripCityRows(oldSections) == Self.stripCityRows(newSections) else {
             return nil
         }
-        let oldPath = Self.findCityEntryIndexPath(in: oldSections)
-        let newPath = Self.findCityEntryIndexPath(in: newSections)
-        guard oldPath != newPath else { return nil }
+        let removedCity = Self.findCityEntryIndexPath(in: oldSections)
+        let insertedCity = Self.findCityEntryIndexPath(in: newSections)
+        guard removedCity != insertedCity else { return nil }
 
-        // 2. Collect country rows that change highlight, in OLD-section paths.
-        //    The country row sits at `cityEntry.row - 1`, and stays at the same
-        //    OLD-side index path because city insertions go AFTER it.
+        // 2. Country rows that change highlight must be expressed in OLD
+        //    indexing. Looking them up by code inside `oldSections` gives the
+        //    correct pre-update integer path even when the previous selection
+        //    pushed indices around (the buggy `newPath.row - 1` shortcut
+        //    collided with the deleted city row at certain positions).
         var reloads: [IndexPath] = []
-        if let oldPath {
-            let countryPath = IndexPath(row: oldPath.row - 1, section: oldPath.section)
-            reloads.append(countryPath)
+        if let prev = oldSelected,
+           let path = Self.countryIndexPath(forCode: prev.code, in: oldSections) {
+            reloads.append(path)
         }
-        if let newPath {
-            // Translate the new-side country path back to old-side indexing.
-            // Adding/removing the city row doesn't shift the country row that
-            // sits right above it, so the integer indices are stable.
-            let countryPath = IndexPath(row: newPath.row - 1, section: newPath.section)
-            if !reloads.contains(countryPath) {
-                reloads.append(countryPath)
-            }
+        if let new = newSelected,
+           let path = Self.countryIndexPath(forCode: new.code, in: oldSections),
+           !reloads.contains(path) {
+            reloads.append(path)
+        }
+        // Never touch the row we're already deleting — UITableView treats
+        // delete + reload of the same path as a hard error.
+        if let removed = removedCity {
+            reloads.removeAll { $0 == removed }
         }
         return CityRowTogglePlan(
-            removed: oldPath,
-            inserted: newPath,
-            countryRowsToReload: reloads
+            removedCityPath: removedCity,
+            insertedCityPath: insertedCity,
+            countryRowsToRefresh: reloads
         )
     }
 
-    private func animateCityRowToggle(
-        plan: CityRowTogglePlan,
-        previous: AddWishlistCountryViewState,
-        current: AddWishlistCountryViewState
-    ) {
+    private func animateCityRowToggle(plan: CityRowTogglePlan) {
         tableView.performBatchUpdates {
-            if let removed = plan.removed {
+            if let removed = plan.removedCityPath {
                 tableView.deleteRows(at: [removed], with: .fade)
             }
-            if let inserted = plan.inserted {
+            if let inserted = plan.insertedCityPath {
                 tableView.insertRows(at: [inserted], with: .fade)
             }
-            // Reload the country rows that gain/lose the selection tint. `.none`
-            // keeps it visually quiet — the eye-catching motion stays on the
-            // city row itself.
-            if !plan.countryRowsToReload.isEmpty {
-                tableView.reloadRows(at: plan.countryRowsToReload, with: .none)
+            // `.none` keeps things visually quiet — the motion stays on the
+            // city row; country rows just swap their tint without flicker.
+            if !plan.countryRowsToRefresh.isEmpty {
+                tableView.reloadRows(at: plan.countryRowsToRefresh, with: .none)
             }
         }
     }
@@ -318,6 +323,20 @@ final class AddWishlistCountryViewController: UIViewController {
         for (s, section) in sections.enumerated() {
             for (r, row) in section.rows.enumerated() {
                 if case .cityEntry = row {
+                    return IndexPath(row: r, section: s)
+                }
+            }
+        }
+        return nil
+    }
+
+    private static func countryIndexPath(
+        forCode code: String,
+        in sections: [CountrySection]
+    ) -> IndexPath? {
+        for (s, section) in sections.enumerated() {
+            for (r, row) in section.rows.enumerated() {
+                if case .country(let place) = row, place.code == code {
                     return IndexPath(row: r, section: s)
                 }
             }
