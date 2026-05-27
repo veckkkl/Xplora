@@ -24,11 +24,6 @@ final class GetStatisticsUseCaseImpl: GetStatisticsUseCase {
         self.getTrips = getTrips
     }
 
-    /// Visited countries come from Timeline trips — `Trip.placeCode` is the
-    /// canonical source. A trip to Hong Kong (`HK`) or Taiwan (`TW`) is a real
-    /// visit and remains in the timeline, but only places whose catalog status
-    /// is `.un` contribute to the "195 UN" progress. We never collapse
-    /// territories into their parent country.
     func execute() async throws -> StatisticsSummary {
         async let catalogTask = getCatalogPlaces.execute()
         async let tripsTask = getTrips.execute()

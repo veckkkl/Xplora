@@ -22,8 +22,6 @@ struct GetStatisticsUseCaseTests {
     // MARK: - UN filtering
 
     @Test func onlyUNPlacesCountTowardTotals() async throws {
-        // A trip to Taiwan / Hong Kong is valid Timeline data but must not
-        // increase the UN counter — neither place has `.un` status.
         let catalog: [CatalogPlace] = [
             CatalogPlace(code: "FR", status: .un),
             CatalogPlace(code: "TW", status: .disputed),
@@ -38,7 +36,6 @@ struct GetStatisticsUseCaseTests {
     // MARK: - World progress percent
 
     @Test func worldProgressPercentIsRounded() async throws {
-        // 1 visited out of 3 UN = 33%
         let catalog: [CatalogPlace] = [
             CatalogPlace(code: "FR", status: .un),
             CatalogPlace(code: "DE", status: .un),
@@ -62,7 +59,6 @@ struct GetStatisticsUseCaseTests {
     // MARK: - Continent counting
 
     @Test func visitedContinentsCountOnlyCountinentsWithAtLeastOneVisit() async throws {
-        // FR and DE are both Europe; JP is Asia.
         let catalog: [CatalogPlace] = [
             CatalogPlace(code: "FR", status: .un),
             CatalogPlace(code: "DE", status: .un),
@@ -114,7 +110,6 @@ struct GetStatisticsUseCaseTests {
     @Test func fullCatalogTotalMatchesExpectedUNCount() async throws {
         let sut = makeUseCase(visitedCodes: [])
         let result = try await sut.execute()
-        // CatalogPlacePolicy defines 195 UN places (193 UN members + Vatican + Palestine).
         #expect(result.totalUNCount == 195)
     }
 

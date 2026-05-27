@@ -6,11 +6,6 @@
 import SnapKit
 import UIKit
 
-/// Onboarding's residence picker. Sources its rows from the unified Xplora
-/// catalog (`GetCatalogPlacesUseCase`) so users see the same entries as
-/// Wishlist and Timeline — including Hong Kong, Taiwan, Antarctica and other
-/// non-UN places. Status badges and filtering by `.un` are intentionally not
-/// applied: at onboarding time every catalog entry is a valid residence.
 @MainActor
 final class CountryPickerViewController: UIViewController {
 
@@ -40,8 +35,6 @@ final class CountryPickerViewController: UIViewController {
         super.viewDidLoad()
         title = L10n.Onboarding.Country.pickerTitle
         view.backgroundColor = .systemBackground
-        // Pushed onto the onboarding nav — the system back button handles
-        // cancel. No explicit left bar button needed.
 
         loadingIndicator.hidesWhenStopped = true
 
@@ -60,8 +53,6 @@ final class CountryPickerViewController: UIViewController {
         loadingIndicator.startAnimating()
         Task { [weak self] in
             guard let self else { return }
-            // No status filter: Onboarding shows the full catalog, including
-            // territories and disputed places.
             let places = (try? await self.getCatalogPlaces.execute()) ?? []
             self.applyAlphabetSections(from: places)
             self.loadingIndicator.stopAnimating()
@@ -111,7 +102,6 @@ extension CountryPickerViewController: UITableViewDataSource, UITableViewDelegat
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         let place = sections[indexPath.section].places[indexPath.row]
         var content = cell.defaultContentConfiguration()
-        // Flag + localized name only — status is intentionally hidden here.
         content.text = "\(place.flag)  \(place.localizedName)"
         cell.contentConfiguration = content
         return cell

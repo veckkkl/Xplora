@@ -11,9 +11,6 @@ protocol TripDateRangeModuleOutput: AnyObject {
     func tripDateRangeDidCancel()
 }
 
-/// The date-range screen always works in terms of a `CatalogPlace` so the
-/// localized name, flag, and status come from a single source of truth. Trip
-/// persistence stays placeCode-only — the place itself is never serialised.
 enum TripDateRangeMode {
     case create(place: CatalogPlace)
     case edit(tripId: UUID, place: CatalogPlace, startDate: Date, endDate: Date)

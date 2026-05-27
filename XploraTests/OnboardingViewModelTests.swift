@@ -14,8 +14,6 @@ struct OnboardingViewModelTests {
         return (OnboardingViewModel(completeOnboarding: useCase), useCase)
     }
 
-    /// `status` is irrelevant to Onboarding logic — pass any value; the VM
-    /// records only `code` and `localizedName`.
     private func place(_ code: String) -> CatalogPlace {
         CatalogPlace(code: code, status: .un)
     }

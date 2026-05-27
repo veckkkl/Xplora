@@ -47,9 +47,6 @@ final class AppCoordinator {
             viewModel: viewModel,
             getCatalogPlaces: getCatalogPlaces
         )
-        // Wrap in a nav controller so the country picker can push onto a stack
-        // instead of opening as a modal sheet. Nav bar is hidden on the
-        // onboarding screen itself; it appears once the picker is pushed.
         let nav = UINavigationController(rootViewController: viewController)
         nav.setNavigationBarHidden(true, animated: false)
         setRoot(nav)

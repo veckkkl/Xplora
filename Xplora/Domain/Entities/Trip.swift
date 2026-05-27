@@ -9,9 +9,6 @@ import Foundation
 
 struct Trip: Identifiable, Equatable, Codable {
     let id: UUID
-    /// ISO 3166-1 alpha-2 code from the unified Xplora catalog (`CatalogPlace`).
-    /// Hong Kong / Taiwan / Antarctica are preserved as their own codes — never
-    /// collapsed into a parent country.
     let placeCode: String
     let startDate: Date
     let endDate: Date
@@ -34,23 +31,10 @@ struct Trip: Identifiable, Equatable, Codable {
         self.visitedPlaces = visitedPlaces
     }
 
-    // MARK: - Codable (backward-compatible)
-    //
-    // Old payloads stored the full `Country` blob under the `country` key:
-    //
-    //   { "country": { "id": "...", "code": "IT", "name": "Italy", "regions": [] }, ... }
-    //
-    // New payloads write only the canonical `placeCode`:
-    //
-    //   { "placeCode": "IT", ... }
-    //
-    // Decoder accepts both shapes so existing LocalStorage data continues to
-    // load. Encoder always writes the new shape, so re-saving migrates rows.
-
     private enum CodingKeys: String, CodingKey {
         case id
         case placeCode
-        case country // legacy
+        case country
         case startDate
         case endDate
         case notesCount

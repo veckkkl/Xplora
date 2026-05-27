@@ -197,8 +197,6 @@ final class OnboardingViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // Nav bar is hidden on this root screen and re-enabled when the picker
-        // is pushed; popping back here must re-hide it.
         navigationController?.setNavigationBarHidden(true, animated: animated)
     }
 
@@ -397,16 +395,10 @@ final class OnboardingViewController: UIViewController {
         picker.onSelect = { [weak self] place in
             self?.viewModel.didSelectPlace(place)
         }
-        // Push onto the wrapping nav (`AppCoordinator.showOnboarding` builds
-        // it). Nav bar is hidden on the onboarding root and re-enabled here so
-        // the system back button is shown on the picker.
         navigationController?.setNavigationBarHidden(false, animated: true)
         navigationController?.pushViewController(picker, animated: true)
     }
 
-    /// Inline flag derivation. Kept local so this screen doesn't reach into a
-    /// shared helper just for one cell label; matches the formula used in
-    /// `CatalogPlace.flag`.
     private static func flagEmoji(forCode code: String) -> String {
         String(
             code.uppercased().unicodeScalars

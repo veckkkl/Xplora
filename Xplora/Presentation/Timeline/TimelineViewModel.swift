@@ -58,7 +58,6 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
     private let getCatalogPlaces: GetCatalogPlacesUseCase
     private let deleteTripUseCase: DeleteTripUseCase
     private var trips: [Trip] = []
-    /// Indexed by uppercased place code so display lookups stay O(1) per row.
     private var catalogByCode: [String: CatalogPlace] = [:]
     private var isLoading = false
 
@@ -179,9 +178,6 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
         )
     }
 
-    /// Resolves a stored trip code against the catalog. Falls back to a synthetic
-    /// `CatalogPlace` so the cell still renders (flag from the raw code, name =
-    /// code) when a previously saved place is no longer in the allowlist.
     private func catalogPlace(for code: String) -> CatalogPlace {
         if let hit = catalogByCode[code.uppercased()] { return hit }
         return CatalogPlace(code: code.uppercased(), status: .territory)

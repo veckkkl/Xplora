@@ -162,9 +162,6 @@ extension TripCountryPickerViewController: UITableViewDataSource {
             return cell
         }
 
-        // Status surfaces as a trailing pill (same component as Wishlist), not
-        // as a subtitle. The main Timeline screen still shows no status — this
-        // is only the picker.
         var config = cell.defaultContentConfiguration()
         config.text = "\(place.flag)  \(place.localizedName)"
         config.textProperties.font = UIFont.systemFont(ofSize: 17)

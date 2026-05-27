@@ -10,9 +10,6 @@ final class TimelineCoordinator {
     private let navigationController: UINavigationController
     private let locator: ServiceLocator
     private weak var timelineViewModel: TimelineViewModel?
-    /// Picker is pushed onto the timeline nav stack (not presented as a sheet)
-    /// so the country list, date picker, and timeline form one back-stack the
-    /// user can navigate with the system back button.
     private weak var pickerViewController: TripCountryPickerViewController?
 
     init(navigationController: UINavigationController, locator: ServiceLocator = .shared) {
@@ -97,7 +94,6 @@ extension TimelineCoordinator: TripCountryPickerModuleOutput {
 
 extension TimelineCoordinator: TripDateRangeModuleOutput {
     func tripDateRangeDidSave(tripId: UUID) {
-        // Drop the picker + date pages, return to the timeline list, refresh.
         navigationController.popToRootViewController(animated: true)
         timelineViewModel?.refresh()
     }

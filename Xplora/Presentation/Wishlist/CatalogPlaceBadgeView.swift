@@ -3,10 +3,6 @@
 
 import UIKit
 
-/// Small pill used as a `UITableViewCell.accessoryView` to surface
-/// `CatalogPlaceStatus` next to a country row. Shared by the Wishlist add
-/// screen and the Timeline country picker so the visual format is identical
-/// in both places.
 final class CatalogPlaceBadgeView: UILabel {
 
     private let contentInsets = UIEdgeInsets(top: 3, left: 7, bottom: 3, right: 7)
@@ -41,7 +37,6 @@ final class CatalogPlaceBadgeView: UILabel {
         layer.cornerRadius = 5
         layer.cornerCurve = .continuous
         layer.masksToBounds = true
-        // Prevent UITableViewCell from squeezing the accessory below intrinsic size.
         setContentHuggingPriority(.required, for: .horizontal)
         setContentHuggingPriority(.required, for: .vertical)
         setContentCompressionResistancePriority(.required, for: .horizontal)
@@ -50,7 +45,6 @@ final class CatalogPlaceBadgeView: UILabel {
 }
 
 extension CatalogPlaceStatus {
-    /// Short text on the cell badge.
     var badgeLabel: String {
         switch self {
         case .un:        return "UN"
@@ -59,8 +53,6 @@ extension CatalogPlaceStatus {
         }
     }
 
-    /// Long, human-readable label. Used in cases (e.g. accessibility, headers)
-    /// where the short code isn't enough. Cells use `badgeLabel`.
     var subtitleLabel: String {
         switch self {
         case .un:        return "UN member"
@@ -69,7 +61,6 @@ extension CatalogPlaceStatus {
         }
     }
 
-    /// Tinted, light/dark-mode aware pill background.
     fileprivate var badgeBackgroundColor: UIColor {
         switch self {
         case .un:        return UIColor.systemBlue.withAlphaComponent(0.14)
@@ -78,8 +69,6 @@ extension CatalogPlaceStatus {
         }
     }
 
-    /// Foreground text color matching the pill background. Each option works
-    /// in both light and dark mode via UIKit's semantic colors.
     fileprivate var badgeTextColor: UIColor {
         switch self {
         case .un:        return .systemBlue
@@ -92,10 +81,6 @@ extension CatalogPlaceStatus {
 // MARK: - Accessory factory
 
 extension CatalogPlaceBadgeView {
-    /// Composes a status badge with an optional trailing checkmark, sized so it
-    /// can be assigned directly to `UITableViewCell.accessoryView`.
-    /// Returns `nil` only when neither the status pill nor the checkmark is
-    /// requested (currently never — status is always rendered).
     static func accessoryView(for status: CatalogPlaceStatus, isSelected: Bool) -> UIView? {
         let badge = CatalogPlaceBadgeView(status: status)
         let checkmark: UIImageView? = isSelected
@@ -116,10 +101,6 @@ extension CatalogPlaceBadgeView {
             return view
         }
 
-        // `accessoryView` is sized from `frame.size`, and
-        // `systemLayoutSizeFitting` on a standalone view (no parent in the
-        // Auto Layout engine) is unreliable. Compose manually using each
-        // child's intrinsic size.
         let spacing: CGFloat = 6
         let sizes = parts.map { $0.intrinsicContentSize }
         let totalWidth = sizes.reduce(0) { $0 + $1.width } + CGFloat(parts.count - 1) * spacing
