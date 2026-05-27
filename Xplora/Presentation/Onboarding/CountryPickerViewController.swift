@@ -6,17 +6,19 @@
 import SnapKit
 import UIKit
 
+/// Onboarding's residence picker. Sources its rows from the unified Xplora
+/// catalog (`GetCatalogPlacesUseCase`) so users see the same entries as
+/// Wishlist and Timeline — including Hong Kong, Taiwan, Antarctica and other
+/// non-UN places. Status badges and filtering by `.un` are intentionally not
+/// applied: at onboarding time every catalog entry is a valid residence.
+@MainActor
 final class CountryPickerViewController: UIViewController {
 
-    var onSelect: ((CountryOption) -> Void)?
+    var onSelect: ((CatalogPlace) -> Void)?
 
-    private let sections: [(letter: String, countries: [CountryOption])] = {
-        let all = CountryOption.all()
-        let grouped = Dictionary(grouping: all) { String($0.name.prefix(1)).uppercased() }
-        return grouped.keys.sorted().map { letter in
-            (letter, grouped[letter]!)
-        }
-    }()
+    private let getCatalogPlaces: GetCatalogPlacesUseCase
+
+    private var sections: [(letter: String, places: [CatalogPlace])] = []
 
     private let tableView: UITableView = {
         let tv = UITableView(frame: .zero, style: .plain)
@@ -24,6 +26,15 @@ final class CountryPickerViewController: UIViewController {
         tv.sectionIndexColor = .systemBlue
         return tv
     }()
+
+    private let loadingIndicator = UIActivityIndicatorView(style: .large)
+
+    init(getCatalogPlaces: GetCatalogPlacesUseCase) {
+        self.getCatalogPlaces = getCatalogPlaces
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,14 +47,49 @@ final class CountryPickerViewController: UIViewController {
             action: #selector(cancelTapped)
         )
 
+        loadingIndicator.hidesWhenStopped = true
+
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.isHidden = true
         view.addSubview(tableView)
+        view.addSubview(loadingIndicator)
         tableView.snp.makeConstraints { $0.edges.equalToSuperview() }
+        loadingIndicator.snp.makeConstraints { $0.center.equalTo(view.safeAreaLayoutGuide) }
+
+        loadCatalog()
     }
 
     @objc private func cancelTapped() {
         dismiss(animated: true)
+    }
+
+    private func loadCatalog() {
+        loadingIndicator.startAnimating()
+        Task { [weak self] in
+            guard let self else { return }
+            // No status filter: Onboarding shows the full catalog, including
+            // territories and disputed places.
+            let places = (try? await self.getCatalogPlaces.execute()) ?? []
+            self.applyAlphabetSections(from: places)
+            self.loadingIndicator.stopAnimating()
+            self.tableView.isHidden = false
+            self.tableView.reloadData()
+        }
+    }
+
+    private func applyAlphabetSections(from places: [CatalogPlace]) {
+        let grouped = Dictionary(grouping: places) {
+            String($0.localizedName.prefix(1)).uppercased()
+        }
+        sections = grouped.keys
+            .sorted()
+            .map { letter in
+                let rows = grouped[letter]!.sorted {
+                    $0.localizedName.localizedCompare($1.localizedName) == .orderedAscending
+                }
+                return (letter, rows)
+            }
     }
 }
 
@@ -54,7 +100,7 @@ extension CountryPickerViewController: UITableViewDataSource, UITableViewDelegat
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        sections[section].countries.count
+        sections[section].places.count
     }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -71,16 +117,18 @@ extension CountryPickerViewController: UITableViewDataSource, UITableViewDelegat
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        let country = sections[indexPath.section].countries[indexPath.row]
+        let place = sections[indexPath.section].places[indexPath.row]
         var content = cell.defaultContentConfiguration()
-        content.text = "\(country.flagEmoji)  \(country.name)"
+        // Flag + localized name only — status is intentionally hidden here.
+        content.text = "\(place.flag)  \(place.localizedName)"
         cell.contentConfiguration = content
         return cell
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        onSelect?(sections[indexPath.section].countries[indexPath.row])
+        let place = sections[indexPath.section].places[indexPath.row]
+        onSelect?(place)
         dismiss(animated: true)
     }
 }

@@ -14,6 +14,12 @@ struct OnboardingViewModelTests {
         return (OnboardingViewModel(completeOnboarding: useCase), useCase)
     }
 
+    /// `status` is irrelevant to Onboarding logic — pass any value; the VM
+    /// records only `code` and `localizedName`.
+    private func place(_ code: String) -> CatalogPlace {
+        CatalogPlace(code: code, status: .un)
+    }
+
     // MARK: - Initial state
 
     @Test func viewDidLoad_continueIsDisabled() {
@@ -28,7 +34,7 @@ struct OnboardingViewModelTests {
 
     @Test func didChangeName_validName_enablesButtonWhenCountryAlsoSelected() {
         let (sut, _) = makeSUT()
-        sut.didSelectCountry(CountryOption(code: "US", name: "United States"))
+        sut.didSelectPlace(place("US"))
         var received: Bool?
         sut.onContinueEnabled = { received = $0 }
         sut.didChangeName("Alice")
@@ -37,7 +43,7 @@ struct OnboardingViewModelTests {
 
     @Test func didChangeName_emptyName_keepsContinueDisabled() {
         let (sut, _) = makeSUT()
-        sut.didSelectCountry(CountryOption(code: "US", name: "United States"))
+        sut.didSelectPlace(place("US"))
         var received: Bool?
         sut.onContinueEnabled = { received = $0 }
         sut.didChangeName("")
@@ -46,7 +52,7 @@ struct OnboardingViewModelTests {
 
     @Test func didChangeName_invalidCharacters_keepsContinueDisabled() {
         let (sut, _) = makeSUT()
-        sut.didSelectCountry(CountryOption(code: "US", name: "United States"))
+        sut.didSelectPlace(place("US"))
         var received: Bool?
         sut.onContinueEnabled = { received = $0 }
         sut.didChangeName("Alice123")
@@ -72,11 +78,11 @@ struct OnboardingViewModelTests {
 
     // MARK: - Country selection
 
-    @Test func didSelectCountry_updatesSelection() {
+    @Test func didSelectPlace_updatesSelection() {
         let (sut, _) = makeSUT()
         var selection: CountrySelection?
         sut.onCountrySelectionChanged = { selection = $0 }
-        sut.didSelectCountry(CountryOption(code: "FR", name: "France"))
+        sut.didSelectPlace(place("FR"))
         if case .country(let code, _) = selection {
             #expect(code == "FR")
         } else {
@@ -84,11 +90,11 @@ struct OnboardingViewModelTests {
         }
     }
 
-    @Test func didSelectCountry_clearsCountryError() {
+    @Test func didSelectPlace_clearsCountryError() {
         let (sut, _) = makeSUT()
         var error: String??
         sut.onCountryError = { error = $0 }
-        sut.didSelectCountry(CountryOption(code: "FR", name: "France"))
+        sut.didSelectPlace(place("FR"))
         #expect(error == .some(nil))
     }
 
@@ -124,7 +130,7 @@ struct OnboardingViewModelTests {
         sut.didToggleWorldCitizen(true)
         var selection: CountrySelection?
         sut.onCountrySelectionChanged = { selection = $0 }
-        sut.didSelectCountry(CountryOption(code: "DE", name: "Germany"))
+        sut.didSelectPlace(place("DE"))
         if case .country(let code, _) = selection {
             #expect(code == "DE")
         } else {
@@ -137,7 +143,7 @@ struct OnboardingViewModelTests {
     @Test func didTapContinue_validNameAndCountry_callsUseCaseOnce() {
         let (sut, useCase) = makeSUT()
         sut.didChangeName("Alice")
-        sut.didSelectCountry(CountryOption(code: "US", name: "United States"))
+        sut.didSelectPlace(place("US"))
         sut.didTapContinue()
         #expect(useCase.callCount == 1)
     }
@@ -145,7 +151,7 @@ struct OnboardingViewModelTests {
     @Test func didTapContinue_validNameAndCountry_passesCorrectParams() {
         let (sut, useCase) = makeSUT()
         sut.didChangeName("Alice")
-        sut.didSelectCountry(CountryOption(code: "US", name: "United States"))
+        sut.didSelectPlace(place("US"))
         sut.didTapContinue()
         #expect(useCase.lastName == "Alice")
         #expect(useCase.lastCode == "US")
@@ -173,14 +179,14 @@ struct OnboardingViewModelTests {
 
     @Test func didTapContinue_emptyName_doesNotCallUseCase() {
         let (sut, useCase) = makeSUT()
-        sut.didSelectCountry(CountryOption(code: "US", name: "United States"))
+        sut.didSelectPlace(place("US"))
         sut.didTapContinue()
         #expect(useCase.callCount == 0)
     }
 
     @Test func didTapContinue_emptyName_firesNameError() {
         let (sut, _) = makeSUT()
-        sut.didSelectCountry(CountryOption(code: "US", name: "United States"))
+        sut.didSelectPlace(place("US"))
         var error: String??
         sut.onNameError = { error = $0 }
         sut.didTapContinue()
@@ -208,7 +214,7 @@ struct OnboardingViewModelTests {
     @Test func didTapContinue_trimmedNameIsPassed() {
         let (sut, useCase) = makeSUT()
         sut.didChangeName("  Alice  ")
-        sut.didSelectCountry(CountryOption(code: "US", name: "United States"))
+        sut.didSelectPlace(place("US"))
         sut.didTapContinue()
         #expect(useCase.lastName == "Alice")
     }

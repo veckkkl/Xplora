@@ -5,6 +5,7 @@
 
 import Testing
 @testable import Xplora
+import Foundation
 
 struct GetStatisticsUseCaseTests {
 
@@ -21,6 +22,8 @@ struct GetStatisticsUseCaseTests {
     // MARK: - UN filtering
 
     @Test func onlyUNPlacesCountTowardTotals() async throws {
+        // A trip to Taiwan / Hong Kong is valid Timeline data but must not
+        // increase the UN counter — neither place has `.un` status.
         let catalog: [CatalogPlace] = [
             CatalogPlace(code: "FR", status: .un),
             CatalogPlace(code: "TW", status: .disputed),
@@ -94,6 +97,18 @@ struct GetStatisticsUseCaseTests {
         #expect(result.visitedUNCount == 1)
     }
 
+    // MARK: - Trip deduplication
+
+    @Test func multipleTripsToSameCountryCountOnce() async throws {
+        let catalog: [CatalogPlace] = [
+            CatalogPlace(code: "FR", status: .un),
+            CatalogPlace(code: "DE", status: .un)
+        ]
+        let sut = makeUseCase(catalog: catalog, visitedCodes: ["FR", "FR", "FR"])
+        let result = try await sut.execute()
+        #expect(result.visitedUNCount == 1)
+    }
+
     // MARK: - Full catalog smoke test
 
     @Test func fullCatalogTotalMatchesExpectedUNCount() async throws {
@@ -110,12 +125,19 @@ struct GetStatisticsUseCaseTests {
         visitedCodes: [String]
     ) -> GetStatisticsUseCaseImpl {
         let places = catalog ?? CatalogPlacePolicy.all
-        let visited = visitedCodes.map { code in
-            Country(id: UUID(), code: code, name: code, regions: [])
+        let trips = visitedCodes.enumerated().map { offset, code in
+            Trip(
+                id: UUID(),
+                placeCode: code,
+                startDate: Date(timeIntervalSince1970: TimeInterval(offset)),
+                endDate: Date(timeIntervalSince1970: TimeInterval(offset)),
+                notesCount: 0,
+                visitedPlaces: []
+            )
         }
         return GetStatisticsUseCaseImpl(
             getCatalogPlaces: StubCatalogPlacesUseCase(places: places),
-            getVisitedCountries: StubVisitedCountriesUseCase(countries: visited)
+            getTrips: StubTripsUseCase(trips: trips)
         )
     }
 }
@@ -128,8 +150,8 @@ private final class StubCatalogPlacesUseCase: GetCatalogPlacesUseCase {
     func execute() async throws -> [CatalogPlace] { places }
 }
 
-private final class StubVisitedCountriesUseCase: GetVisitedCountriesUseCase {
-    private let countries: [Country]
-    init(countries: [Country]) { self.countries = countries }
-    func execute() async throws -> [Country] { countries }
+private final class StubTripsUseCase: GetTripsUseCase {
+    private let trips: [Trip]
+    init(trips: [Trip]) { self.trips = trips }
+    func execute() async throws -> [Trip] { trips }
 }

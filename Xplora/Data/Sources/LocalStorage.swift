@@ -12,7 +12,6 @@ final class LocalStorage: LocalStorageProtocol {
 
     private enum Keys {
         static let trips = "trips"
-        static let countries = "countries"
         static let settings = "settings"
         static let wishlistCountries = "wishlistCountries"
         static let cachedCatalogCodes = "cachedCatalogCodes"
@@ -40,11 +39,6 @@ final class LocalStorage: LocalStorageProtocol {
     var trips: [Trip] {
         get { load([Trip].self, forKey: Keys.trips) ?? [] }
         set { save(newValue, forKey: Keys.trips) }
-    }
-
-    var countries: [Country] {
-        get { load([Country].self, forKey: Keys.countries) ?? [] }
-        set { save(newValue, forKey: Keys.countries) }
     }
 
     var settings: UserSettings {

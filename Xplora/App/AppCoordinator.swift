@@ -38,11 +38,15 @@ final class AppCoordinator {
 
     func showOnboarding() {
         let completeOnboarding = locator.resolve(CompleteOnboardingUseCase.self)
+        let getCatalogPlaces = locator.resolve(GetCatalogPlacesUseCase.self)
         let viewModel = OnboardingViewModel(completeOnboarding: completeOnboarding)
         viewModel.onCompleted = { [weak self] in
             self?.handleOnboardingCompleted()
         }
-        let viewController = OnboardingViewController(viewModel: viewModel)
+        let viewController = OnboardingViewController(
+            viewModel: viewModel,
+            getCatalogPlaces: getCatalogPlaces
+        )
         setRoot(viewController)
     }
 

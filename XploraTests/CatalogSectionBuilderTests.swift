@@ -4,6 +4,7 @@
 //
 
 import Testing
+import Foundation
 @testable import Xplora
 
 struct CatalogSectionBuilderTests {
@@ -63,7 +64,7 @@ struct CatalogSectionBuilderTests {
             CatalogPlace(code: "DE", status: .un)
         ]
         let sections = CatalogSectionBuilder.continentSections(from: onlyClassifiable, compare: Self.compare)
-        #expect(!sections.contains(where: { $0.continent == .other }))
+        #expect(!sections.contains(where: { $0.continent == Continent.other }))
     }
 
     @Test func otherSectionContainsOnlySupportedPlacesPassedIn() {
@@ -76,7 +77,7 @@ struct CatalogSectionBuilderTests {
             CatalogPlace(code: "ZZ", status: .territory) // not classifiable -> Other
         ]
         let sections = CatalogSectionBuilder.continentSections(from: mixed, compare: Self.compare)
-        let otherSection = sections.first { $0.continent == .other }
+        let otherSection = sections.first { $0.continent == Continent.other }
 
         #expect(otherSection != nil)
         if let otherSection {

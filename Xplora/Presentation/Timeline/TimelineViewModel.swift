@@ -15,7 +15,9 @@ struct TripTimelineItem: Equatable {
 
 struct TripTimelineSection: Equatable {
     let year: Int
-    let items: [TripTimelineItem]
+    let items: [TripTimelineSection.Item]
+
+    typealias Item = TripTimelineItem
 }
 
 struct TimelineViewState: Equatable {
@@ -26,7 +28,7 @@ struct TimelineViewState: Equatable {
 
 enum TimelineRoute {
     case addTrip
-    case editTripDates(tripId: UUID, country: Country, startDate: Date, endDate: Date)
+    case editTripDates(tripId: UUID, place: CatalogPlace, startDate: Date, endDate: Date)
 }
 
 @MainActor
@@ -53,8 +55,11 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
     var onRoute: ((TimelineRoute) -> Void)?
 
     private let getTripsUseCase: GetTripsUseCase
+    private let getCatalogPlaces: GetCatalogPlacesUseCase
     private let deleteTripUseCase: DeleteTripUseCase
     private var trips: [Trip] = []
+    /// Indexed by uppercased place code so display lookups stay O(1) per row.
+    private var catalogByCode: [String: CatalogPlace] = [:]
     private var isLoading = false
 
     private static let dayMonthFormatter: DateFormatter = {
@@ -64,8 +69,13 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
         return formatter
     }()
 
-    init(getTripsUseCase: GetTripsUseCase, deleteTripUseCase: DeleteTripUseCase) {
+    init(
+        getTripsUseCase: GetTripsUseCase,
+        getCatalogPlaces: GetCatalogPlacesUseCase,
+        deleteTripUseCase: DeleteTripUseCase
+    ) {
         self.getTripsUseCase = getTripsUseCase
+        self.getCatalogPlaces = getCatalogPlaces
         self.deleteTripUseCase = deleteTripUseCase
     }
 
@@ -87,10 +97,11 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
 
     func didTapEditDates(tripId: UUID) {
         guard let trip = trips.first(where: { $0.id == tripId }) else { return }
+        let place = catalogPlace(for: trip.placeCode)
         onRoute?(
             .editTripDates(
                 tripId: trip.id,
-                country: trip.country,
+                place: place,
                 startDate: trip.startDate,
                 endDate: trip.endDate
             )
@@ -114,12 +125,19 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
 
         Task {
             do {
-                trips = try await getTripsUseCase.execute()
+                async let tripsTask = getTripsUseCase.execute()
+                async let placesTask = getCatalogPlaces.execute()
+                let (loadedTrips, loadedPlaces) = try await (tripsTask, placesTask)
+                trips = loadedTrips
+                catalogByCode = Dictionary(
+                    uniqueKeysWithValues: loadedPlaces.map { ($0.code.uppercased(), $0) }
+                )
                 isLoading = false
                 publish()
             } catch {
                 isLoading = false
                 trips = []
+                catalogByCode = [:]
                 publish()
                 onError?(L10n.Timeline.Error.load)
             }
@@ -151,22 +169,22 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
     }
 
     private func makeItem(from trip: Trip) -> TripTimelineItem {
-        TripTimelineItem(
+        let place = catalogPlace(for: trip.placeCode)
+        return TripTimelineItem(
             id: trip.id,
-            flag: flagEmoji(for: trip.country.code),
-            countryName: trip.country.name,
+            flag: place.flag,
+            countryName: place.localizedName,
             dateRangeText: formatRange(start: trip.startDate, end: trip.endDate),
             notesText: notesText(for: trip.notesCount)
         )
     }
 
-    private func flagEmoji(for countryCode: String) -> String {
-        countryCode
-            .uppercased()
-            .unicodeScalars
-            .compactMap { Unicode.Scalar(127397 + $0.value) }
-            .map { String($0) }
-            .joined()
+    /// Resolves a stored trip code against the catalog. Falls back to a synthetic
+    /// `CatalogPlace` so the cell still renders (flag from the raw code, name =
+    /// code) when a previously saved place is no longer in the allowlist.
+    private func catalogPlace(for code: String) -> CatalogPlace {
+        if let hit = catalogByCode[code.uppercased()] { return hit }
+        return CatalogPlace(code: code.uppercased(), status: .territory)
     }
 
     private func formatRange(start: Date, end: Date) -> String {

@@ -19,9 +19,11 @@ final class TimelineCoordinator {
 
     func start() {
         let getTripsUseCase: GetTripsUseCase = locator.resolve(GetTripsUseCase.self)
+        let getCatalogPlaces: GetCatalogPlacesUseCase = locator.resolve(GetCatalogPlacesUseCase.self)
         let deleteTripUseCase: DeleteTripUseCase = locator.resolve(DeleteTripUseCase.self)
         let viewModel = TimelineViewModel(
             getTripsUseCase: getTripsUseCase,
+            getCatalogPlaces: getCatalogPlaces,
             deleteTripUseCase: deleteTripUseCase
         )
         let viewController = TimelineViewController(viewModel: viewModel)
@@ -34,22 +36,15 @@ final class TimelineCoordinator {
         timelineViewModel = viewModel
     }
 
-    /// Entry point for the "create trip" flow.
-    /// Invoked by the country selection step once it lands; the dates screen
-    /// handles trip creation itself via `CreateTripUseCase`.
-    func presentCreateTrip(country: Country) {
-        presentDateRange(mode: .create(country: country))
-    }
-
     private func handle(_ route: TimelineRoute) {
         switch route {
         case .addTrip:
             presentCountryPicker()
-        case let .editTripDates(tripId, country, startDate, endDate):
+        case let .editTripDates(tripId, place, startDate, endDate):
             presentDateRange(
                 mode: .edit(
                     tripId: tripId,
-                    country: country,
+                    place: place,
                     startDate: startDate,
                     endDate: endDate
                 )
@@ -58,8 +53,8 @@ final class TimelineCoordinator {
     }
 
     private func presentCountryPicker() {
-        let getAllCountries: GetAllCountriesUseCase = locator.resolve(GetAllCountriesUseCase.self)
-        let viewModel = TripCountryPickerViewModel(getAllCountries: getAllCountries)
+        let getCatalogPlaces: GetCatalogPlacesUseCase = locator.resolve(GetCatalogPlacesUseCase.self)
+        let viewModel = TripCountryPickerViewModel(getCatalogPlaces: getCatalogPlaces)
         viewModel.output = self
 
         let viewController = TripCountryPickerViewController(viewModel: viewModel)
@@ -93,13 +88,13 @@ final class TimelineCoordinator {
 }
 
 extension TimelineCoordinator: TripCountryPickerModuleOutput {
-    func tripCountryPickerDidSelect(country: Country) {
+    func tripCountryPickerDidSelect(place: CatalogPlace) {
         let createTrip: CreateTripUseCase = locator.resolve(CreateTripUseCase.self)
         let updateTripDates: UpdateTripDatesUseCase = locator.resolve(UpdateTripDatesUseCase.self)
         let validateDates: ValidateTripDateRangeUseCase = locator.resolve(ValidateTripDateRangeUseCase.self)
 
         let viewModel = TripDateRangeViewModel(
-            mode: .create(country: country),
+            mode: .create(place: place),
             createTrip: createTrip,
             updateTripDates: updateTripDates,
             validateDates: validateDates

@@ -16,7 +16,6 @@ protocol LocalStorageProtocol: AnyObject {
     func removeValue(forKey key: String)
 
     var trips: [Trip] { get set }
-    var countries: [Country] { get set }
     var settings: UserSettings { get set }
     var wishlistCountries: [WishlistCountry] { get set }
     var cachedCatalogCodes: [String]? { get set }

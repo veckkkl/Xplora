@@ -57,4 +57,14 @@ extension CatalogPlaceStatus {
         case .territory: return nil
         }
     }
+
+    /// Longer, human-readable label used as a subtitle in the Timeline picker.
+    /// Always non-nil so every row in that list has a status line.
+    var subtitleLabel: String {
+        switch self {
+        case .un:        return "UN member"
+        case .disputed:  return "Disputed"
+        case .territory: return "Territory"
+        }
+    }
 }

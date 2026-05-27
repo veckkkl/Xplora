@@ -23,7 +23,7 @@ final class UpdateTripDatesUseCaseImpl: UpdateTripDatesUseCase {
         let existing = try await tripsRepo.getTrip(id: tripId)
         let updated = Trip(
             id: existing.id,
-            country: existing.country,
+            placeCode: existing.placeCode,
             startDate: startDate,
             endDate: endDate,
             notesCount: existing.notesCount,
