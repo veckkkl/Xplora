@@ -34,14 +34,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Repositories
         let tripsRepo: TripsRepo = TripsRepoImpl(storage: storage)
-        let placesRepo: PlacesRepo = PlacesRepoImpl(storage: storage)
         let settingsRepo: SettingsRepo = SettingsRepoImpl(storage: storage)
         let notesRepo: NotesRepo = NotesRepoImpl(coreDataStack: coreDataStack)
         let authRepository: AuthRepository = AuthRepositoryImpl(storage: storage)
         let wishlistRepo: WishlistRepo = WishlistRepoImpl(storage: storage)
 
         locator.register(TripsRepo.self, instance: tripsRepo)
-        locator.register(PlacesRepo.self, instance: placesRepo)
         locator.register(SettingsRepo.self, instance: settingsRepo)
         locator.register(NotesRepo.self, instance: notesRepo)
         locator.register(AuthRepository.self, instance: authRepository)
@@ -49,22 +47,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Services
         let locationService: LocationService = LocationServiceImpl()
-        let fogLogicService: FogLogicService = FogLogicServiceImpl()
         let fogOverlayProvider: FogOverlayProviding = EmptyFogOverlayProvider()
 
         locator.register(LocationService.self, instance: locationService)
-        locator.register(FogLogicService.self, instance: fogLogicService)
         locator.register(FogOverlayProviding.self, instance: fogOverlayProvider)
 
         // UseCases
-        let getAllCountriesUseCase: GetAllCountriesUseCase = GetAllCountriesUseCaseImpl()
-
-        let getVisitedCountriesUseCase: GetVisitedCountriesUseCase =
-            GetVisitedCountriesUseCaseImpl(placesRepo: placesRepo)
-
-        let addVisitedPlaceUseCase: AddVisitedPlaceUseCase =
-            AddVisitedPlaceUseCaseImpl(placesRepo: placesRepo)
-
         let validateTripDateRangeUseCase: ValidateTripDateRangeUseCase =
             ValidateTripDateRangeUseCaseImpl()
 
@@ -83,9 +71,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let tripNotesCountProvider: TripNotesCountProviding =
             StoredTripNotesCountProvider(tripsRepo: tripsRepo)
 
-        locator.register(GetAllCountriesUseCase.self, instance: getAllCountriesUseCase)
-        locator.register(GetVisitedCountriesUseCase.self, instance: getVisitedCountriesUseCase)
-        locator.register(AddVisitedPlaceUseCase.self, instance: addVisitedPlaceUseCase)
         locator.register(ValidateTripDateRangeUseCase.self, instance: validateTripDateRangeUseCase)
         locator.register(GetTripsUseCase.self, instance: getTripsUseCase)
         locator.register(CreateTripUseCase.self, instance: createTripUseCase)
@@ -142,7 +127,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let getStatisticsUseCase: GetStatisticsUseCase = GetStatisticsUseCaseImpl(
             getCatalogPlaces: getCatalogPlacesUseCase,
-            getVisitedCountries: getVisitedCountriesUseCase
+            getTrips: getTripsUseCase
         )
         locator.register(GetStatisticsUseCase.self, instance: getStatisticsUseCase)
 

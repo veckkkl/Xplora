@@ -21,6 +21,7 @@ final class OnboardingViewController: UIViewController {
     }
 
     private let viewModel: OnboardingViewModelInput & OnboardingViewModelOutput
+    private let getCatalogPlaces: GetCatalogPlacesUseCase
     private var currentSelection: CountrySelection = .none
 
     // MARK: - Header
@@ -172,8 +173,12 @@ final class OnboardingViewController: UIViewController {
 
     // MARK: - Init
 
-    init(viewModel: OnboardingViewModelInput & OnboardingViewModelOutput) {
+    init(
+        viewModel: OnboardingViewModelInput & OnboardingViewModelOutput,
+        getCatalogPlaces: GetCatalogPlacesUseCase
+    ) {
         self.viewModel = viewModel
+        self.getCatalogPlaces = getCatalogPlaces
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -188,6 +193,11 @@ final class OnboardingViewController: UIViewController {
         setupConstraints()
         bindActions()
         viewModel.viewDidLoad()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -345,7 +355,7 @@ final class OnboardingViewController: UIViewController {
             applyPlaceholderCountry()
             setCheckmark(visible: false)
         case .country(let code, let name):
-            countryLabel.text = "\(CountryOption(code: code, name: name).flagEmoji)  \(name)"
+            countryLabel.text = "\(Self.flagEmoji(forCode: code))  \(name)"
             countryLabel.textColor = .label
             setCheckmark(visible: false)
         case .worldCitizen:
@@ -381,11 +391,20 @@ final class OnboardingViewController: UIViewController {
     }
 
     private func presentCountryPicker() {
-        let picker = CountryPickerViewController()
-        picker.onSelect = { [weak self] country in
-            self?.viewModel.didSelectCountry(country)
+        let picker = CountryPickerViewController(getCatalogPlaces: getCatalogPlaces)
+        picker.onSelect = { [weak self] place in
+            self?.viewModel.didSelectPlace(place)
         }
-        present(UINavigationController(rootViewController: picker), animated: true)
+        navigationController?.setNavigationBarHidden(false, animated: true)
+        navigationController?.pushViewController(picker, animated: true)
+    }
+
+    private static func flagEmoji(forCode code: String) -> String {
+        String(
+            code.uppercased().unicodeScalars
+                .compactMap { Unicode.Scalar(127397 + $0.value) }
+                .map { Character($0) }
+        )
     }
 
     // MARK: - Actions

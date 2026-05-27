@@ -18,7 +18,7 @@ enum CountrySelection {
 protocol OnboardingViewModelInput: AnyObject {
     func viewDidLoad()
     func didChangeName(_ name: String)
-    func didSelectCountry(_ country: CountryOption)
+    func didSelectPlace(_ place: CatalogPlace)
     func didToggleWorldCitizen(_ enabled: Bool)
     func didTapContinue()
 }
@@ -73,8 +73,12 @@ final class OnboardingViewModel: OnboardingViewModelInput, OnboardingViewModelOu
         updateContinueState()
     }
 
-    func didSelectCountry(_ country: CountryOption) {
-        countrySelection = .country(code: country.code, name: country.name)
+    /// Onboarding stores only the catalog code; `name` keeps the user-facing
+    /// label (localized) so the UI label and `CountrySelection.country(.name)`
+    /// payload remain consistent. Status is intentionally not persisted —
+    /// Onboarding treats every catalog entry equally.
+    func didSelectPlace(_ place: CatalogPlace) {
+        countrySelection = .country(code: place.code, name: place.localizedName)
         onCountrySelectionChanged?(countrySelection)
         onCountryError?(nil)
         updateContinueState()

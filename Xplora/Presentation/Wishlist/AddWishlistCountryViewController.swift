@@ -18,8 +18,6 @@ final class AddWishlistCountryViewController: UIViewController {
     private let retryButton = UIButton(type: .system)
     private var currentLocationBarButton: UIBarButtonItem?
 
-    // Locally cached snapshot of the last applied state, used to render the
-    // table data source and to compute minimal in-place cell updates.
     private var currentState: AddWishlistCountryViewState?
     private var sections: [CountrySection] { currentState?.sections ?? [] }
 
@@ -160,7 +158,6 @@ final class AddWishlistCountryViewController: UIViewController {
         viewModel.onScrollToPlace = { [weak self] code in
             self?.scrollToPlace(code: code)
         }
-        // `onSelect` is owned by the parent that constructs the view model.
     }
 
     // MARK: - State rendering
@@ -169,12 +166,10 @@ final class AddWishlistCountryViewController: UIViewController {
         let previous = currentState
         currentState = state
 
-        // 1. Loading / loaded / error visibility
         if previous?.loadingState != state.loadingState {
             applyLoadingState(state.loadingState)
         }
 
-        // 2. Buttons
         currentLocationBarButton?.isEnabled = state.currentLocationButtonEnabled
         let addActive = state.addButtonEnabled
         addButton.isHidden = !addActive
@@ -182,17 +177,21 @@ final class AddWishlistCountryViewController: UIViewController {
         tableView.contentInset.bottom = inset
         tableView.verticalScrollIndicatorInsets.bottom = inset
 
-        // 3. Table — reload only when section/structure data changed; this
-        // keeps the in-place city text field focus untouched while the user
-        // is typing (state changes that don't change sections shouldn't
-        // recreate cells).
         let sectionsChanged = previous?.sections != state.sections
         if sectionsChanged {
-            tableView.reloadData()
+            if let previous,
+               let plan = cityRowTogglePlan(
+                   from: previous.sections,
+                   oldSelected: previous.selectedPlace,
+                   to: state.sections,
+                   newSelected: state.selectedPlace
+               ) {
+                animateCityRowToggle(plan: plan, oldSections: previous.sections)
+            } else {
+                tableView.reloadData()
+            }
         }
 
-        // 4. City entry cell — minimal in-place update for chip selection
-        // changes that aren't accompanied by a section reload.
         if !sectionsChanged {
             let citySelectionChanged = previous?.selectedCity != state.selectedCity
             let citiesChanged = previous?.citiesForSelectedPlace != state.citiesForSelectedPlace
@@ -202,12 +201,83 @@ final class AddWishlistCountryViewController: UIViewController {
                     selectedCity: state.selectedCity,
                     cities: state.citiesForSelectedPlace
                 )
+                tableView.performBatchUpdates(nil)
             } else if citySelectionChanged, let cell = visibleCityEntryCell() {
                 cell.updateChipSelection(state.selectedCity)
             }
-            // Pure cityText changes (user typing) don't require any cell update
-            // — the text field is the source of truth during typing.
         }
+    }
+
+    // MARK: - City-row expand/collapse animation
+
+    private struct CityRowTogglePlan {
+        let removedCityPath: IndexPath?
+        let insertedCityPath: IndexPath?
+    }
+
+    private func cityRowTogglePlan(
+        from oldSections: [CountrySection],
+        oldSelected: CatalogPlace?,
+        to newSections: [CountrySection],
+        newSelected: CatalogPlace?
+    ) -> CityRowTogglePlan? {
+        guard Self.stripCityRows(oldSections) == Self.stripCityRows(newSections) else {
+            return nil
+        }
+        let removedCity = Self.findCityEntryIndexPath(in: oldSections)
+        let insertedCity = Self.findCityEntryIndexPath(in: newSections)
+        guard removedCity != insertedCity else { return nil }
+        _ = oldSelected
+        _ = newSelected
+
+        return CityRowTogglePlan(
+            removedCityPath: removedCity,
+            insertedCityPath: insertedCity
+        )
+    }
+
+    private func animateCityRowToggle(plan: CityRowTogglePlan, oldSections: [CountrySection]) {
+        for cell in tableView.visibleCells {
+            guard let oldPath = tableView.indexPath(for: cell),
+                  oldPath.section < oldSections.count,
+                  oldPath.row < oldSections[oldPath.section].rows.count else { continue }
+            guard case .country(let place) = oldSections[oldPath.section].rows[oldPath.row] else {
+                continue
+            }
+            applyCountryCellConfig(cell, place: place)
+        }
+
+        tableView.performBatchUpdates {
+            if let removed = plan.removedCityPath {
+                tableView.deleteRows(at: [removed], with: .fade)
+            }
+            if let inserted = plan.insertedCityPath {
+                tableView.insertRows(at: [inserted], with: .fade)
+            }
+        }
+    }
+
+    private static func stripCityRows(_ sections: [CountrySection]) -> [CountrySection] {
+        sections.map { section in
+            CountrySection(
+                continent: section.continent,
+                rows: section.rows.filter {
+                    if case .cityEntry = $0 { return false }
+                    return true
+                }
+            )
+        }
+    }
+
+    private static func findCityEntryIndexPath(in sections: [CountrySection]) -> IndexPath? {
+        for (s, section) in sections.enumerated() {
+            for (r, row) in section.rows.enumerated() {
+                if case .cityEntry = row {
+                    return IndexPath(row: r, section: s)
+                }
+            }
+        }
+        return nil
     }
 
     private func applyLoadingState(_ state: AddWishlistCountryLoadingState) {
@@ -283,52 +353,6 @@ final class AddWishlistCountryViewController: UIViewController {
         viewModel.didTapRetry()
     }
 
-    // MARK: - Accessory view
-
-    private func makeAccessoryView(badge: String?, isSelected: Bool) -> UIView? {
-        let badgeView: CatalogPlaceBadgeView? = badge.map { CatalogPlaceBadgeView(text: $0) }
-        let checkmark: UIImageView? = isSelected
-            ? {
-                let cfg = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
-                let imageView = UIImageView(image: UIImage(systemName: "checkmark", withConfiguration: cfg))
-                imageView.tintColor = .systemBlue
-                imageView.contentMode = .center
-                return imageView
-            }()
-            : nil
-
-        let parts: [UIView] = [badgeView, checkmark].compactMap { $0 }
-        guard !parts.isEmpty else { return nil }
-
-        if parts.count == 1 {
-            let view = parts[0]
-            view.frame = CGRect(origin: .zero, size: view.intrinsicContentSize)
-            return view
-        }
-
-        // Explicit frame math: `accessoryView` is sized from `frame.size`, and
-        // `systemLayoutSizeFitting` on a standalone view (no parent in the
-        // Auto Layout engine) is unreliable. Compose manually using each
-        // child's intrinsic size.
-        let spacing: CGFloat = 6
-        let sizes = parts.map { $0.intrinsicContentSize }
-        let totalWidth = sizes.reduce(0) { $0 + $1.width } + CGFloat(parts.count - 1) * spacing
-        let maxHeight = sizes.map(\.height).max() ?? 0
-
-        let container = UIView(frame: CGRect(x: 0, y: 0, width: totalWidth, height: maxHeight))
-        var x: CGFloat = 0
-        for (view, size) in zip(parts, sizes) {
-            view.frame = CGRect(
-                x: x,
-                y: (maxHeight - size.height) / 2,
-                width: size.width,
-                height: size.height
-            )
-            container.addSubview(view)
-            x += size.width + spacing
-        }
-        return container
-    }
 }
 
 // MARK: - UISearchBarDelegate
@@ -363,6 +387,11 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
 
     private func countryCell(for place: CatalogPlace, at indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CountryCell", for: indexPath)
+        applyCountryCellConfig(cell, place: place)
+        return cell
+    }
+
+    fileprivate func applyCountryCellConfig(_ cell: UITableViewCell, place: CatalogPlace) {
         let isSelected = place.code == currentState?.selectedPlace?.code
 
         var content = cell.defaultContentConfiguration()
@@ -370,7 +399,7 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
         content.textProperties.font = .systemFont(ofSize: 20)
         cell.contentConfiguration = content
         cell.accessoryType = .none
-        cell.accessoryView = makeAccessoryView(badge: place.status.badgeLabel, isSelected: isSelected)
+        cell.accessoryView = CatalogPlaceBadgeView.accessoryView(for: place.status, isSelected: isSelected)
         cell.tintColor = .systemBlue
 
         let cellBackground: UIColor = isSelected ? UIColor.systemBlue.withAlphaComponent(0.08) : .clear
@@ -380,21 +409,25 @@ extension AddWishlistCountryViewController: UITableViewDataSource {
         cell.backgroundColor = cellBackground
         cell.contentView.backgroundColor = .clear
 
-        // Hide separator on the selected row AND on the row immediately above it,
-        // so no gray line appears above the blue expanded block.
-        let precedesSelected = nextRowIsSelected(after: indexPath)
-        cell.separatorInset = (isSelected || precedesSelected)
+        let precedes = precedesSelectedCountry(place)
+        cell.separatorInset = (isSelected || precedes)
             ? UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
             : tableView.separatorInset
-
-        return cell
     }
 
-    private func nextRowIsSelected(after indexPath: IndexPath) -> Bool {
-        let nextRow = indexPath.row + 1
-        guard nextRow < sections[indexPath.section].rows.count else { return false }
-        if case .country(let next) = sections[indexPath.section].rows[nextRow] {
-            return next.code == currentState?.selectedPlace?.code
+    private func precedesSelectedCountry(_ place: CatalogPlace) -> Bool {
+        guard let selectedCode = currentState?.selectedPlace?.code else { return false }
+        for section in sections {
+            for (idx, row) in section.rows.enumerated() {
+                if case .country(let p) = row, p.code == place.code {
+                    let nextRowIndex = idx + 1
+                    guard nextRowIndex < section.rows.count else { return false }
+                    if case .country(let next) = section.rows[nextRowIndex] {
+                        return next.code == selectedCode
+                    }
+                    return false
+                }
+            }
         }
         return false
     }

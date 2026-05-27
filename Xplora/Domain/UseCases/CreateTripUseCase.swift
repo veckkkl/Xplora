@@ -6,7 +6,7 @@
 import Foundation
 
 protocol CreateTripUseCase {
-    func execute(country: Country, startDate: Date, endDate: Date) async throws -> Trip
+    func execute(placeCode: String, startDate: Date, endDate: Date) async throws -> Trip
 }
 
 final class CreateTripUseCaseImpl: CreateTripUseCase {
@@ -18,11 +18,11 @@ final class CreateTripUseCaseImpl: CreateTripUseCase {
         self.validateDates = validateDates
     }
 
-    func execute(country: Country, startDate: Date, endDate: Date) async throws -> Trip {
+    func execute(placeCode: String, startDate: Date, endDate: Date) async throws -> Trip {
         try validateDates.execute(startDate: startDate, endDate: endDate).get()
         let trip = Trip(
             id: UUID(),
-            country: country,
+            placeCode: placeCode,
             startDate: startDate,
             endDate: endDate,
             notesCount: 0,

@@ -12,8 +12,8 @@ protocol TripDateRangeModuleOutput: AnyObject {
 }
 
 enum TripDateRangeMode {
-    case create(country: Country)
-    case edit(tripId: UUID, country: Country, startDate: Date, endDate: Date)
+    case create(place: CatalogPlace)
+    case edit(tripId: UUID, place: CatalogPlace, startDate: Date, endDate: Date)
 }
 
 struct TripDateRangeViewState: Equatable {
@@ -48,7 +48,7 @@ final class TripDateRangeViewModel: TripDateRangeViewModelInput, TripDateRangeVi
     weak var output: TripDateRangeModuleOutput?
 
     private let mode: TripDateRangeMode
-    private let country: Country
+    private let place: CatalogPlace
     private var startDate: Date
     private var endDate: Date
 
@@ -68,13 +68,13 @@ final class TripDateRangeViewModel: TripDateRangeViewModelInput, TripDateRangeVi
         self.validateDates = validateDates
 
         switch mode {
-        case .create(let country):
-            self.country = country
+        case .create(let place):
+            self.place = place
             let today = Calendar.autoupdatingCurrent.startOfDay(for: Date())
             self.startDate = today
             self.endDate = today
-        case let .edit(_, country, startDate, endDate):
-            self.country = country
+        case let .edit(_, place, startDate, endDate):
+            self.place = place
             self.startDate = startDate
             self.endDate = endDate
         }
@@ -112,19 +112,23 @@ final class TripDateRangeViewModel: TripDateRangeViewModelInput, TripDateRangeVi
 
     private func performSave() {
         switch mode {
-        case .create(let country):
-            performCreate(country: country)
+        case .create(let place):
+            performCreate(placeCode: place.code)
         case .edit(let tripId, _, _, _):
             performUpdate(tripId: tripId)
         }
     }
 
-    private func performCreate(country: Country) {
+    private func performCreate(placeCode: String) {
         let start = startDate
         let end = endDate
         Task {
             do {
-                let trip = try await createTrip.execute(country: country, startDate: start, endDate: end)
+                let trip = try await createTrip.execute(
+                    placeCode: placeCode,
+                    startDate: start,
+                    endDate: end
+                )
                 output?.tripDateRangeDidSave(tripId: trip.id)
             } catch {
                 onError?(L10n.Timeline.DateRange.Error.save)
@@ -164,8 +168,8 @@ final class TripDateRangeViewModel: TripDateRangeViewModelInput, TripDateRangeVi
         case .edit: title = L10n.Timeline.DateRange.Title.edit
         }
 
-        let flag = flagEmoji(for: country.code)
-        let countryDisplay = "\(flag) \(country.name)".trimmingCharacters(in: .whitespaces)
+        let countryDisplay = "\(place.flag) \(place.localizedName)"
+            .trimmingCharacters(in: .whitespaces)
 
         onStateChange?(
             TripDateRangeViewState(
@@ -186,14 +190,5 @@ final class TripDateRangeViewModel: TripDateRangeViewModelInput, TripDateRangeVi
         case .startDateInFuture:
             return L10n.Timeline.DateRange.Error.startInFuture
         }
-    }
-
-    private func flagEmoji(for countryCode: String) -> String {
-        countryCode
-            .uppercased()
-            .unicodeScalars
-            .compactMap { Unicode.Scalar(127397 + $0.value) }
-            .map { String($0) }
-            .joined()
     }
 }

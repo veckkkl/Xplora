@@ -12,12 +12,11 @@ final class TripCountryPickerViewController: UIViewController {
 
     private let searchController = UISearchController(searchResultsController: nil)
     private let tableView = UITableView(frame: .zero, style: .plain)
+    private let loadingIndicator = UIActivityIndicatorView(style: .large)
     private let emptyLabel = UILabel()
 
-    // Grouped data for the default (non-search) mode
-    private var sections: [(letter: String, countries: [Country])] = []
-    // Flat data for search-results mode
-    private var filteredCountries: [Country] = []
+    private var sections: [CountrySection] = []
+    private var loadingState: TripCountryPickerLoadingState = .loading
 
     private var isFiltering: Bool {
         searchController.isActive && !(searchController.searchBar.text?.isEmpty ?? true)
@@ -35,8 +34,8 @@ final class TripCountryPickerViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        viewModel.onCountriesLoaded = { [weak self] countries in
-            self?.apply(countries)
+        viewModel.onStateChange = { [weak self] state in
+            self?.apply(state)
         }
         viewModel.viewDidLoad()
     }
@@ -68,7 +67,9 @@ final class TripCountryPickerViewController: UIViewController {
         tableView.estimatedRowHeight = 52
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         tableView.keyboardDismissMode = .onDrag
-        tableView.sectionIndexColor = .systemBlue
+        tableView.sectionHeaderTopPadding = 0
+
+        loadingIndicator.hidesWhenStopped = true
 
         emptyLabel.text = L10n.Timeline.CountryPicker.Empty.noResults
         emptyLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
@@ -78,10 +79,14 @@ final class TripCountryPickerViewController: UIViewController {
         emptyLabel.isHidden = true
 
         view.addSubview(tableView)
+        view.addSubview(loadingIndicator)
         view.addSubview(emptyLabel)
 
         tableView.snp.makeConstraints { make in
             make.edges.equalTo(view.safeAreaLayoutGuide)
+        }
+        loadingIndicator.snp.makeConstraints { make in
+            make.center.equalTo(view.safeAreaLayoutGuide)
         }
         emptyLabel.snp.makeConstraints { make in
             make.center.equalTo(view.safeAreaLayoutGuide)
@@ -92,23 +97,29 @@ final class TripCountryPickerViewController: UIViewController {
 
     // MARK: - State
 
-    private func apply(_ countries: [Country]) {
-        if isFiltering {
-            filteredCountries = countries
-        } else {
-            let grouped = Dictionary(grouping: countries) { String($0.name.prefix(1)).uppercased() }
-            sections = grouped.keys.sorted().map { (letter: $0, countries: grouped[$0]!.sorted { $0.name < $1.name }) }
-        }
+    private func apply(_ state: TripCountryPickerViewState) {
+        loadingState = state.loadingState
+        sections = state.sections
         tableView.reloadData()
-        updateEmptyState()
+        updateChrome()
     }
 
-    private func updateEmptyState() {
-        let count = isFiltering
-            ? filteredCountries.count
-            : sections.reduce(0) { $0 + $1.countries.count }
-        emptyLabel.isHidden = count > 0
-        tableView.isHidden = count == 0
+    private func updateChrome() {
+        switch loadingState {
+        case .loading:
+            loadingIndicator.startAnimating()
+            tableView.isHidden = true
+            emptyLabel.isHidden = true
+        case .loaded:
+            loadingIndicator.stopAnimating()
+            let totalRows = sections.reduce(0) { $0 + $1.rows.count }
+            tableView.isHidden = totalRows == 0
+            emptyLabel.isHidden = totalRows > 0
+        case .error:
+            loadingIndicator.stopAnimating()
+            tableView.isHidden = true
+            emptyLabel.isHidden = false
+        }
     }
 
     @objc private func didTapCancel() {
@@ -121,8 +132,6 @@ final class TripCountryPickerViewController: UIViewController {
 extension TripCountryPickerViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         viewModel.search(query: searchController.searchBar.text ?? "")
-        tableView.reloadData()
-        updateEmptyState()
     }
 }
 
@@ -130,46 +139,36 @@ extension TripCountryPickerViewController: UISearchResultsUpdating {
 
 extension TripCountryPickerViewController: UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int {
-        isFiltering ? 1 : sections.count
+        sections.count
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        isFiltering ? filteredCountries.count : sections[section].countries.count
+        sections[section].rows.count
     }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        isFiltering ? nil : sections[section].letter
+        sections[section].continent?.localizedName
     }
 
-    func sectionIndexTitles(for tableView: UITableView) -> [String]? {
-        isFiltering ? nil : sections.map(\.letter)
-    }
-
-    func tableView(_ tableView: UITableView, sectionForSectionIndexTitle title: String, at index: Int) -> Int {
-        index
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        sections[section].continent == nil
+            ? CGFloat.leastNonzeroMagnitude
+            : UITableView.automaticDimension
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CountryCell", for: indexPath)
-        let country = isFiltering
-            ? filteredCountries[indexPath.row]
-            : sections[indexPath.section].countries[indexPath.row]
+        guard case .country(let place) = sections[indexPath.section].rows[indexPath.row] else {
+            return cell
+        }
 
         var config = cell.defaultContentConfiguration()
-        config.text = "\(flagEmoji(for: country.code))  \(country.name)"
+        config.text = "\(place.flag)  \(place.localizedName)"
         config.textProperties.font = UIFont.systemFont(ofSize: 17)
         cell.contentConfiguration = config
         cell.accessoryType = .none
+        cell.accessoryView = CatalogPlaceBadgeView.accessoryView(for: place.status, isSelected: false)
         return cell
-    }
-
-    private func flagEmoji(for countryCode: String) -> String {
-        countryCode
-            .uppercased()
-            .unicodeScalars
-            .compactMap { Unicode.Scalar(127397 + $0.value) }
-            .map { String($0) }
-            .joined()
     }
 }
 
@@ -178,9 +177,7 @@ extension TripCountryPickerViewController: UITableViewDataSource {
 extension TripCountryPickerViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        let country = isFiltering
-            ? filteredCountries[indexPath.row]
-            : sections[indexPath.section].countries[indexPath.row]
-        viewModel.didSelect(country: country)
+        guard case .country(let place) = sections[indexPath.section].rows[indexPath.row] else { return }
+        viewModel.didSelect(place: place)
     }
 }

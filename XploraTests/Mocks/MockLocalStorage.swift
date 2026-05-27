@@ -9,8 +9,9 @@ import Foundation
 final class MockLocalStorage: LocalStorageProtocol {
     private var store: [String: Data] = [:]
     var trips: [Trip] = []
-    var countries: [Country] = []
     var settings: UserSettings = .default
+    var wishlistCountries: [WishlistCountry] = []
+    var cachedCatalogCodes: [String]?
 
     func save<T: Codable>(_ value: T, forKey key: String) {
         store[key] = try? JSONEncoder().encode(value)

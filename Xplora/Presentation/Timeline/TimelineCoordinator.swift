@@ -10,7 +10,7 @@ final class TimelineCoordinator {
     private let navigationController: UINavigationController
     private let locator: ServiceLocator
     private weak var timelineViewModel: TimelineViewModel?
-    private weak var presentedNavigationController: UINavigationController?
+    private weak var pickerViewController: TripCountryPickerViewController?
 
     init(navigationController: UINavigationController, locator: ServiceLocator = .shared) {
         self.navigationController = navigationController
@@ -19,9 +19,11 @@ final class TimelineCoordinator {
 
     func start() {
         let getTripsUseCase: GetTripsUseCase = locator.resolve(GetTripsUseCase.self)
+        let getCatalogPlaces: GetCatalogPlacesUseCase = locator.resolve(GetCatalogPlacesUseCase.self)
         let deleteTripUseCase: DeleteTripUseCase = locator.resolve(DeleteTripUseCase.self)
         let viewModel = TimelineViewModel(
             getTripsUseCase: getTripsUseCase,
+            getCatalogPlaces: getCatalogPlaces,
             deleteTripUseCase: deleteTripUseCase
         )
         let viewController = TimelineViewController(viewModel: viewModel)
@@ -34,22 +36,15 @@ final class TimelineCoordinator {
         timelineViewModel = viewModel
     }
 
-    /// Entry point for the "create trip" flow.
-    /// Invoked by the country selection step once it lands; the dates screen
-    /// handles trip creation itself via `CreateTripUseCase`.
-    func presentCreateTrip(country: Country) {
-        presentDateRange(mode: .create(country: country))
-    }
-
     private func handle(_ route: TimelineRoute) {
         switch route {
         case .addTrip:
-            presentCountryPicker()
-        case let .editTripDates(tripId, country, startDate, endDate):
-            presentDateRange(
+            pushCountryPicker()
+        case let .editTripDates(tripId, place, startDate, endDate):
+            pushDateRange(
                 mode: .edit(
                     tripId: tripId,
-                    country: country,
+                    place: place,
                     startDate: startDate,
                     endDate: endDate
                 )
@@ -57,20 +52,17 @@ final class TimelineCoordinator {
         }
     }
 
-    private func presentCountryPicker() {
-        let getAllCountries: GetAllCountriesUseCase = locator.resolve(GetAllCountriesUseCase.self)
-        let viewModel = TripCountryPickerViewModel(getAllCountries: getAllCountries)
+    private func pushCountryPicker() {
+        let getCatalogPlaces: GetCatalogPlacesUseCase = locator.resolve(GetCatalogPlacesUseCase.self)
+        let viewModel = TripCountryPickerViewModel(getCatalogPlaces: getCatalogPlaces)
         viewModel.output = self
 
         let viewController = TripCountryPickerViewController(viewModel: viewModel)
-        let nav = UINavigationController(rootViewController: viewController)
-        nav.modalPresentationStyle = .formSheet
-
-        presentedNavigationController = nav
-        navigationController.present(nav, animated: true)
+        pickerViewController = viewController
+        navigationController.pushViewController(viewController, animated: true)
     }
 
-    private func presentDateRange(mode: TripDateRangeMode) {
+    private func pushDateRange(mode: TripDateRangeMode) {
         let createTrip: CreateTripUseCase = locator.resolve(CreateTripUseCase.self)
         let updateTripDates: UpdateTripDatesUseCase = locator.resolve(UpdateTripDatesUseCase.self)
         let validateDates: ValidateTripDateRangeUseCase = locator.resolve(ValidateTripDateRangeUseCase.self)
@@ -84,49 +76,29 @@ final class TimelineCoordinator {
         viewModel.output = self
 
         let viewController = TripDateRangeViewController(viewModel: viewModel)
-        let nav = UINavigationController(rootViewController: viewController)
-        nav.modalPresentationStyle = .formSheet
-
-        presentedNavigationController = nav
-        navigationController.present(nav, animated: true)
+        navigationController.pushViewController(viewController, animated: true)
     }
 }
 
 extension TimelineCoordinator: TripCountryPickerModuleOutput {
-    func tripCountryPickerDidSelect(country: Country) {
-        let createTrip: CreateTripUseCase = locator.resolve(CreateTripUseCase.self)
-        let updateTripDates: UpdateTripDatesUseCase = locator.resolve(UpdateTripDatesUseCase.self)
-        let validateDates: ValidateTripDateRangeUseCase = locator.resolve(ValidateTripDateRangeUseCase.self)
-
-        let viewModel = TripDateRangeViewModel(
-            mode: .create(country: country),
-            createTrip: createTrip,
-            updateTripDates: updateTripDates,
-            validateDates: validateDates
-        )
-        viewModel.output = self
-
-        let viewController = TripDateRangeViewController(viewModel: viewModel)
-        presentedNavigationController?.pushViewController(viewController, animated: true)
+    func tripCountryPickerDidSelect(place: CatalogPlace) {
+        pushDateRange(mode: .create(place: place))
     }
 
     func tripCountryPickerDidCancel() {
-        presentedNavigationController?.dismiss(animated: true)
+        guard let picker = pickerViewController else { return }
+        navigationController.popToViewController(picker, animated: false)
+        navigationController.popViewController(animated: true)
     }
 }
 
 extension TimelineCoordinator: TripDateRangeModuleOutput {
     func tripDateRangeDidSave(tripId: UUID) {
-        presentedNavigationController?.dismiss(animated: true) { [weak self] in
-            self?.timelineViewModel?.refresh()
-        }
+        navigationController.popToRootViewController(animated: true)
+        timelineViewModel?.refresh()
     }
 
     func tripDateRangeDidCancel() {
-        if let nav = presentedNavigationController, nav.viewControllers.count > 1 {
-            nav.popViewController(animated: true)
-        } else {
-            presentedNavigationController?.dismiss(animated: true)
-        }
+        navigationController.popViewController(animated: true)
     }
 }
