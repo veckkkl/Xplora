@@ -3,18 +3,12 @@
 //  Xplora
 //
 
-import SafariServices
 import SnapKit
 import StoreKit
 import UIKit
 
 @MainActor
 final class ProfileViewController: UIViewController {
-    private enum Links {
-        // TODO: Replace with the public GitHub or GitHub Pages privacy policy URL after publishing.
-        static let privacyPolicy: URL? = nil
-    }
-
     private enum Item: Hashable {
         case profileCard(ProfileCardItem)
         case action(sectionIndex: Int, rowIndex: Int)
@@ -331,8 +325,10 @@ final class ProfileViewController: UIViewController {
         switch route {
         case .logout:
             onLogout?()
-        case .openProfileDetails:
+        case .openProfileDetails(let status, let residenceCountryCode):
             let viewController = ProfileDetailsViewController()
+            viewController.displayStatus = status
+            viewController.residenceCountryCode = residenceCountryCode
             viewController.onNameSaved = { [weak self] name in
                 self?.viewModel.didUpdateUserName(name)
             }
@@ -358,19 +354,20 @@ final class ProfileViewController: UIViewController {
     }
 
     private func presentPrivacyPolicy() {
-        guard let url = Links.privacyPolicy else {
-            presentPrivacyPolicyFallbackAlert()
-            return
+        do {
+            let document = try PrivacyPolicyProvider.load()
+            let viewController = LegalDocumentViewController(document: document)
+            viewController.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(viewController, animated: true)
+        } catch {
+            presentPrivacyPolicyErrorAlert()
         }
-
-        let safariViewController = SFSafariViewController(url: url)
-        present(safariViewController, animated: true)
     }
 
-    private func presentPrivacyPolicyFallbackAlert() {
+    private func presentPrivacyPolicyErrorAlert() {
         let alert = UIAlertController(
             title: L10n.Profile.Privacy.fallbackTitle,
-            message: L10n.Profile.Privacy.fallbackMessage,
+            message: L10n.Profile.Privacy.errorMessage,
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))

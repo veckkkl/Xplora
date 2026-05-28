@@ -20,10 +20,6 @@ enum ProfileUserSettings {
         return stored.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    static var currentStatus: ProfileStatus {
-        .worldExplorer
-    }
-
     static var currentAvatarFileName: String? {
         UserDefaults.standard.string(forKey: Keys.avatarFileName)
     }

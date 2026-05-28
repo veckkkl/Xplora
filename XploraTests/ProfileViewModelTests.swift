@@ -21,7 +21,12 @@ struct ProfileViewModelTests {
         let getUser = MockGetCurrentUserUseCase()
         getUser.stubbedUser = user
         let updateUser = MockUpdateCurrentUserUseCase()
-        let sut = ProfileViewModel(getCurrentUser: getUser, updateCurrentUser: updateUser)
+        let sut = ProfileViewModel(
+            getCurrentUser: getUser,
+            updateCurrentUser: updateUser,
+            getStatistics: MockGetStatisticsUseCase(),
+            getTrips: MockGetTripsUseCase()
+        )
         return (sut, getUser, updateUser)
     }
 
@@ -91,19 +96,19 @@ struct ProfileViewModelTests {
         #expect(item.name == "New Name")
     }
 
-    // MARK: - Logout
+    // MARK: - Data section
 
-    @Test func selectLogoutItem_firesLogoutRoute() {
+    @Test func selectDeleteDataItem_firesConfirmDeleteRoute() {
         let (sut, _, _) = makeSUT(user: makeUser())
         sut.viewDidLoad()
         var route: ProfileRoute?
         sut.onRoute = { route = $0 }
-        // Data section is index 3, logout row is index 0
+        // Data section is index 3, delete-data row is index 0
         sut.didSelectItem(at: IndexPath(row: 0, section: 3))
-        #expect(route == .logout)
+        #expect(route == .confirmDeleteData)
     }
 
-    @Test func selectLogoutItem_doesNotCallUpdateUseCase() {
+    @Test func selectDeleteDataItem_doesNotCallUpdateUseCase() {
         let (sut, _, updateUser) = makeSUT(user: makeUser())
         sut.viewDidLoad()
         sut.didSelectItem(at: IndexPath(row: 0, section: 3))

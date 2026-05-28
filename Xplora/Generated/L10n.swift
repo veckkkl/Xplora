@@ -929,6 +929,8 @@ internal enum L10n {
       internal enum Stat {
         /// countries
         internal static let countries = L10n.tr("Localizable", "profile.card.stat.countries", fallback: "countries")
+        /// of world
+        internal static let ofWorld = L10n.tr("Localizable", "profile.card.stat.of_world", fallback: "of world")
         /// places
         internal static let places = L10n.tr("Localizable", "profile.card.stat.places", fallback: "places")
         /// trips
@@ -937,6 +939,8 @@ internal enum L10n {
       internal enum Status {
         /// Adventure Traveler
         internal static let adventureTraveler = L10n.tr("Localizable", "profile.card.status.adventure_traveler", fallback: "Adventure Traveler")
+        /// Familiar Wanderer
+        internal static let familiarWanderer = L10n.tr("Localizable", "profile.card.status.familiar_wanderer", fallback: "Familiar Wanderer")
         /// Place Collector
         internal static let placeCollector = L10n.tr("Localizable", "profile.card.status.place_collector", fallback: "Place Collector")
         /// World Explorer
@@ -972,6 +976,10 @@ internal enum L10n {
       internal static let name = L10n.tr("Localizable", "profile.details.name", fallback: "Name")
       /// Profile details screen will be implemented in the next step.
       internal static let placeholder = L10n.tr("Localizable", "profile.details.placeholder", fallback: "Profile details screen will be implemented in the next step.")
+      /// Residence country
+      internal static let residenceCountry = L10n.tr("Localizable", "profile.details.residence_country", fallback: "Residence country")
+      /// Not selected
+      internal static let residenceCountryNotSelected = L10n.tr("Localizable", "profile.details.residence_country_not_selected", fallback: "Not selected")
       /// Show Status
       internal static let showStatus = L10n.tr("Localizable", "profile.details.show_status", fallback: "Show Status")
       /// Status
@@ -999,8 +1007,10 @@ internal enum L10n {
         internal static let title = L10n.tr("Localizable", "profile.details.edit_name.title", fallback: "Edit Name")
       }
       internal enum StatusInfo {
-        /// Status is automatically calculated based on your places, countries, and trips.
-        internal static let message = L10n.tr("Localizable", "profile.details.status_info.message", fallback: "Status is automatically calculated based on your places, countries, and trips.")
+        /// Your status is calculated automatically from your travel history: visited countries, number of trips, repeated visits, and world coverage percentage.
+        /// 
+        /// Broader geography and higher progress increase your status. If you often return to the same countries, you may become a “Familiar Wanderer”.
+        internal static let message = L10n.tr("Localizable", "profile.details.status_info.message", fallback: "Your status is calculated automatically from your travel history: visited countries, number of trips, repeated visits, and world coverage percentage.\n\nBroader geography and higher progress increase your status. If you often return to the same countries, you may become a “Familiar Wanderer”.")
         /// Profile Status
         internal static let title = L10n.tr("Localizable", "profile.details.status_info.title", fallback: "Profile Status")
       }
@@ -1032,8 +1042,6 @@ internal enum L10n {
       internal static let share = L10n.tr("Localizable", "profile.item.share", fallback: "Share")
       /// Share with Friends
       internal static let shareWithFriends = L10n.tr("Localizable", "profile.item.share_with_friends", fallback: "Share with Friends")
-      /// Sign Out
-      internal static let signOut = L10n.tr("Localizable", "profile.item.sign_out", fallback: "Sign Out")
     }
     internal enum Language {
       /// English
@@ -1058,6 +1066,8 @@ internal enum L10n {
       internal static let title = L10n.tr("Localizable", "profile.language_selection.title", fallback: "Language")
     }
     internal enum Privacy {
+      /// Could not open Privacy Policy
+      internal static let errorMessage = L10n.tr("Localizable", "profile.privacy.error_message", fallback: "Could not open Privacy Policy")
       /// Privacy Policy link will be added later.
       internal static let fallbackMessage = L10n.tr("Localizable", "profile.privacy.fallback_message", fallback: "Privacy Policy link will be added later.")
       /// Privacy Policy

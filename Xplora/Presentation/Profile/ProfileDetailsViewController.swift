@@ -9,6 +9,8 @@ import UIKit
 
 final class ProfileDetailsViewController: UIViewController {
     var onNameSaved: ((String) -> Void)?
+    var displayStatus: TravelStatus = .adventureTraveler
+    var residenceCountryCode: String?
 
     private let viewModel = ProfileDetailsViewModel()
 
@@ -58,6 +60,12 @@ final class ProfileDetailsViewController: UIViewController {
     private let nameTitleLabel = UILabel()
     private let nameValueLabel = UILabel()
     private let nameChevronImageView = UIImageView()
+
+    private let residenceCardView = UIView()
+    private let residenceRowView = UIView()
+    private let residenceTitleLabel = UILabel()
+    private let residenceValueLabel = UILabel()
+    private let residenceChevronImageView = UIImageView()
 
     private let statusVisibilityCardView = UIView()
     private let statusVisibilityRowView = UIView()
@@ -159,6 +167,28 @@ final class ProfileDetailsViewController: UIViewController {
         nameChevronImageView.contentMode = .scaleAspectFit
         nameChevronImageView.preferredSymbolConfiguration = .init(pointSize: 13, weight: .semibold)
 
+        residenceCardView.backgroundColor = .secondarySystemGroupedBackground
+        residenceCardView.layer.cornerRadius = Constants.cardCornerRadius
+        residenceCardView.layer.cornerCurve = .continuous
+        residenceCardView.clipsToBounds = true
+
+        residenceTitleLabel.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        residenceTitleLabel.textColor = .label
+        residenceTitleLabel.text = L10n.Profile.Details.residenceCountry
+        residenceTitleLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        residenceValueLabel.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        residenceValueLabel.textColor = .secondaryLabel
+        residenceValueLabel.textAlignment = .right
+        residenceValueLabel.numberOfLines = 1
+        residenceValueLabel.lineBreakMode = .byTruncatingTail
+        residenceValueLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        residenceChevronImageView.image = UIImage(systemName: "chevron.right")
+        residenceChevronImageView.tintColor = .tertiaryLabel
+        residenceChevronImageView.contentMode = .scaleAspectFit
+        residenceChevronImageView.preferredSymbolConfiguration = .init(pointSize: 13, weight: .semibold)
+
         statusVisibilityCardView.backgroundColor = .secondarySystemGroupedBackground
         statusVisibilityCardView.layer.cornerRadius = Constants.cardCornerRadius
         statusVisibilityCardView.layer.cornerCurve = .continuous
@@ -192,6 +222,7 @@ final class ProfileDetailsViewController: UIViewController {
 
         stackView.addArrangedSubview(headerStackView)
         stackView.addArrangedSubview(infoCardView)
+        stackView.addArrangedSubview(residenceCardView)
         stackView.addArrangedSubview(statusVisibilityCardView)
 
         headerStackView.addArrangedSubview(avatarContainerView)
@@ -205,11 +236,16 @@ final class ProfileDetailsViewController: UIViewController {
         avatarContainerView.addSubview(editPhotoButton)
 
         infoCardView.addSubview(nameRowButton)
+        residenceCardView.addSubview(residenceRowView)
         statusVisibilityCardView.addSubview(statusVisibilityRowView)
 
         nameRowButton.addSubview(nameTitleLabel)
         nameRowButton.addSubview(nameValueLabel)
         nameRowButton.addSubview(nameChevronImageView)
+
+        residenceRowView.addSubview(residenceTitleLabel)
+        residenceRowView.addSubview(residenceValueLabel)
+        residenceRowView.addSubview(residenceChevronImageView)
 
         statusVisibilityRowView.addSubview(statusVisibilityTitleLabel)
         statusVisibilityRowView.addSubview(statusVisibilitySwitch)
@@ -288,6 +324,29 @@ final class ProfileDetailsViewController: UIViewController {
             make.centerY.equalToSuperview()
         }
 
+        residenceRowView.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview()
+            make.height.equalTo(Constants.rowHeight)
+            make.bottom.equalToSuperview()
+        }
+
+        residenceTitleLabel.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(Constants.rowHorizontalInset)
+            make.centerY.equalToSuperview()
+        }
+
+        residenceChevronImageView.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-Constants.rowHorizontalInset)
+            make.centerY.equalToSuperview()
+            make.size.equalTo(CGSize(width: 9, height: 14))
+        }
+
+        residenceValueLabel.snp.makeConstraints { make in
+            make.leading.greaterThanOrEqualTo(residenceTitleLabel.snp.trailing).offset(Constants.rowSpacing)
+            make.trailing.equalTo(residenceChevronImageView.snp.leading).offset(-8)
+            make.centerY.equalToSuperview()
+        }
+
         statusVisibilityTitleLabel.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(Constants.toggleRowHorizontalInset)
             make.centerY.equalToSuperview()
@@ -328,16 +387,23 @@ final class ProfileDetailsViewController: UIViewController {
 
     private func refreshProfileData() {
         let currentName = ProfileUserSettings.currentName
-        let currentStatus = ProfileUserSettings.currentStatus
 
         initialsLabel.text = ProfileUserSettings.initials(from: currentName)
         applyAvatarImage(ProfileUserSettings.loadCurrentAvatarImage())
         nameLabel.text = currentName
-        statusLabel.text = currentStatus.title
+        statusLabel.text = displayStatus.title
 
         nameValueLabel.text = currentName
+        residenceValueLabel.text = residenceCountryDisplayValue()
         statusVisibilitySwitch.isOn = ProfileUserSettings.isStatusVisible
         applyStatusVisibility(isVisible: ProfileUserSettings.isStatusVisible)
+    }
+
+    private func residenceCountryDisplayValue() -> String {
+        guard let code = residenceCountryCode, !code.isEmpty else {
+            return L10n.Profile.Details.residenceCountryNotSelected
+        }
+        return CountryLocalizer.name(for: code)
     }
 
     @objc private func didTapChangePhoto() {
