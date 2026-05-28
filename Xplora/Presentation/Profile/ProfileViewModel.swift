@@ -5,8 +5,8 @@
 
 import Foundation
 
-enum ProfileRoute {
-    case openProfileDetails
+enum ProfileRoute: Equatable {
+    case openProfileDetails(status: TravelStatus, residenceCountryCode: String?)
     case openLanguageSelection
     case openAboutXplora
     case openPrivacyPolicy
@@ -37,16 +37,26 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
 
     private let getCurrentUser: GetCurrentUserUseCase
     private let updateCurrentUser: UpdateCurrentUserUseCase
+    private let getStatistics: GetStatisticsUseCase
+    private let getTrips: GetTripsUseCase
+    private let travelStatusResolver: TravelStatusResolver
 
     private var sections: [ProfileSectionModel] = []
     private var isDarkThemeEnabled = AppThemeManager.isDarkThemeEnabled
+    private var profileStats = ProfileStatsSnapshot.zero
 
     init(
         getCurrentUser: GetCurrentUserUseCase,
-        updateCurrentUser: UpdateCurrentUserUseCase
+        updateCurrentUser: UpdateCurrentUserUseCase,
+        getStatistics: GetStatisticsUseCase,
+        getTrips: GetTripsUseCase,
+        travelStatusResolver: TravelStatusResolver = TravelStatusResolver()
     ) {
         self.getCurrentUser = getCurrentUser
         self.updateCurrentUser = updateCurrentUser
+        self.getStatistics = getStatistics
+        self.getTrips = getTrips
+        self.travelStatusResolver = travelStatusResolver
     }
 
     func viewDidLoad() {
@@ -55,6 +65,7 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
             return
         }
         refreshSections()
+        loadProfileStats()
     }
 
     func didSelectItem(at indexPath: IndexPath) {
@@ -65,13 +76,14 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         let item = section.items[indexPath.row]
         switch item {
         case .profileCard:
-            onRoute?(.openProfileDetails)
+            onRoute?(.openProfileDetails(
+                status: currentTravelStatus(),
+                residenceCountryCode: getCurrentUser.execute()?.residenceCountryCode
+            ))
         case .action(let actionItem):
             switch actionItem.action {
             case .darkTheme:
                 didToggleDarkTheme(!isDarkThemeEnabled)
-            case .logout:
-                onRoute?(.logout)
             default:
                 onRoute?(route(for: actionItem.action))
             }
@@ -101,7 +113,7 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
                             initials: ProfileUserSettings.initials(from: userName),
                             avatarFileName: ProfileUserSettings.currentAvatarFileName,
                             name: userName,
-                            status: ProfileUserSettings.currentStatus,
+                            status: currentTravelStatus(),
                             isStatusVisible: ProfileUserSettings.isStatusVisible,
                             stats: makeProfileStats()
                         )
@@ -176,15 +188,6 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
                 section: .data,
                 items: [
                     .action(ProfileActionItem(
-                        action: .logout,
-                        title: L10n.Profile.Item.signOut,
-                        value: nil,
-                        style: .standard,
-                        accessory: .none,
-                        iconSystemName: "rectangle.portrait.and.arrow.right",
-                        iconTint: .red
-                    )),
-                    .action(ProfileActionItem(
                         action: .deleteData,
                         title: L10n.Profile.Item.deleteData,
                         value: nil,
@@ -202,17 +205,60 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         AppLanguage.current.displayName
     }
 
+    private func currentTravelStatus() -> TravelStatus {
+        travelStatusResolver.resolve(
+            countriesCount: profileStats.countriesCount,
+            tripsCount: profileStats.tripsCount,
+            worldProgressPercent: Double(profileStats.worldProgressPercent)
+        )
+    }
+
     private func makeProfileStats() -> [ProfileCardItem.Stat] {
         [
-            .init(iconSystemName: "location.fill", value: "23", label: L10n.Profile.Card.Stat.places, tint: .blue),
-            .init(iconSystemName: "flag.fill", value: "7", label: L10n.Profile.Card.Stat.countries, tint: .green),
-            .init(iconSystemName: "globe.europe.africa.fill", value: "12", label: L10n.Profile.Card.Stat.trips, tint: .purple)
+            .init(
+                iconSystemName: "percent",
+                value: "\(profileStats.worldProgressPercent)",
+                label: L10n.Profile.Card.Stat.ofWorld,
+                tint: .blue
+            ),
+            .init(
+                iconSystemName: "flag.fill",
+                value: "\(profileStats.countriesCount)",
+                label: L10n.Profile.Card.Stat.countries,
+                tint: .green
+            ),
+            .init(
+                iconSystemName: "globe.europe.africa.fill",
+                value: "\(profileStats.tripsCount)",
+                label: L10n.Profile.Card.Stat.trips,
+                tint: .purple
+            )
         ]
+    }
+
+    private func loadProfileStats() {
+        Task { [weak self] in
+            guard let self else { return }
+            async let summaryTask = self.getStatistics.execute()
+            async let tripsTask = self.getTrips.execute()
+            do {
+                let (summary, trips) = try await (summaryTask, tripsTask)
+                self.profileStats = ProfileStatsSnapshot(
+                    worldProgressPercent: summary.worldProgressPercent,
+                    countriesCount: summary.visitedUNCount,
+                    tripsCount: trips.count
+                )
+                self.refreshSections()
+            } catch {
+                self.profileStats = .zero
+                self.refreshSections()
+            }
+        }
     }
 
     private func route(for action: ProfileItemAction) -> ProfileRoute {
         switch action {
-        case .darkTheme, .logout:
+        case .darkTheme:
             preconditionFailure("Handled before route(for:) is called.")
         case .language:       return .openLanguageSelection
         case .rateApp:        return .rateApp

@@ -452,9 +452,11 @@
 "profile.card.status.world_explorer" = "World Explorer";
 "profile.card.status.place_collector" = "Place Collector";
 "profile.card.status.adventure_traveler" = "Adventure Traveler";
+"profile.card.status.familiar_wanderer" = "Familiar Wanderer";
 "profile.card.stat.places" = "places";
 "profile.card.stat.countries" = "countries";
 "profile.card.stat.trips" = "trips";
+"profile.card.stat.of_world" = "of world";
 
 "profile.section.app_settings" = "App Settings";
 "profile.section.support" = "Support";
@@ -479,12 +481,14 @@
 "profile.details.change_photo" = "Change Photo";
 "profile.details.change_photo_stub" = "Changing profile photo will be added later.";
 "profile.details.name" = "Name";
+"profile.details.residence_country" = "Residence country";
+"profile.details.residence_country_not_selected" = "Not selected";
 "profile.details.status" = "Status";
 "profile.details.status_note" = "Status updates automatically based on travel statistics.";
 "profile.details.show_status" = "Show Status";
 "profile.details.about_status" = "About status";
 "profile.details.status_info.title" = "Profile Status";
-"profile.details.status_info.message" = "Status is automatically calculated based on your places, countries, and trips.";
+"profile.details.status_info.message" = "Your status is calculated automatically from your travel history: visited countries, number of trips, repeated visits, and world coverage percentage.\n\nBroader geography and higher progress increase your status. If you often return to the same countries, you may become a “Familiar Wanderer”.";
 "profile.details.edit_name.title" = "Edit Name";
 "profile.details.edit_name.placeholder" = "Enter name";
 "profile.details.edit_name.save" = "Save";
@@ -518,6 +522,7 @@
 "profile.privacy.placeholder" = "Privacy Policy screen will be implemented in the next step.";
 "profile.privacy.fallback_title" = "Privacy Policy";
 "profile.privacy.fallback_message" = "Privacy Policy link will be added later.";
+"profile.privacy.error_message" = "Could not open Privacy Policy";
 "profile.share.text" = "Check out Xplora";
 "profile.rate.title" = "Rate App";
 "profile.rate.fallback_message" = "Unable to open the review prompt right now.";
@@ -547,6 +552,5 @@
 
 "profile.about.version_build" = "Version %@ · Build %@";
 "profile.data.footnote" = "Deleting data is permanent and cannot be undone.";
-"profile.item.sign_out" = "Sign Out";
 "profile.language.english_native" = "English";
 "profile.language.russian_native" = "Русский";

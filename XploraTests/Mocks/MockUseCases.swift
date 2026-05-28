@@ -35,3 +35,20 @@ final class MockUpdateCurrentUserUseCase: UpdateCurrentUserUseCase {
         updatedName = name
     }
 }
+
+final class MockGetStatisticsUseCase: GetStatisticsUseCase {
+    var stubbedSummary = StatisticsSummary(
+        totalUNCount: 0,
+        visitedUNCount: 0,
+        worldProgressPercent: 0,
+        visitedContinentsCount: 0,
+        totalContinentsCount: 7,
+        continentItems: []
+    )
+    func execute() async throws -> StatisticsSummary { stubbedSummary }
+}
+
+final class MockGetTripsUseCase: GetTripsUseCase {
+    var stubbedTrips: [Trip] = []
+    func execute() async throws -> [Trip] { stubbedTrips }
+}

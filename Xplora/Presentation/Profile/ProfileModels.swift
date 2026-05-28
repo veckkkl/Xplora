@@ -33,7 +33,18 @@ enum ProfileItemAction: Equatable {
     case privacyPolicy
     case shareWithFriends
     case deleteData
-    case logout
+}
+
+struct ProfileStatsSnapshot: Equatable {
+    let worldProgressPercent: Int
+    let countriesCount: Int
+    let tripsCount: Int
+
+    static let zero = ProfileStatsSnapshot(
+        worldProgressPercent: 0,
+        countriesCount: 0,
+        tripsCount: 0
+    )
 }
 
 enum ProfileRowAccessory: Equatable {
@@ -56,17 +67,15 @@ enum ProfileIconTint: Hashable {
     case red
 }
 
-enum ProfileStatus: Hashable {
-    case worldExplorer
-    case placeCollector
-    case adventureTraveler
-
+extension TravelStatus {
     var title: String {
         switch self {
         case .worldExplorer:
             return L10n.Profile.Card.Status.worldExplorer
         case .placeCollector:
             return L10n.Profile.Card.Status.placeCollector
+        case .familiarWanderer:
+            return L10n.Profile.Card.Status.familiarWanderer
         case .adventureTraveler:
             return L10n.Profile.Card.Status.adventureTraveler
         }
@@ -84,7 +93,7 @@ struct ProfileCardItem: Hashable {
     let initials: String
     let avatarFileName: String?
     let name: String
-    let status: ProfileStatus
+    let status: TravelStatus
     let isStatusVisible: Bool
     let stats: [Stat]
 }

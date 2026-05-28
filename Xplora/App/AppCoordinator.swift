@@ -179,7 +179,9 @@ final class AppCoordinator {
     private func makeProfileNav() -> UINavigationController {
         let viewModel = ProfileViewModel(
             getCurrentUser: locator.resolve(GetCurrentUserUseCase.self),
-            updateCurrentUser: locator.resolve(UpdateCurrentUserUseCase.self)
+            updateCurrentUser: locator.resolve(UpdateCurrentUserUseCase.self),
+            getStatistics: locator.resolve(GetStatisticsUseCase.self),
+            getTrips: locator.resolve(GetTripsUseCase.self)
         )
         let viewController = ProfileViewController(viewModel: viewModel)
         viewController.onLogout = { [weak self] in
