@@ -483,6 +483,7 @@
 "profile.details.name" = "Name";
 "profile.details.residence_country" = "Residence country";
 "profile.details.residence_country_not_selected" = "Not selected";
+"profile.details.residence_country_picker_hint" = "Choose residence country";
 "profile.details.status" = "Status";
 "profile.details.status_note" = "Status updates automatically based on travel statistics.";
 "profile.details.show_status" = "Show Status";

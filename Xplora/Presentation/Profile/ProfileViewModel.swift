@@ -22,6 +22,7 @@ protocol ProfileViewModelInput: AnyObject {
     func didSelectItem(at indexPath: IndexPath)
     func didToggleDarkTheme(_ isOn: Bool)
     func didUpdateUserName(_ name: String)
+    func didUpdateResidenceCountry(_ residenceCountryCode: String?)
 }
 
 @MainActor
@@ -99,6 +100,11 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
     func didUpdateUserName(_ name: String) {
         updateCurrentUser.execute(name: name)
         ProfileUserSettings.saveName(name)
+        refreshSections()
+    }
+
+    func didUpdateResidenceCountry(_ residenceCountryCode: String?) {
+        updateCurrentUser.execute(residenceCountryCode: residenceCountryCode)
         refreshSections()
     }
 

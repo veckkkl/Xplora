@@ -29,6 +29,7 @@ final class ProfileViewController: UIViewController {
     }
 
     private let viewModel: ProfileViewModelInput & ProfileViewModelOutput
+    private let getCatalogPlaces: GetCatalogPlacesUseCase
 
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
@@ -160,8 +161,12 @@ final class ProfileViewController: UIViewController {
 
     var onLogout: (() -> Void)?
 
-    init(viewModel: ProfileViewModelInput & ProfileViewModelOutput) {
+    init(
+        viewModel: ProfileViewModelInput & ProfileViewModelOutput,
+        getCatalogPlaces: GetCatalogPlacesUseCase
+    ) {
         self.viewModel = viewModel
+        self.getCatalogPlaces = getCatalogPlaces
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -329,8 +334,12 @@ final class ProfileViewController: UIViewController {
             let viewController = ProfileDetailsViewController()
             viewController.displayStatus = status
             viewController.residenceCountryCode = residenceCountryCode
+            viewController.getCatalogPlaces = getCatalogPlaces
             viewController.onNameSaved = { [weak self] name in
                 self?.viewModel.didUpdateUserName(name)
+            }
+            viewController.onResidenceCountrySelected = { [weak self] code in
+                self?.viewModel.didUpdateResidenceCountry(code)
             }
             viewController.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(viewController, animated: true)

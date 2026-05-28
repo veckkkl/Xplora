@@ -45,6 +45,18 @@ final class AuthRepositoryImpl: AuthRepository {
         storage.save(updated, forKey: Keys.currentUser)
     }
 
+    func updateResidenceCountry(_ residenceCountryCode: String?) {
+        guard let user = getCurrentUser() else { return }
+        let updated = AuthUser(
+            id: user.id,
+            name: user.name,
+            createdAt: user.createdAt,
+            residenceCountryCode: residenceCountryCode,
+            isWorldCitizen: residenceCountryCode == nil ? user.isWorldCitizen : false
+        )
+        storage.save(updated, forKey: Keys.currentUser)
+    }
+
     func logout() {
         storage.removeValue(forKey: Keys.currentUser)
     }

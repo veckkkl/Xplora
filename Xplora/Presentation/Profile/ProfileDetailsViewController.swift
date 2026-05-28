@@ -9,8 +9,10 @@ import UIKit
 
 final class ProfileDetailsViewController: UIViewController {
     var onNameSaved: ((String) -> Void)?
+    var onResidenceCountrySelected: ((String?) -> Void)?
     var displayStatus: TravelStatus = .adventureTraveler
     var residenceCountryCode: String?
+    var getCatalogPlaces: GetCatalogPlacesUseCase?
 
     private let viewModel = ProfileDetailsViewModel()
 
@@ -62,7 +64,7 @@ final class ProfileDetailsViewController: UIViewController {
     private let nameChevronImageView = UIImageView()
 
     private let residenceCardView = UIView()
-    private let residenceRowView = UIView()
+    private let residenceRowView = UIControl()
     private let residenceTitleLabel = UILabel()
     private let residenceValueLabel = UILabel()
     private let residenceChevronImageView = UIImageView()
@@ -188,6 +190,11 @@ final class ProfileDetailsViewController: UIViewController {
         residenceChevronImageView.tintColor = .tertiaryLabel
         residenceChevronImageView.contentMode = .scaleAspectFit
         residenceChevronImageView.preferredSymbolConfiguration = .init(pointSize: 13, weight: .semibold)
+
+        residenceRowView.isAccessibilityElement = true
+        residenceRowView.accessibilityTraits = .button
+        residenceRowView.accessibilityLabel = L10n.Profile.Details.residenceCountry
+        residenceRowView.accessibilityHint = L10n.Profile.Details.residenceCountryPickerHint
 
         statusVisibilityCardView.backgroundColor = .secondarySystemGroupedBackground
         statusVisibilityCardView.layer.cornerRadius = Constants.cardCornerRadius
@@ -381,6 +388,7 @@ final class ProfileDetailsViewController: UIViewController {
     private func bindActions() {
         editPhotoButton.addTarget(self, action: #selector(didTapChangePhoto), for: .touchUpInside)
         nameRowButton.addTarget(self, action: #selector(didTapNameRow), for: .touchUpInside)
+        residenceRowView.addTarget(self, action: #selector(didTapResidenceRow), for: .touchUpInside)
         statusInfoPillButton.addTarget(self, action: #selector(didTapStatusInfoPill), for: .touchUpInside)
         statusVisibilitySwitch.addTarget(self, action: #selector(didChangeStatusVisibility(_:)), for: .valueChanged)
     }
@@ -447,6 +455,26 @@ final class ProfileDetailsViewController: UIViewController {
     @objc private func didChangeStatusVisibility(_ sender: UISwitch) {
         ProfileUserSettings.saveStatusVisibility(sender.isOn)
         applyStatusVisibility(isVisible: sender.isOn)
+    }
+
+    @objc private func didTapResidenceRow() {
+        guard let getCatalogPlaces else { return }
+        let picker = CountryPickerViewController(
+            getCatalogPlaces: getCatalogPlaces,
+            title: L10n.Profile.Details.residenceCountry,
+            selectedCode: residenceCountryCode
+        )
+        picker.onSelect = { [weak self] place in
+            self?.handleResidenceCountrySelected(place.code)
+        }
+        picker.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(picker, animated: true)
+    }
+
+    private func handleResidenceCountrySelected(_ code: String) {
+        residenceCountryCode = code
+        residenceValueLabel.text = residenceCountryDisplayValue()
+        onResidenceCountrySelected?(code)
     }
 
     @objc private func didTapNameRow() {
