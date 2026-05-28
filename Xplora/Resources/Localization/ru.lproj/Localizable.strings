@@ -53,8 +53,6 @@
 
 "notes.presentation.untitled" = "Без названия";
 
-"placeholder.stub_format" = "%@ (заглушка)";
-
 "timeline.empty.title" = "Поездок пока нет";
 "timeline.error.load" = "Не удалось загрузить поездки. Попробуйте ещё раз.";
 "timeline.trip.notes.one" = "1 заметка";
