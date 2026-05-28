@@ -1124,6 +1124,10 @@ internal enum L10n {
       internal static let title = L10n.tr("Localizable", "profile.tab.title", fallback: "Settings")
     }
   }
+  internal enum Statistics {
+    /// Statistics
+    internal static let title = L10n.tr("Localizable", "statistics.title", fallback: "Statistics")
+  }
   internal enum Tab {
     /// Profile
     internal static let profile = L10n.tr("Localizable", "tab.profile", fallback: "Profile")

@@ -17,14 +17,14 @@ final class ProfileViewController: UIViewController {
     private enum Constants {
         static let regularRowPadding: CGFloat = 16
         static let destructiveRowPadding: CGFloat = 15
-        static let titleFontSize: CGFloat = 36
+        static let titleFontSize: CGFloat = AppSpacing.screenTitleFontSize
         static let sectionTitleFontSize: CGFloat = 22
         static let sectionAndRowFontSize: CGFloat = 20
         static let rowIconPointSize: CGFloat = 16
         static let rowIconReservedSize = CGSize(width: 18, height: 18)
         static let sectionHeaderTopInset: CGFloat = 14
         static let sectionHeaderBottomInset: CGFloat = 10
-        static let sectionHeaderHorizontalInset: CGFloat = 20
+        static let sectionHeaderHorizontalInset: CGFloat = AppSpacing.screenHorizontalInset
         static let sectionInterSpacing: CGFloat = 2
     }
 
@@ -135,9 +135,9 @@ final class ProfileViewController: UIViewController {
                 : UIFont.systemFont(ofSize: Constants.sectionTitleFontSize, weight: .semibold),
             color: section == .profileCard ? .label : .secondaryLabel,
             insets: UIEdgeInsets(
-                top: section == .profileCard ? 10 : Constants.sectionHeaderTopInset,
+                top: section == .profileCard ? AppSpacing.screenTitleTopInset : Constants.sectionHeaderTopInset,
                 left: Constants.sectionHeaderHorizontalInset,
-                bottom: section == .profileCard ? 14 : Constants.sectionHeaderBottomInset,
+                bottom: section == .profileCard ? AppSpacing.screenTitleBottomInset : Constants.sectionHeaderBottomInset,
                 right: Constants.sectionHeaderHorizontalInset
             )
         )
@@ -188,6 +188,11 @@ final class ProfileViewController: UIViewController {
         viewModel.viewDidLoad()
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        adjustTopInsetForScrollingScreenTitle()
+    }
+
     private func prepareRegistrations() {
         _ = profileCardRegistration
         _ = actionCellRegistration
@@ -199,6 +204,16 @@ final class ProfileViewController: UIViewController {
         view.backgroundColor = .systemGroupedBackground
         title = nil
         navigationItem.largeTitleDisplayMode = .never
+
+        // Transparent, title-less bar so the raised scrollable title isn't
+        // hidden behind a bar backdrop (matches the other root tab screens).
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        navigationItem.standardAppearance = appearance
+        navigationItem.scrollEdgeAppearance = appearance
+        navigationItem.compactAppearance = appearance
+        navigationItem.compactScrollEdgeAppearance = appearance
+
         view.addSubview(collectionView)
     }
 

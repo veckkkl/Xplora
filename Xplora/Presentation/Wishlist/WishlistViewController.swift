@@ -6,13 +6,18 @@ import UIKit
 
 @MainActor
 final class WishlistViewController: UIViewController {
+    private enum Item: Hashable {
+        case header
+        case empty
+        case country(WishlistCountry)
+    }
+
     private let viewModel: WishlistViewModelInput & WishlistViewModelOutput
     private let getCatalogPlacesUseCase: GetCatalogPlacesUseCase
     private let getCitiesForPlaceUseCase: GetCitiesForPlaceUseCase
 
     private var collectionView: UICollectionView!
-    private var dataSource: UICollectionViewDiffableDataSource<Int, WishlistCountry>!
-    private let emptyLabel = UILabel()
+    private var dataSource: UICollectionViewDiffableDataSource<Int, Item>!
 
     init(
         viewModel: WishlistViewModelInput & WishlistViewModelOutput,
@@ -34,35 +39,42 @@ final class WishlistViewController: UIViewController {
         setupNavBar()
         setupCollectionView()
         setupDataSource()
-        setupEmptyLabel()
         bind()
         viewModel.viewDidLoad()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        applyTransparentNavigationBar()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        restoreDefaultNavigationBarBackground()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        adjustTopInsetForScrollingScreenTitle()
     }
 
     // MARK: - Nav bar
 
     private func setupNavBar() {
-        title = L10n.Wishlist.title
-        navigationController?.navigationBar.prefersLargeTitles = true
-        navigationItem.largeTitleDisplayMode = .always
+        title = nil
+        navigationItem.largeTitleDisplayMode = .never
 
-        // Fully transparent navigation bar across all scroll states so the
-        // list content doesn't get covered by a material backdrop as the user
-        // scrolls. Scope the override to this view controller via
-        // `navigationItem.*Appearance` (per-VC, doesn't leak globally).
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        navigationItem.standardAppearance = appearance
-        navigationItem.scrollEdgeAppearance = appearance
-        navigationItem.compactAppearance = appearance
-        navigationItem.compactScrollEdgeAppearance = appearance
-
+        // Title-less, large-title-less bar. The big screen title is part of the
+        // scrollable content (header cell); only the native system "+" lives
+        // here, fixed top-right. The bar is made fully transparent in
+        // `viewWillAppear` so its iOS 26 glass backdrop doesn't gray the title.
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             systemItem: .add,
             primaryAction: UIAction { [weak self] _ in
                 self?.viewModel.didTapAdd()
             }
         )
+
         view.backgroundColor = .systemBackground
     }
 
@@ -78,14 +90,25 @@ final class WishlistViewController: UIViewController {
             top: 0, leading: 58, bottom: 0, trailing: 0
         )
         config.separatorConfiguration = separatorConfig
+        // Header and empty rows never show separators.
+        config.itemSeparatorHandler = { [weak self] indexPath, proposed in
+            guard let self else { return proposed }
+            var resolved = proposed
+            if case .country = self.dataSource.itemIdentifier(for: indexPath) {
+                return resolved
+            }
+            resolved.topSeparatorVisibility = .hidden
+            resolved.bottomSeparatorVisibility = .hidden
+            return resolved
+        }
         config.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
             guard let self,
-                  let country = dataSource.itemIdentifier(for: indexPath) else { return nil }
+                  case .country(let country) = dataSource.itemIdentifier(for: indexPath) else { return nil }
             let delete = UIContextualAction(style: .destructive, title: L10n.Common.delete) { [weak self] _, _, done in
                 guard let self else { done(false); return }
                 // Remove from snapshot immediately so ViewModel's async reload doesn't fight UIKit's swipe animation
                 var snap = dataSource.snapshot()
-                snap.deleteItems([country])
+                snap.deleteItems([.country(country)])
                 dataSource.apply(snap, animatingDifferences: true)
                 done(true)
                 viewModel.didDelete(id: country.id)
@@ -96,48 +119,50 @@ final class WishlistViewController: UIViewController {
         let layout = UICollectionViewCompositionalLayout.list(using: config)
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .systemBackground
-        collectionView.contentInsetAdjustmentBehavior = .automatic
+        collectionView.contentInsetAdjustmentBehavior = .always
+        collectionView.delegate = self
 
         view.addSubview(collectionView)
         collectionView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
-            make.leading.trailing.bottom.equalToSuperview()
+            make.edges.equalToSuperview()
         }
     }
 
     // MARK: - Data source
 
     private func setupDataSource() {
-        let cellRegistration = UICollectionView.CellRegistration<WishlistCountryCell, WishlistCountry> {
-            [weak self] cell, _, country in
+        let headerRegistration = UICollectionView.CellRegistration<WishlistHeaderCell, Item> { cell, _, _ in
+            cell.configure(title: L10n.Wishlist.title)
+        }
+
+        let emptyRegistration = UICollectionView.CellRegistration<WishlistEmptyCell, Item> { cell, _, _ in
+            cell.configure(text: "\(L10n.Wishlist.Empty.title)\n\(L10n.Wishlist.Empty.subtitle)")
+        }
+
+        let countryRegistration = UICollectionView.CellRegistration<WishlistCountryCell, Item> {
+            [weak self] cell, _, item in
+            guard case .country(let country) = item else { return }
             cell.configure(with: country)
             cell.onToggle = { self?.viewModel.didToggle(id: country.id) }
         }
 
-        dataSource = UICollectionViewDiffableDataSource<Int, WishlistCountry>(
+        dataSource = UICollectionViewDiffableDataSource<Int, Item>(
             collectionView: collectionView
-        ) { collectionView, indexPath, country in
-            collectionView.dequeueConfiguredReusableCell(
-                using: cellRegistration, for: indexPath, item: country
-            )
-        }
-    }
-
-    // MARK: - Empty label
-
-    private func setupEmptyLabel() {
-        emptyLabel.numberOfLines = 0
-        emptyLabel.textAlignment = .center
-        emptyLabel.textColor = .secondaryLabel
-        emptyLabel.font = .systemFont(ofSize: 16, weight: .regular)
-        emptyLabel.text = "\(L10n.Wishlist.Empty.title)\n\(L10n.Wishlist.Empty.subtitle)"
-        emptyLabel.isHidden = true
-
-        view.addSubview(emptyLabel)
-        emptyLabel.snp.makeConstraints { make in
-            make.center.equalTo(collectionView)
-            make.leading.greaterThanOrEqualToSuperview().offset(24)
-            make.trailing.lessThanOrEqualToSuperview().offset(-24)
+        ) { collectionView, indexPath, item in
+            switch item {
+            case .header:
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: headerRegistration, for: indexPath, item: item
+                )
+            case .empty:
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: emptyRegistration, for: indexPath, item: item
+                )
+            case .country:
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: countryRegistration, for: indexPath, item: item
+                )
+            }
         }
     }
 
@@ -153,13 +178,15 @@ final class WishlistViewController: UIViewController {
     }
 
     private func apply(_ state: WishlistViewState) {
-        var snapshot = NSDiffableDataSourceSnapshot<Int, WishlistCountry>()
+        var snapshot = NSDiffableDataSourceSnapshot<Int, Item>()
         snapshot.appendSections([0])
-        snapshot.appendItems(state.items, toSection: 0)
+        snapshot.appendItems([.header], toSection: 0)
+        if state.isEmpty {
+            snapshot.appendItems([.empty], toSection: 0)
+        } else {
+            snapshot.appendItems(state.items.map { .country($0) }, toSection: 0)
+        }
         dataSource.apply(snapshot, animatingDifferences: true)
-
-        // Never hide collectionView — header lives outside it now
-        emptyLabel.isHidden = !state.isEmpty
     }
 
     // MARK: - Actions
@@ -217,5 +244,62 @@ final class WishlistViewController: UIViewController {
         let nav = UINavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
+    }
+}
+
+// MARK: - UICollectionViewDelegate
+
+extension WishlistViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
+        if case .country = dataSource.itemIdentifier(for: indexPath) { return true }
+        return false
+    }
+
+    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        if case .country = dataSource.itemIdentifier(for: indexPath) { return true }
+        return false
+    }
+}
+
+// MARK: - Cells
+
+private final class WishlistHeaderCell: UICollectionViewCell {
+    private var headerView: ScreenHeaderView?
+
+    func configure(title: String) {
+        guard headerView == nil else { return }
+        let header = ScreenHeaderView(title: title)
+        contentView.addSubview(header)
+        header.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        headerView = header
+    }
+}
+
+private final class WishlistEmptyCell: UICollectionViewCell {
+    private let label = UILabel()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.textColor = .secondaryLabel
+        label.font = .systemFont(ofSize: 16, weight: .regular)
+        contentView.addSubview(label)
+        label.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(40)
+            make.bottom.equalToSuperview().offset(-24)
+            make.leading.equalToSuperview().offset(24)
+            make.trailing.equalToSuperview().offset(-24)
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(text: String) {
+        label.text = text
     }
 }
