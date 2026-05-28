@@ -17,7 +17,6 @@ final class ProfileViewController: UIViewController {
     private enum Constants {
         static let regularRowPadding: CGFloat = 16
         static let destructiveRowPadding: CGFloat = 15
-        static let titleFontSize: CGFloat = 36
         static let sectionTitleFontSize: CGFloat = 22
         static let sectionAndRowFontSize: CGFloat = 20
         static let rowIconPointSize: CGFloat = 16
@@ -34,7 +33,7 @@ final class ProfileViewController: UIViewController {
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
         collectionView.backgroundColor = .systemGroupedBackground
-        collectionView.contentInsetAdjustmentBehavior = .always
+        collectionView.contentInsetAdjustmentBehavior = .automatic
         collectionView.delegate = self
         return collectionView
     }()
@@ -130,14 +129,12 @@ final class ProfileViewController: UIViewController {
 
         view.configure(
             title: title,
-            font: section == .profileCard
-                ? UIFont.systemFont(ofSize: Constants.titleFontSize, weight: .bold)
-                : UIFont.systemFont(ofSize: Constants.sectionTitleFontSize, weight: .semibold),
-            color: section == .profileCard ? .label : .secondaryLabel,
+            font: UIFont.systemFont(ofSize: Constants.sectionTitleFontSize, weight: .semibold),
+            color: .secondaryLabel,
             insets: UIEdgeInsets(
-                top: section == .profileCard ? 10 : Constants.sectionHeaderTopInset,
+                top: Constants.sectionHeaderTopInset,
                 left: Constants.sectionHeaderHorizontalInset,
-                bottom: section == .profileCard ? 14 : Constants.sectionHeaderBottomInset,
+                bottom: Constants.sectionHeaderBottomInset,
                 right: Constants.sectionHeaderHorizontalInset
             )
         )
@@ -197,8 +194,12 @@ final class ProfileViewController: UIViewController {
 
     private func setupUI() {
         view.backgroundColor = .systemGroupedBackground
-        title = nil
-        navigationItem.largeTitleDisplayMode = .never
+
+        // Native Notes-style collapsing large title; the profile card is the
+        // first list item beneath it.
+        navigationItem.title = L10n.Profile.title
+        configureCollapsingLargeTitle()
+
         view.addSubview(collectionView)
     }
 

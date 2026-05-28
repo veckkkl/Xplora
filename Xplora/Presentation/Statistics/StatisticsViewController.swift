@@ -70,11 +70,12 @@ final class StatisticsViewController: UIViewController {
     // MARK: - Setup
 
     private func setupView() {
-        title = "Исследовано"
+        navigationItem.title = L10n.Statistics.title
         view.backgroundColor = .systemGroupedBackground
-        navigationController?.navigationBar.prefersLargeTitles = true
+        configureCollapsingLargeTitle()
 
         scrollView.delegate = self
+        scrollView.contentInsetAdjustmentBehavior = .automatic
 
         view.addSubview(scrollView)
         view.addSubview(activityIndicator)

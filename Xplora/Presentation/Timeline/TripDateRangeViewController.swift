@@ -38,6 +38,7 @@ final class TripDateRangeViewController: UIViewController {
 
     private func setupUI() {
         view.backgroundColor = .systemBackground
+        navigationItem.largeTitleDisplayMode = .never
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             title: L10n.Common.cancel,

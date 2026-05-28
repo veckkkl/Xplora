@@ -38,7 +38,11 @@ final class TimelineViewController: UIViewController {
 
     private func setupUI() {
         view.backgroundColor = .systemBackground
-        title = L10n.Tab.timeline
+
+        // Native Notes-style collapsing large title; the year divider is the
+        // first scrollable row underneath it. Only the system "+" lives in the bar.
+        navigationItem.title = L10n.Tab.timeline
+        configureCollapsingLargeTitle()
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .add,
@@ -47,11 +51,14 @@ final class TimelineViewController: UIViewController {
         )
 
         tableView.register(TimelineTripCell.self, forCellReuseIdentifier: TimelineTripCell.reuseIdentifier)
+        tableView.register(TimelineYearCell.self, forCellReuseIdentifier: TimelineYearCell.reuseIdentifier)
         tableView.dataSource = self
         tableView.delegate = self
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 72
-        tableView.estimatedSectionHeaderHeight = 48
+        // Year is a normal scrollable row (not a section header), so headers
+        // never pin while scrolling.
+        tableView.estimatedSectionHeaderHeight = 0
         tableView.separatorStyle = .none
         tableView.backgroundColor = .clear
         tableView.sectionHeaderTopPadding = 0
@@ -69,7 +76,7 @@ final class TimelineViewController: UIViewController {
         view.addSubview(activityIndicator)
 
         tableView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
+            make.edges.equalToSuperview()
         }
 
         emptyLabel.snp.makeConstraints { make in
@@ -98,7 +105,6 @@ final class TimelineViewController: UIViewController {
         tableView.reloadData()
 
         emptyLabel.isHidden = !state.isEmpty
-        tableView.isHidden = state.isEmpty
 
         if state.isLoading {
             activityIndicator.startAnimating()
@@ -124,45 +130,48 @@ extension TimelineViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        sections[section].items.count
+        // Row 0 is the scrollable year divider, followed by the trips.
+        sections[section].items.count + 1
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let section = sections[indexPath.section]
+
+        if indexPath.row == 0 {
+            guard let yearCell = tableView.dequeueReusableCell(
+                withIdentifier: TimelineYearCell.reuseIdentifier,
+                for: indexPath
+            ) as? TimelineYearCell else {
+                return UITableViewCell()
+            }
+            yearCell.configure(year: section.year)
+            return yearCell
+        }
+
         guard let cell = tableView.dequeueReusableCell(
             withIdentifier: TimelineTripCell.reuseIdentifier,
             for: indexPath
         ) as? TimelineTripCell else {
             return UITableViewCell()
         }
-        let section = sections[indexPath.section]
-        let item = section.items[indexPath.row]
+        let tripIndex = indexPath.row - 1
+        let item = section.items[tripIndex]
         cell.configure(
             with: item,
-            isFirstInSection: indexPath.row == 0,
-            isLastInSection: indexPath.row == section.items.count - 1
+            isFirstInSection: tripIndex == 0,
+            isLastInSection: tripIndex == section.items.count - 1
         )
         return cell
     }
 }
 
 extension TimelineViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        let header = UIView()
-        header.backgroundColor = .systemBackground
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        .leastNormalMagnitude
+    }
 
-        let label = UILabel()
-        label.text = "\(sections[section].year)"
-        label.font = UIFont.systemFont(ofSize: 22, weight: .bold)
-        label.textColor = .label
-
-        header.addSubview(label)
-        label.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(20)
-            make.top.equalToSuperview().offset(20)
-            make.bottom.equalToSuperview().offset(-8)
-        }
-
-        return header
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        .leastNormalMagnitude
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -174,11 +183,16 @@ extension TimelineViewController: UITableViewDelegate {
         contextMenuConfigurationForRowAt indexPath: IndexPath,
         point: CGPoint
     ) -> UIContextMenuConfiguration? {
-        guard sections.indices.contains(indexPath.section),
-              sections[indexPath.section].items.indices.contains(indexPath.row) else {
+        // Row 0 is the year divider; trips start at row 1.
+        guard indexPath.row >= 1,
+              sections.indices.contains(indexPath.section) else {
             return nil
         }
-        let tripId = sections[indexPath.section].items[indexPath.row].id
+        let tripIndex = indexPath.row - 1
+        guard sections[indexPath.section].items.indices.contains(tripIndex) else {
+            return nil
+        }
+        let tripId = sections[indexPath.section].items[tripIndex].id
 
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
             guard let self else { return nil }
@@ -213,5 +227,38 @@ extension TimelineViewController: UITableViewDelegate {
             self?.viewModel.didConfirmDelete(tripId: tripId)
         })
         present(alert, animated: true)
+    }
+}
+
+// MARK: - Year divider cell
+
+private final class TimelineYearCell: UITableViewCell {
+    static let reuseIdentifier = "TimelineYearCell"
+
+    private let yearLabel = UILabel()
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+        selectionStyle = .none
+
+        yearLabel.font = UIFont.systemFont(ofSize: 22, weight: .bold)
+        yearLabel.textColor = .label
+        contentView.addSubview(yearLabel)
+        yearLabel.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.lessThanOrEqualToSuperview().offset(-20)
+            make.top.equalToSuperview().offset(20)
+            make.bottom.equalToSuperview().offset(-8)
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(year: Int) {
+        yearLabel.text = "\(year)"
     }
 }

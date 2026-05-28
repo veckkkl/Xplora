@@ -14,7 +14,8 @@ enum ProfileSection: Int, CaseIterable {
     var headerTitle: String? {
         switch self {
         case .profileCard:
-            return L10n.Profile.title
+            // Screen title is the native navigation-bar large title now.
+            return nil
         case .appearance:
             return L10n.Profile.Section.appearance
         case .app:

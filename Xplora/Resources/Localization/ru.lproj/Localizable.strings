@@ -81,6 +81,8 @@
 "tab.timeline" = "Хронология";
 "tab.wishlist" = "Вишлист";
 
+"statistics.title" = "Исследовано";
+
 "wishlist.title" = "Вишлист";
 "wishlist.add.title" = "Добавить страну";
 "wishlist.add.button" = "Добавить";

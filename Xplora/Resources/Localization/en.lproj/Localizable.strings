@@ -81,6 +81,8 @@
 "tab.timeline" = "Timeline";
 "tab.wishlist" = "Wishlist";
 
+"statistics.title" = "Statistics";
+
 "wishlist.title" = "Wishlist";
 "wishlist.add.title" = "Add Country";
 "wishlist.add.button" = "Add";

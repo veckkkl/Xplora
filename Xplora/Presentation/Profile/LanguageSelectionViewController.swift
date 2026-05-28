@@ -39,6 +39,7 @@ final class LanguageSelectionViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .systemGroupedBackground
         title = L10n.Profile.LanguageSelection.title
+        navigationItem.largeTitleDisplayMode = .never
         view.addSubview(tableView)
     }
 

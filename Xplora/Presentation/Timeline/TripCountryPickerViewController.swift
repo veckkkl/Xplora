@@ -45,6 +45,7 @@ final class TripCountryPickerViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .systemBackground
         title = L10n.Timeline.CountryPicker.title
+        navigationItem.largeTitleDisplayMode = .never
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             title: L10n.Common.cancel,
