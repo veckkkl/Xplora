@@ -17,14 +17,13 @@ final class ProfileViewController: UIViewController {
     private enum Constants {
         static let regularRowPadding: CGFloat = 16
         static let destructiveRowPadding: CGFloat = 15
-        static let titleFontSize: CGFloat = AppSpacing.screenTitleFontSize
         static let sectionTitleFontSize: CGFloat = 22
         static let sectionAndRowFontSize: CGFloat = 20
         static let rowIconPointSize: CGFloat = 16
         static let rowIconReservedSize = CGSize(width: 18, height: 18)
         static let sectionHeaderTopInset: CGFloat = 14
         static let sectionHeaderBottomInset: CGFloat = 10
-        static let sectionHeaderHorizontalInset: CGFloat = AppSpacing.screenHorizontalInset
+        static let sectionHeaderHorizontalInset: CGFloat = 20
         static let sectionInterSpacing: CGFloat = 2
     }
 
@@ -34,7 +33,7 @@ final class ProfileViewController: UIViewController {
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
         collectionView.backgroundColor = .systemGroupedBackground
-        collectionView.contentInsetAdjustmentBehavior = .always
+        collectionView.contentInsetAdjustmentBehavior = .automatic
         collectionView.delegate = self
         return collectionView
     }()
@@ -130,14 +129,12 @@ final class ProfileViewController: UIViewController {
 
         view.configure(
             title: title,
-            font: section == .profileCard
-                ? UIFont.systemFont(ofSize: Constants.titleFontSize, weight: .bold)
-                : UIFont.systemFont(ofSize: Constants.sectionTitleFontSize, weight: .semibold),
-            color: section == .profileCard ? .label : .secondaryLabel,
+            font: UIFont.systemFont(ofSize: Constants.sectionTitleFontSize, weight: .semibold),
+            color: .secondaryLabel,
             insets: UIEdgeInsets(
-                top: section == .profileCard ? AppSpacing.screenTitleTopInset : Constants.sectionHeaderTopInset,
+                top: Constants.sectionHeaderTopInset,
                 left: Constants.sectionHeaderHorizontalInset,
-                bottom: section == .profileCard ? AppSpacing.screenTitleBottomInset : Constants.sectionHeaderBottomInset,
+                bottom: Constants.sectionHeaderBottomInset,
                 right: Constants.sectionHeaderHorizontalInset
             )
         )
@@ -188,11 +185,6 @@ final class ProfileViewController: UIViewController {
         viewModel.viewDidLoad()
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        adjustTopInsetForScrollingScreenTitle()
-    }
-
     private func prepareRegistrations() {
         _ = profileCardRegistration
         _ = actionCellRegistration
@@ -202,17 +194,11 @@ final class ProfileViewController: UIViewController {
 
     private func setupUI() {
         view.backgroundColor = .systemGroupedBackground
-        title = nil
-        navigationItem.largeTitleDisplayMode = .never
 
-        // Transparent, title-less bar so the raised scrollable title isn't
-        // hidden behind a bar backdrop (matches the other root tab screens).
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        navigationItem.standardAppearance = appearance
-        navigationItem.scrollEdgeAppearance = appearance
-        navigationItem.compactAppearance = appearance
-        navigationItem.compactScrollEdgeAppearance = appearance
+        // Native Notes-style collapsing large title; the profile card is the
+        // first list item beneath it.
+        navigationItem.title = L10n.Profile.title
+        configureCollapsingLargeTitle()
 
         view.addSubview(collectionView)
     }

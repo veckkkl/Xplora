@@ -14,7 +14,6 @@ final class TimelineViewController: UIViewController {
     private let emptyLabel = UILabel()
     private let activityIndicator = UIActivityIndicatorView(style: .medium)
     private var sections: [TripTimelineSection] = []
-    private lazy var headerView = ScreenHeaderView(title: L10n.Tab.timeline)
 
     init(viewModel: TimelineViewModelInput & TimelineViewModelOutput) {
         self.viewModel = viewModel
@@ -34,32 +33,17 @@ final class TimelineViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        applyTransparentNavigationBar()
         viewModel.viewWillAppear()
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        // Restore a standard bar for pushed screens (e.g. the country picker)
-        // that share this navigation controller.
-        restoreDefaultNavigationBarBackground()
-    }
-
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        adjustTopInsetForScrollingScreenTitle()
-        sizeTableHeader()
     }
 
     private func setupUI() {
         view.backgroundColor = .systemBackground
-        title = nil
-        navigationItem.largeTitleDisplayMode = .never
 
-        // Title-less, large-title-less bar. The big title scrolls with content;
-        // only the native system "+" lives here. The bar is made fully
-        // transparent in `viewWillAppear` so its iOS 26 glass backdrop doesn't
-        // gray the title.
+        // Native Notes-style collapsing large title; the year divider is the
+        // first scrollable row underneath it. Only the system "+" lives in the bar.
+        navigationItem.title = L10n.Tab.timeline
+        configureCollapsingLargeTitle()
+
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .add,
             target: self,
@@ -78,8 +62,6 @@ final class TimelineViewController: UIViewController {
         tableView.separatorStyle = .none
         tableView.backgroundColor = .clear
         tableView.sectionHeaderTopPadding = 0
-        // Title scrolls away with the content, matching the Settings screen.
-        tableView.tableHeaderView = headerView
 
         emptyLabel.text = L10n.Timeline.Empty.title
         emptyLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
@@ -105,22 +87,6 @@ final class TimelineViewController: UIViewController {
 
         activityIndicator.snp.makeConstraints { make in
             make.center.equalTo(view.safeAreaLayoutGuide)
-        }
-    }
-
-    private func sizeTableHeader() {
-        guard let header = tableView.tableHeaderView else { return }
-        let targetWidth = tableView.bounds.width
-        guard targetWidth > 0 else { return }
-        let fittingSize = CGSize(width: targetWidth, height: UIView.layoutFittingCompressedSize.height)
-        let height = header.systemLayoutSizeFitting(
-            fittingSize,
-            withHorizontalFittingPriority: .required,
-            verticalFittingPriority: .fittingSizeLevel
-        ).height
-        if abs(header.frame.height - height) > 0.5 || header.frame.width != targetWidth {
-            header.frame = CGRect(x: 0, y: 0, width: targetWidth, height: height)
-            tableView.tableHeaderView = header
         }
     }
 

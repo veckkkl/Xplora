@@ -7,7 +7,6 @@ import UIKit
 @MainActor
 final class WishlistViewController: UIViewController {
     private enum Item: Hashable {
-        case header
         case empty
         case country(WishlistCountry)
     }
@@ -43,31 +42,14 @@ final class WishlistViewController: UIViewController {
         viewModel.viewDidLoad()
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        applyTransparentNavigationBar()
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        restoreDefaultNavigationBarBackground()
-    }
-
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        adjustTopInsetForScrollingScreenTitle()
-    }
-
     // MARK: - Nav bar
 
     private func setupNavBar() {
-        title = nil
-        navigationItem.largeTitleDisplayMode = .never
+        // Native Notes-style collapsing large title; only the system "+" lives
+        // in the bar (fixed top-right).
+        navigationItem.title = L10n.Wishlist.title
+        configureCollapsingLargeTitle()
 
-        // Title-less, large-title-less bar. The big screen title is part of the
-        // scrollable content (header cell); only the native system "+" lives
-        // here, fixed top-right. The bar is made fully transparent in
-        // `viewWillAppear` so its iOS 26 glass backdrop doesn't gray the title.
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             systemItem: .add,
             primaryAction: UIAction { [weak self] _ in
@@ -119,7 +101,7 @@ final class WishlistViewController: UIViewController {
         let layout = UICollectionViewCompositionalLayout.list(using: config)
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .systemBackground
-        collectionView.contentInsetAdjustmentBehavior = .always
+        collectionView.contentInsetAdjustmentBehavior = .automatic
         collectionView.delegate = self
 
         view.addSubview(collectionView)
@@ -131,10 +113,6 @@ final class WishlistViewController: UIViewController {
     // MARK: - Data source
 
     private func setupDataSource() {
-        let headerRegistration = UICollectionView.CellRegistration<WishlistHeaderCell, Item> { cell, _, _ in
-            cell.configure(title: L10n.Wishlist.title)
-        }
-
         let emptyRegistration = UICollectionView.CellRegistration<WishlistEmptyCell, Item> { cell, _, _ in
             cell.configure(text: "\(L10n.Wishlist.Empty.title)\n\(L10n.Wishlist.Empty.subtitle)")
         }
@@ -150,10 +128,6 @@ final class WishlistViewController: UIViewController {
             collectionView: collectionView
         ) { collectionView, indexPath, item in
             switch item {
-            case .header:
-                return collectionView.dequeueConfiguredReusableCell(
-                    using: headerRegistration, for: indexPath, item: item
-                )
             case .empty:
                 return collectionView.dequeueConfiguredReusableCell(
                     using: emptyRegistration, for: indexPath, item: item
@@ -180,7 +154,6 @@ final class WishlistViewController: UIViewController {
     private func apply(_ state: WishlistViewState) {
         var snapshot = NSDiffableDataSourceSnapshot<Int, Item>()
         snapshot.appendSections([0])
-        snapshot.appendItems([.header], toSection: 0)
         if state.isEmpty {
             snapshot.appendItems([.empty], toSection: 0)
         } else {
@@ -262,20 +235,6 @@ extension WishlistViewController: UICollectionViewDelegate {
 }
 
 // MARK: - Cells
-
-private final class WishlistHeaderCell: UICollectionViewCell {
-    private var headerView: ScreenHeaderView?
-
-    func configure(title: String) {
-        guard headerView == nil else { return }
-        let header = ScreenHeaderView(title: title)
-        contentView.addSubview(header)
-        header.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-        headerView = header
-    }
-}
 
 private final class WishlistEmptyCell: UICollectionViewCell {
     private let label = UILabel()

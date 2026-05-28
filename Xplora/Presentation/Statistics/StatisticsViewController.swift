@@ -13,17 +13,11 @@ final class StatisticsViewController: UIViewController {
 
     // MARK: - UI
 
-    private lazy var headerView: ScreenHeaderView = {
-        let view = ScreenHeaderView(title: L10n.Statistics.title)
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
         sv.alwaysBounceVertical = true
         sv.translatesAutoresizingMaskIntoConstraints = false
-        sv.clipsToBounds = true
+        sv.clipsToBounds = false
         return sv
     }()
 
@@ -73,32 +67,19 @@ final class StatisticsViewController: UIViewController {
         viewModel.viewDidLoad()
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        adjustTopInsetForScrollingScreenTitle()
-    }
-
     // MARK: - Setup
 
     private func setupView() {
-        title = nil
-        navigationItem.largeTitleDisplayMode = .never
+        navigationItem.title = L10n.Statistics.title
         view.backgroundColor = .systemGroupedBackground
-
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        navigationItem.standardAppearance = appearance
-        navigationItem.scrollEdgeAppearance = appearance
-        navigationItem.compactAppearance = appearance
-        navigationItem.compactScrollEdgeAppearance = appearance
+        configureCollapsingLargeTitle()
 
         scrollView.delegate = self
-        scrollView.contentInsetAdjustmentBehavior = .always
+        scrollView.contentInsetAdjustmentBehavior = .automatic
 
         view.addSubview(scrollView)
         view.addSubview(activityIndicator)
         view.addSubview(errorLabel)
-        scrollView.addSubview(headerView)
         scrollView.addSubview(stackView)
 
         NSLayoutConstraint.activate([
@@ -107,14 +88,7 @@ final class StatisticsViewController: UIViewController {
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            // Header is the first scrollable content element (full width) so it
-            // scrolls away with the cards, matching the Settings screen.
-            headerView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
-            headerView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
-            headerView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
-            headerView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
-
-            stackView.topAnchor.constraint(equalTo: headerView.bottomAnchor),
+            stackView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 16),
             stackView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 16),
             stackView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -16),
             stackView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -16),
