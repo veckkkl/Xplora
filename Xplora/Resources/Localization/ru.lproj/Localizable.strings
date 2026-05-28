@@ -483,6 +483,7 @@
 "profile.details.name" = "Имя";
 "profile.details.residence_country" = "Страна проживания";
 "profile.details.residence_country_not_selected" = "Не выбрана";
+"profile.details.residence_country_picker_hint" = "Выберите страну проживания";
 "profile.details.status" = "Статус";
 "profile.details.status_note" = "Статус обновляется автоматически по статистике путешествий.";
 "profile.details.show_status" = "Показывать статус";

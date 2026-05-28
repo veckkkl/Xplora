@@ -183,7 +183,10 @@ final class AppCoordinator {
             getStatistics: locator.resolve(GetStatisticsUseCase.self),
             getTrips: locator.resolve(GetTripsUseCase.self)
         )
-        let viewController = ProfileViewController(viewModel: viewModel)
+        let viewController = ProfileViewController(
+            viewModel: viewModel,
+            getCatalogPlaces: locator.resolve(GetCatalogPlacesUseCase.self)
+        )
         viewController.onLogout = { [weak self] in
             self?.handleLogout()
         }

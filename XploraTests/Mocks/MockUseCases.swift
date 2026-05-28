@@ -30,9 +30,15 @@ final class MockGetCurrentUserUseCase: GetCurrentUserUseCase {
 final class MockUpdateCurrentUserUseCase: UpdateCurrentUserUseCase {
     private(set) var updatedName: String?
     private(set) var callCount = 0
+    private(set) var updatedResidenceCountryCode: String??
+    private(set) var residenceCallCount = 0
     func execute(name: String) {
         callCount += 1
         updatedName = name
+    }
+    func execute(residenceCountryCode: String?) {
+        residenceCallCount += 1
+        updatedResidenceCountryCode = residenceCountryCode
     }
 }
 

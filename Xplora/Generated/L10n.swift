@@ -980,6 +980,8 @@ internal enum L10n {
       internal static let residenceCountry = L10n.tr("Localizable", "profile.details.residence_country", fallback: "Residence country")
       /// Not selected
       internal static let residenceCountryNotSelected = L10n.tr("Localizable", "profile.details.residence_country_not_selected", fallback: "Not selected")
+      /// Choose residence country
+      internal static let residenceCountryPickerHint = L10n.tr("Localizable", "profile.details.residence_country_picker_hint", fallback: "Choose residence country")
       /// Show Status
       internal static let showStatus = L10n.tr("Localizable", "profile.details.show_status", fallback: "Show Status")
       /// Status

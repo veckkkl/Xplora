@@ -5,6 +5,7 @@
 
 protocol UpdateCurrentUserUseCase {
     func execute(name: String)
+    func execute(residenceCountryCode: String?)
 }
 
 final class UpdateCurrentUserUseCaseImpl: UpdateCurrentUserUseCase {
@@ -16,5 +17,9 @@ final class UpdateCurrentUserUseCaseImpl: UpdateCurrentUserUseCase {
 
     func execute(name: String) {
         authRepository.updateName(name)
+    }
+
+    func execute(residenceCountryCode: String?) {
+        authRepository.updateResidenceCountry(residenceCountryCode)
     }
 }

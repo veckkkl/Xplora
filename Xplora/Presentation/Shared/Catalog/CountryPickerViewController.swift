@@ -6,12 +6,18 @@
 import SnapKit
 import UIKit
 
+/// Reusable alphabetical country picker backed by the shared catalog.
+/// Used by onboarding (residence selection) and by Profile Details
+/// (editing the residence country). Returns the selected `CatalogPlace`
+/// via `onSelect`; it performs no persistence itself.
 @MainActor
 final class CountryPickerViewController: UIViewController {
 
     var onSelect: ((CatalogPlace) -> Void)?
 
     private let getCatalogPlaces: GetCatalogPlacesUseCase
+    private let screenTitle: String
+    private let selectedCode: String?
 
     private var sections: [(letter: String, places: [CatalogPlace])] = []
 
@@ -24,8 +30,14 @@ final class CountryPickerViewController: UIViewController {
 
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
 
-    init(getCatalogPlaces: GetCatalogPlacesUseCase) {
+    init(
+        getCatalogPlaces: GetCatalogPlacesUseCase,
+        title: String? = nil,
+        selectedCode: String? = nil
+    ) {
         self.getCatalogPlaces = getCatalogPlaces
+        self.screenTitle = title ?? L10n.Onboarding.Country.pickerTitle
+        self.selectedCode = selectedCode?.uppercased()
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -33,7 +45,7 @@ final class CountryPickerViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = L10n.Onboarding.Country.pickerTitle
+        title = screenTitle
         view.backgroundColor = .systemBackground
 
         loadingIndicator.hidesWhenStopped = true
@@ -58,6 +70,7 @@ final class CountryPickerViewController: UIViewController {
             self.loadingIndicator.stopAnimating()
             self.tableView.isHidden = false
             self.tableView.reloadData()
+            self.scrollToSelectedCode()
         }
     }
 
@@ -73,6 +86,21 @@ final class CountryPickerViewController: UIViewController {
                 }
                 return (letter, rows)
             }
+    }
+
+    private func scrollToSelectedCode() {
+        guard let selectedCode,
+              let indexPath = indexPath(forCode: selectedCode) else { return }
+        tableView.scrollToRow(at: indexPath, at: .middle, animated: false)
+    }
+
+    private func indexPath(forCode code: String) -> IndexPath? {
+        for (sectionIndex, section) in sections.enumerated() {
+            if let rowIndex = section.places.firstIndex(where: { $0.code.uppercased() == code }) {
+                return IndexPath(row: rowIndex, section: sectionIndex)
+            }
+        }
+        return nil
     }
 }
 
@@ -104,6 +132,7 @@ extension CountryPickerViewController: UITableViewDataSource, UITableViewDelegat
         var content = cell.defaultContentConfiguration()
         content.text = "\(place.flag)  \(place.localizedName)"
         cell.contentConfiguration = content
+        cell.accessoryType = place.code.uppercased() == selectedCode ? .checkmark : .none
         return cell
     }
 
