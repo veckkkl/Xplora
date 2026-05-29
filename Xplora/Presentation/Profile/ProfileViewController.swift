@@ -426,19 +426,9 @@ final class ProfileViewController: UIViewController {
         alert.addAction(UIAlertAction(title: L10n.Common.cancel, style: .cancel))
         alert.addAction(
             UIAlertAction(title: L10n.Common.delete, style: .destructive) { [weak self] _ in
-                self?.presentDeleteSuccessStub()
+                self?.viewModel.didConfirmDeleteData()
             }
         )
-        present(alert, animated: true)
-    }
-
-    private func presentDeleteSuccessStub() {
-        let alert = UIAlertController(
-            title: L10n.Profile.Delete.stubTitle,
-            message: L10n.Profile.Delete.stubMessage,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
         present(alert, animated: true)
     }
 

@@ -13,5 +13,6 @@ protocol TripsRepo {
     func save(trip: Trip) async throws
     func update(trip: Trip) async throws
     func delete(tripId: UUID) async throws
+    func deleteAll() async throws
 }
 

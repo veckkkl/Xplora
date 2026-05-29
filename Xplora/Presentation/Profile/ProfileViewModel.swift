@@ -23,6 +23,7 @@ protocol ProfileViewModelInput: AnyObject {
     func didToggleDarkTheme(_ isOn: Bool)
     func didUpdateUserName(_ name: String)
     func didUpdateResidenceCountry(_ residenceCountryCode: String?)
+    func didConfirmDeleteData()
 }
 
 @MainActor
@@ -106,6 +107,12 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
     func didUpdateResidenceCountry(_ residenceCountryCode: String?) {
         updateCurrentUser.execute(residenceCountryCode: residenceCountryCode)
         refreshSections()
+    }
+
+    // Deleting user data routes through the same reset path as logout:
+    // AppCoordinator clears the stored AuthUser and returns to onboarding.
+    func didConfirmDeleteData() {
+        onRoute?(.logout)
     }
 
     private func buildSections() -> [ProfileSectionModel] {

@@ -32,4 +32,8 @@ final class WishlistRepoImpl: WishlistRepo {
         list[index].isCompleted.toggle()
         storage.wishlistCountries = list
     }
+
+    func deleteAll() async throws {
+        storage.wishlistCountries = []
+    }
 }
