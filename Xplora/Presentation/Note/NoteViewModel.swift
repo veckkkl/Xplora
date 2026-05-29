@@ -410,7 +410,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         guard var current = draft else { return }
         let trimmedName = placeName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return }
-        let (city, country) = parseCityCountry(from: address)
+        let (city, country) = NoteLocationAddressParser.parseCityCountry(from: address)
         current.location = NoteLocation(
             placeName: trimmedName,
             city: city,
@@ -541,21 +541,6 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
                 || note.tripEndDate != nil
         }
         return original != note
-    }
-
-    private func parseCityCountry(from address: String?) -> (String, String) {
-        let trimmed = address?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        guard !trimmed.isEmpty else { return ("", "") }
-        let parts = trimmed
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-
-        if parts.count >= 2 {
-            return (parts[parts.count - 2], parts[parts.count - 1])
-        }
-
-        return (parts.first ?? "", "")
     }
 
     private func formatDateText(for note: Note) -> String {
