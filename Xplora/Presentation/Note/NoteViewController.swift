@@ -28,21 +28,11 @@ final class NoteViewController: UIViewController {
     private let textPlaceholderLabel = UILabel()
     private let activityIndicator = UIActivityIndicatorView(style: .large)
 
-    private let searchContainerView = UIView()
-    private let searchBar = UISearchBar()
-    private let keyboardToolbar = UIToolbar()
-    private var toolbarPrevItem: UIBarButtonItem?
-    private var toolbarNextItem: UIBarButtonItem?
-    private var toolbarDoneItem: UIBarButtonItem?
-    private var searchContainerBottomConstraint: Constraint?
-
     private let keyboardObserver = NoteEditorKeyboardObserver()
     private lazy var photoPickerPresenter = NotePhotoPickerPresenter(maxPhotoCount: maxPhotoCount)
+    private let searchController = NoteTextSearchController()
     private var lastState: NoteViewState?
-    private var currentSearchQuery: String = ""
     private var isBoldTyping = false
-    private var searchMatches: [NSRange] = []
-    private var currentMatchIndex: Int = 0
     private let maxPhotoCount = 10
 
     init(viewModel: NoteViewModelInput & NoteViewModelOutput) {
@@ -65,7 +55,18 @@ final class NoteViewController: UIViewController {
         bindViewModel()
         setupKeyboardHandling()
         setupPhotoPickerPresenter()
+        setupSearchController()
         viewModel.viewDidLoad()
+    }
+
+    private func setupSearchController() {
+        searchController.parentView = view
+        searchController.textView = textView
+        searchController.onClose = { [weak self] in
+            guard let self else { return }
+            self.scrollView.contentInset.bottom = 16
+            self.scrollView.verticalScrollIndicatorInsets.bottom = 16
+        }
     }
 
     private func setupPhotoPickerPresenter() {
@@ -232,76 +233,6 @@ final class NoteViewController: UIViewController {
         dateLabel.addGestureRecognizer(dateTap)
     }
 
-    private func setupSearchBar() {
-        searchContainerView.backgroundColor = .clear
-        searchContainerView.isHidden = true
-
-        searchBar.placeholder = L10n.Notes.Editor.Search.placeholder
-        searchBar.searchBarStyle = .minimal
-        searchBar.backgroundImage = UIImage()
-        searchBar.isTranslucent = true
-        searchBar.delegate = self
-        let textField = searchBar.searchTextField
-        textField.backgroundColor = UIColor.secondarySystemBackground
-        textField.layer.cornerRadius = 18
-        textField.clipsToBounds = true
-        textField.clearButtonMode = .never
-
-        configureSearchToolbar()
-        textField.inputAccessoryView = keyboardToolbar
-
-        view.addSubview(searchContainerView)
-        searchContainerView.addSubview(searchBar)
-
-        searchContainerView.snp.makeConstraints { make in
-            make.leading.trailing.equalTo(view.safeAreaLayoutGuide).inset(16)
-            make.height.equalTo(44)
-            searchContainerBottomConstraint = make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-8).constraint
-        }
-
-        searchBar.snp.makeConstraints { make in
-            make.leading.equalToSuperview()
-            make.trailing.equalToSuperview()
-            make.top.bottom.equalToSuperview()
-        }
-    }
-
-    private func configureSearchToolbar() {
-        if toolbarPrevItem == nil {
-            toolbarPrevItem = UIBarButtonItem(
-                image: UIImage(systemName: "chevron.up"),
-                style: .plain,
-                target: self,
-                action: #selector(didTapSearchPrev)
-            )
-            toolbarPrevItem?.tintColor = .secondaryLabel
-        }
-
-        if toolbarNextItem == nil {
-            toolbarNextItem = UIBarButtonItem(
-                image: UIImage(systemName: "chevron.down"),
-                style: .plain,
-                target: self,
-                action: #selector(didTapSearchNext)
-            )
-            toolbarNextItem?.tintColor = .secondaryLabel
-        }
-
-        if toolbarDoneItem == nil {
-            toolbarDoneItem = UIBarButtonItem(
-                barButtonSystemItem: .done,
-                target: self,
-                action: #selector(didTapSearchDone)
-            )
-        }
-
-        keyboardToolbar.sizeToFit()
-        keyboardToolbar.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        keyboardToolbar.frame.size.width = view.bounds.width
-        let spacer = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        keyboardToolbar.items = [toolbarPrevItem, toolbarNextItem, spacer, toolbarDoneItem].compactMap { $0 }
-    }
-
     private func bindViewModel() {
         viewModel.onStateChange = { [weak self] state in
             self?.apply(state: state)
@@ -314,7 +245,7 @@ final class NoteViewController: UIViewController {
             if let state = self.lastState, state.mode == .edit {
                 return
             }
-            self.openSearchUI()
+            self.searchController.open()
         }
         viewModel.onPhotoSourceRequested = { [weak self] in
             self?.presentPhotoSource()
@@ -351,10 +282,9 @@ final class NoteViewController: UIViewController {
             searchBarOffset = 8
         }
 
-        searchContainerBottomConstraint?.update(offset: -searchBarOffset)
+        searchController.setSearchBarBottomOffset(searchBarOffset)
 
-        let searchBarHeight: CGFloat = searchContainerView.isHidden ? 0 : 52
-        let bottomInset = searchBarOffset + searchBarHeight + 8
+        let bottomInset = searchBarOffset + searchController.searchBarHeight + 8
         scrollView.contentInset.bottom = bottomInset
         scrollView.verticalScrollIndicatorInsets.bottom = bottomInset
         view.layoutIfNeeded()
@@ -398,8 +328,8 @@ final class NoteViewController: UIViewController {
             }
         }
 
-        if isEditing, !searchContainerView.isHidden {
-            didTapSearchDone()
+        if isEditing, searchController.isVisible {
+            searchController.close()
         }
 
         separatorAboveDate.isHidden = !isEditing
@@ -414,7 +344,7 @@ final class NoteViewController: UIViewController {
             if isEditing {
                 textView.text = state.text
             } else {
-                applySearchHighlight(text: state.text, query: currentSearchQuery)
+                searchController.refresh(text: state.text)
             }
         }
 
@@ -470,42 +400,6 @@ final class NoteViewController: UIViewController {
         }
     }
 
-    private func applySearchHighlight(text: String, query: String) {
-        currentSearchQuery = query
-
-        let baseAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 16, weight: .medium),
-            .foregroundColor: UIColor.label
-        ]
-        let matchAttributes: [NSAttributedString.Key: Any] = [
-            .backgroundColor: UIColor.systemYellow.withAlphaComponent(0.28)
-        ]
-        let activeMatchAttributes: [NSAttributedString.Key: Any] = [
-            .backgroundColor: UIColor.systemYellow.withAlphaComponent(0.7),
-            .foregroundColor: UIColor.label
-        ]
-
-        let result = NoteTextHighlighter.highlight(
-            text: text,
-            query: query,
-            activeMatchIndex: currentMatchIndex,
-            baseAttributes: baseAttributes,
-            matchAttributes: matchAttributes,
-            activeMatchAttributes: activeMatchAttributes
-        )
-
-        searchMatches = result.matches
-        textView.attributedText = result.attributedText
-
-        if query.isEmpty {
-            currentMatchIndex = 0
-        } else if !result.matches.isEmpty {
-            currentMatchIndex = min(currentMatchIndex, result.matches.count - 1)
-            textView.scrollRangeToVisible(result.matches[currentMatchIndex])
-        }
-        updateSearchNavigationButtons()
-    }
-
     @objc private func titleDidChange() {
         viewModel.didChangeTitle(headerTitleTextField.text)
     }
@@ -521,8 +415,8 @@ final class NoteViewController: UIViewController {
     }
 
     @objc private func didTapEdit() {
-        if !searchContainerView.isHidden {
-            didTapSearchDone()
+        if searchController.isVisible {
+            searchController.close()
         }
         viewModel.didTapEdit()
     }
@@ -675,48 +569,6 @@ final class NoteViewController: UIViewController {
         return placemarkTitle.isEmpty ? nil : placemarkTitle
     }
 
-    @objc private func didTapSearchDone() {
-        searchContainerView.isHidden = true
-        searchBar.searchTextField.resignFirstResponder()
-        if let state = lastState {
-            applySearchHighlight(text: state.text, query: "")
-        }
-        updateSearchNavigationButtons()
-        scrollView.contentInset.bottom = 16
-        scrollView.verticalScrollIndicatorInsets.bottom = 16
-    }
-
-    @objc private func didTapSearchPrev() {
-        guard !searchMatches.isEmpty else { return }
-        currentMatchIndex = max(0, currentMatchIndex - 1)
-        applySearchHighlight(text: textView.text ?? "", query: currentSearchQuery)
-    }
-
-    @objc private func didTapSearchNext() {
-        guard !searchMatches.isEmpty else { return }
-        currentMatchIndex = min(searchMatches.count - 1, currentMatchIndex + 1)
-        applySearchHighlight(text: textView.text ?? "", query: currentSearchQuery)
-    }
-
-    private func updateSearchNavigationButtons() {
-        guard !searchMatches.isEmpty else {
-            toolbarPrevItem?.isEnabled = false
-            toolbarNextItem?.isEnabled = false
-            return
-        }
-        toolbarPrevItem?.isEnabled = currentMatchIndex > 0
-        toolbarNextItem?.isEnabled = currentMatchIndex < searchMatches.count - 1
-    }
-
-    private func openSearchUI() {
-        if searchContainerView.superview == nil {
-            setupSearchBar()
-        }
-        searchContainerView.isHidden = false
-        searchBar.searchTextField.becomeFirstResponder()
-        updateSearchNavigationButtons()
-    }
-
     private func exitScreen() {
         if let navigationController, navigationController.viewControllers.count > 1 {
             navigationController.popViewController(animated: true)
@@ -731,18 +583,6 @@ extension NoteViewController: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         viewModel.didChangeText(textView.text)
         textPlaceholderLabel.isHidden = !textView.text.isEmpty
-    }
-}
-
-extension NoteViewController: UISearchBarDelegate {
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        guard let state = lastState else { return }
-        currentMatchIndex = 0
-        applySearchHighlight(text: state.text, query: searchText)
-    }
-
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        searchBar.searchTextField.resignFirstResponder()
     }
 }
 
