@@ -7,7 +7,7 @@
 
 final class ServiceLocator {
     static let shared = ServiceLocator()
-    private init() {}
+    init() {}
     private var services: [ObjectIdentifier: Any] = [:]
     
     func register<Service>(_ type: Service.Type, instance: Service) {
