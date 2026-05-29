@@ -496,42 +496,36 @@ final class NoteViewController: UIViewController {
 
     private func applySearchHighlight(text: String, query: String) {
         currentSearchQuery = query
-        guard !query.isEmpty else {
-            searchMatches = []
-            currentMatchIndex = 0
-            textView.attributedText = NSAttributedString(string: text, attributes: [
-                .font: UIFont.systemFont(ofSize: 16, weight: .medium),
-                .foregroundColor: UIColor.label
-            ])
-            return
-        }
 
-        let attributed = NSMutableAttributedString(string: text, attributes: [
+        let baseAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 16, weight: .medium),
             .foregroundColor: UIColor.label
-        ])
+        ]
+        let matchAttributes: [NSAttributedString.Key: Any] = [
+            .backgroundColor: UIColor.systemYellow.withAlphaComponent(0.28)
+        ]
+        let activeMatchAttributes: [NSAttributedString.Key: Any] = [
+            .backgroundColor: UIColor.systemYellow.withAlphaComponent(0.7),
+            .foregroundColor: UIColor.label
+        ]
 
-        let lowercasedText = text.lowercased()
-        let lowercasedQuery = query.lowercased()
-        var searchRange = lowercasedText.startIndex..<lowercasedText.endIndex
-        searchMatches = []
+        let result = NoteTextHighlighter.highlight(
+            text: text,
+            query: query,
+            activeMatchIndex: currentMatchIndex,
+            baseAttributes: baseAttributes,
+            matchAttributes: matchAttributes,
+            activeMatchAttributes: activeMatchAttributes
+        )
 
-        while let range = lowercasedText.range(of: lowercasedQuery, options: [], range: searchRange) {
-            let nsRange = NSRange(range, in: lowercasedText)
-            searchMatches.append(nsRange)
-            attributed.addAttribute(.backgroundColor, value: UIColor.systemYellow.withAlphaComponent(0.28), range: nsRange)
-            searchRange = range.upperBound..<lowercasedText.endIndex
-        }
+        searchMatches = result.matches
+        textView.attributedText = result.attributedText
 
-        if !searchMatches.isEmpty {
-            currentMatchIndex = min(currentMatchIndex, searchMatches.count - 1)
-            let currentMatch = searchMatches[currentMatchIndex]
-            attributed.addAttribute(.backgroundColor, value: UIColor.systemYellow.withAlphaComponent(0.7), range: currentMatch)
-            attributed.addAttribute(.foregroundColor, value: UIColor.label, range: currentMatch)
-            textView.attributedText = attributed
-            textView.scrollRangeToVisible(currentMatch)
-        } else {
-            textView.attributedText = attributed
+        if query.isEmpty {
+            currentMatchIndex = 0
+        } else if !result.matches.isEmpty {
+            currentMatchIndex = min(currentMatchIndex, result.matches.count - 1)
+            textView.scrollRangeToVisible(result.matches[currentMatchIndex])
         }
         updateSearchNavigationButtons()
     }
