@@ -37,6 +37,7 @@ final class NoteViewController: UIViewController {
     private var searchContainerBottomConstraint: Constraint?
 
     private let keyboardObserver = NoteEditorKeyboardObserver()
+    private lazy var photoPickerPresenter = NotePhotoPickerPresenter(maxPhotoCount: maxPhotoCount)
     private var lastState: NoteViewState?
     private var currentSearchQuery: String = ""
     private var isBoldTyping = false
@@ -63,7 +64,22 @@ final class NoteViewController: UIViewController {
         setupActions()
         bindViewModel()
         setupKeyboardHandling()
+        setupPhotoPickerPresenter()
         viewModel.viewDidLoad()
+    }
+
+    private func setupPhotoPickerPresenter() {
+        photoPickerPresenter.presentingViewController = self
+        photoPickerPresenter.sourceView = photoSectionView
+        photoPickerPresenter.onCapturePhoto = { [weak self] image in
+            self?.viewModel.didCapturePhoto(image)
+        }
+        photoPickerPresenter.onPhotoLibrarySelection = { [weak self] results in
+            self?.viewModel.didFinishPhotoLibraryPicking(results: results)
+        }
+        photoPickerPresenter.onError = { [weak self] message in
+            self?.showError(message: message)
+        }
     }
 
     private func configureNavigationBar() {
@@ -301,8 +317,17 @@ final class NoteViewController: UIViewController {
             self.openSearchUI()
         }
         viewModel.onPhotoSourceRequested = { [weak self] in
-            self?.presentPhotoSourcePicker()
+            self?.presentPhotoSource()
         }
+    }
+
+    private func presentPhotoSource() {
+        guard let state = lastState else { return }
+        photoPickerPresenter.presentSource(context: .init(
+            canAddPhoto: state.canAddPhoto,
+            photoURLsCount: state.photoURLs.count,
+            preselectedAssetIdentifiers: state.preselectedAssetIdentifiers
+        ))
     }
 
     private func setupKeyboardHandling() {
@@ -615,67 +640,6 @@ final class NoteViewController: UIViewController {
         MKMapItem.openMaps(with: [mapItem], launchOptions: nil)
     }
 
-    private func presentPhotoSourcePicker() {
-        if let state = lastState, !state.canAddPhoto {
-            showError(message: L10n.Notes.Editor.Photo.limit(maxPhotoCount))
-            return
-        }
-
-        let alert = NoteEditorAlertFactory.makePhotoSourceActionSheet(
-            onCamera: { [weak self] in self?.presentCameraPicker() },
-            onLibrary: { [weak self] in self?.presentPhotoLibraryPicker() }
-        )
-
-        if let popover = alert.popoverPresentationController {
-            popover.sourceView = photoSectionView
-            popover.sourceRect = CGRect(
-                x: photoSectionView.bounds.midX,
-                y: photoSectionView.bounds.midY,
-                width: 1,
-                height: 1
-            )
-        }
-        present(alert, animated: true)
-    }
-
-    private func presentCameraPicker() {
-        if let state = lastState, !state.canAddPhoto {
-            showError(message: L10n.Notes.Editor.Photo.limit(maxPhotoCount))
-            return
-        }
-
-        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
-            showError(message: L10n.Notes.Editor.Photo.Camera.unavailable)
-            return
-        }
-
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.delegate = self
-        picker.allowsEditing = false
-        present(picker, animated: true)
-    }
-
-    private func presentPhotoLibraryPicker() {
-        guard let state = lastState else { return }
-        let remainingSlots = maxPhotoCount - state.photoURLs.count
-        guard remainingSlots > 0 else {
-            showError(message: L10n.Notes.Editor.Photo.limit(maxPhotoCount))
-            return
-        }
-
-        var configuration = PHPickerConfiguration(photoLibrary: .shared())
-        configuration.selectionLimit = state.preselectedAssetIdentifiers.count + remainingSlots
-        configuration.selection = .default
-        configuration.filter = .images
-        configuration.preselectedAssetIdentifiers = state.preselectedAssetIdentifiers
-
-        let picker = PHPickerViewController(configuration: configuration)
-        picker.title = L10n.Notes.Editor.Photo.Picker.counter(state.photoURLs.count, maxPhotoCount)
-        picker.delegate = self
-        present(picker, animated: true)
-    }
-
     private func presentLocationSearch() {
         let controller = LocationSearchViewController()
         controller.onLocationSelected = { [weak self] mapItem, completion in
@@ -782,24 +746,3 @@ extension NoteViewController: UISearchBarDelegate {
     }
 }
 
-extension NoteViewController: PHPickerViewControllerDelegate {
-    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-        picker.dismiss(animated: true)
-        viewModel.didFinishPhotoLibraryPicking(results: results)
-    }
-}
-
-extension NoteViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        picker.dismiss(animated: true)
-    }
-
-    func imagePickerController(
-        _ picker: UIImagePickerController,
-        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
-    ) {
-        picker.dismiss(animated: true)
-        guard let image = info[.originalImage] as? UIImage else { return }
-        viewModel.didCapturePhoto(image)
-    }
-}
