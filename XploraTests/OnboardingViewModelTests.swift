@@ -216,4 +216,101 @@ struct OnboardingViewModelTests {
         sut.didTapContinue()
         #expect(useCase.lastName == "Alice")
     }
+
+    // MARK: - Initial state (no input)
+
+    @Test func didTapContinue_noInput_doesNotCallUseCase() {
+        let (sut, useCase) = makeSUT()
+        sut.didTapContinue()
+        #expect(useCase.callCount == 0)
+    }
+
+    @Test func didTapContinue_noInput_firesEmptyNameError() {
+        let (sut, _) = makeSUT()
+        var error: String??
+        sut.onNameError = { error = $0 }
+        sut.didTapContinue()
+        #expect(error != nil)
+        #expect(error! != nil)
+    }
+
+    // MARK: - Whitespace-only name
+
+    @Test func didChangeName_whitespaceOnly_keepsContinueDisabled() {
+        let (sut, _) = makeSUT()
+        sut.didSelectPlace(place("US"))
+        var received: Bool?
+        sut.onContinueEnabled = { received = $0 }
+        sut.didChangeName("   ")
+        #expect(received == false)
+    }
+
+    @Test func didTapContinue_whitespaceName_doesNotCallUseCase() {
+        let (sut, useCase) = makeSUT()
+        sut.didSelectPlace(place("US"))
+        sut.didChangeName("   ")
+        sut.didTapContinue()
+        #expect(useCase.callCount == 0)
+    }
+
+    // MARK: - Too-long name
+
+    @Test func didChangeName_tooLongName_keepsContinueDisabled() {
+        let (sut, _) = makeSUT()
+        sut.didSelectPlace(place("US"))
+        var received: Bool?
+        sut.onContinueEnabled = { received = $0 }
+        sut.didChangeName(String(repeating: "a", count: ProfileUserSettings.maxNameLength + 1))
+        #expect(received == false)
+    }
+
+    @Test func didChangeName_tooLongName_firesNameError() {
+        let (sut, _) = makeSUT()
+        var error: String??
+        sut.onNameError = { error = $0 }
+        sut.didChangeName(String(repeating: "a", count: ProfileUserSettings.maxNameLength + 1))
+        #expect(error != nil)
+        #expect(error! != nil)
+    }
+
+    // MARK: - World citizen enables continue
+
+    @Test func worldCitizenWithValidName_enablesContinue() {
+        let (sut, _) = makeSUT()
+        sut.didChangeName("Alice")
+        var received: Bool?
+        sut.onContinueEnabled = { received = $0 }
+        sut.didToggleWorldCitizen(true)
+        #expect(received == true)
+    }
+
+    @Test func togglingWorldCitizenOff_disablesContinue() {
+        let (sut, _) = makeSUT()
+        sut.didChangeName("Alice")
+        sut.didToggleWorldCitizen(true)
+        var received: Bool?
+        sut.onContinueEnabled = { received = $0 }
+        sut.didToggleWorldCitizen(false)
+        #expect(received == false)
+    }
+
+    // MARK: - onCompleted is not fired on invalid submit
+
+    @Test func didTapContinue_validNameNoCountry_doesNotFireCompleted() {
+        let (sut, _) = makeSUT()
+        var completed = false
+        sut.onCompleted = { completed = true }
+        sut.didChangeName("Alice")
+        sut.didTapContinue()
+        #expect(completed == false)
+    }
+
+    @Test func didTapContinue_emptyNameWithCountry_doesNotFireCompleted() {
+        let (sut, _) = makeSUT()
+        var completed = false
+        sut.onCompleted = { completed = true }
+        sut.didSelectPlace(place("US"))
+        sut.didTapContinue()
+        #expect(completed == false)
+    }
 }
