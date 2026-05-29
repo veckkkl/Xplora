@@ -36,7 +36,7 @@ final class NoteViewController: UIViewController {
     private var toolbarDoneItem: UIBarButtonItem?
     private var searchContainerBottomConstraint: Constraint?
 
-    private var keyboardObserverTokens: [NSObjectProtocol] = []
+    private let keyboardObserver = NoteEditorKeyboardObserver()
     private var lastState: NoteViewState?
     private var currentSearchQuery: String = ""
     private var isBoldTyping = false
@@ -51,10 +51,6 @@ final class NoteViewController: UIViewController {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    deinit {
-        keyboardObserverTokens.forEach { NotificationCenter.default.removeObserver($0) }
     }
 
     override func viewDidLoad() {
@@ -310,24 +306,16 @@ final class NoteViewController: UIViewController {
     }
 
     private func setupKeyboardHandling() {
-        let willShow = NotificationCenter.default.addObserver(
-            forName: UIResponder.keyboardWillShowNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            self?.handleKeyboard(notification: notification, showing: true)
+        keyboardObserver.onWillShow = { [weak self] in
+            self?.handleKeyboard(showing: true)
         }
-        let willHide = NotificationCenter.default.addObserver(
-            forName: UIResponder.keyboardWillHideNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            self?.handleKeyboard(notification: notification, showing: false)
+        keyboardObserver.onWillHide = { [weak self] in
+            self?.handleKeyboard(showing: false)
         }
-        keyboardObserverTokens = [willShow, willHide]
+        keyboardObserver.start()
     }
 
-    private func handleKeyboard(notification: Notification, showing: Bool) {
+    private func handleKeyboard(showing: Bool) {
         let searchBarOffset: CGFloat
         if showing {
             let keyboardTop = view.keyboardLayoutGuide.layoutFrame.minY
