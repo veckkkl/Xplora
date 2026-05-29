@@ -468,21 +468,13 @@ final class NoteViewController: UIViewController {
     }
 
     private func showError(message: String) {
-        let alert = UIAlertController(title: L10n.Notes.Editor.Alert.Error.title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
-        present(alert, animated: true)
+        present(NoteEditorAlertFactory.makeErrorAlert(message: message), animated: true)
     }
 
     private func confirmDelete() {
-        let alert = UIAlertController(
-            title: L10n.Notes.Editor.Alert.Delete.title,
-            message: L10n.Notes.Editor.Alert.Delete.message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: L10n.Common.cancel, style: .cancel))
-        alert.addAction(UIAlertAction(title: L10n.Common.delete, style: .destructive) { [weak self] _ in
+        let alert = NoteEditorAlertFactory.makeDeleteConfirmation { [weak self] in
             self?.viewModel.didTapDeleteConfirmed()
-        })
+        }
         present(alert, animated: true)
     }
 
@@ -491,20 +483,11 @@ final class NoteViewController: UIViewController {
         guard state.mode == .edit else { return }
 
         if state.hasUnsavedChanges {
-            let alert = UIAlertController(
-                title: L10n.Notes.Editor.Alert.Unsaved.title,
-                message: L10n.Notes.Editor.Alert.Unsaved.message,
-                preferredStyle: .alert
+            let alert = NoteEditorAlertFactory.makeExitConfirmation(
+                isSaveEnabled: state.isSaveEnabled,
+                onDiscard: { [weak self] in self?.exitScreen() },
+                onSave: { [weak self] in self?.viewModel.didTapSave() }
             )
-            alert.addAction(UIAlertAction(title: L10n.Common.cancel, style: .cancel))
-            alert.addAction(UIAlertAction(title: L10n.Common.discard, style: .destructive) { [weak self] _ in
-                self?.exitScreen()
-            })
-            let saveAction = UIAlertAction(title: L10n.Common.save, style: .default) { [weak self] _ in
-                self?.viewModel.didTapSave()
-            }
-            saveAction.isEnabled = state.isSaveEnabled
-            alert.addAction(saveAction)
             present(alert, animated: true)
         } else {
             exitScreen()
@@ -693,14 +676,10 @@ final class NoteViewController: UIViewController {
             return
         }
 
-        let alert = UIAlertController(title: L10n.Notes.Editor.Photo.Add.title, message: nil, preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: L10n.Notes.Editor.Photo.Source.camera, style: .default) { [weak self] _ in
-            self?.presentCameraPicker()
-        })
-        alert.addAction(UIAlertAction(title: L10n.Notes.Editor.Photo.Source.library, style: .default) { [weak self] _ in
-            self?.presentPhotoLibraryPicker()
-        })
-        alert.addAction(UIAlertAction(title: L10n.Common.cancel, style: .cancel))
+        let alert = NoteEditorAlertFactory.makePhotoSourceActionSheet(
+            onCamera: { [weak self] in self?.presentCameraPicker() },
+            onLibrary: { [weak self] in self?.presentPhotoLibraryPicker() }
+        )
 
         if let popover = alert.popoverPresentationController {
             popover.sourceView = photoSectionView
