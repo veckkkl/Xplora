@@ -872,12 +872,6 @@ internal enum L10n {
       internal static let title = L10n.tr("Localizable", "onboarding.world_citizen.title", fallback: "World Citizen")
     }
   }
-  internal enum Placeholder {
-    /// %@ (stub)
-    internal static func stubFormat(_ p1: Any) -> String {
-      return L10n.tr("Localizable", "placeholder.stub_format", String(describing: p1), fallback: "%@ (stub)")
-    }
-  }
   internal enum Profile {
     /// Settings
     internal static let title = L10n.tr("Localizable", "profile.title", fallback: "Settings")

@@ -165,17 +165,6 @@ final class AppCoordinator {
         return nav
     }
 
-    private func makePlaceholderNav(title: String, systemImageName: String) -> UINavigationController {
-        let viewController = PlaceholderViewController(displayTitle: title)
-        let navigationController = UINavigationController(rootViewController: viewController)
-        navigationController.tabBarItem = UITabBarItem(
-            title: title,
-            image: UIImage(systemName: systemImageName),
-            selectedImage: UIImage(systemName: systemImageName)
-        )
-        return navigationController
-    }
-
     private func makeProfileNav() -> UINavigationController {
         let viewModel = ProfileViewModel(
             getCurrentUser: locator.resolve(GetCurrentUserUseCase.self),
