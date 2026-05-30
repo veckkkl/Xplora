@@ -68,7 +68,7 @@ final class NoteViewController: UIViewController {
     }
 
     private func configureBackButton() {
-        let backImage = UIImage(systemName: "chevron.backward")
+        let backImage = UIImage(systemName: SystemSymbol.chevronBackward)
         navigationItem.hidesBackButton = true
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: backImage,
@@ -158,7 +158,7 @@ final class NoteViewController: UIViewController {
     private func configureSearchToolbar() {
         if toolbarPrevItem == nil {
             toolbarPrevItem = UIBarButtonItem(
-                image: UIImage(systemName: "chevron.up"),
+                image: UIImage(systemName: SystemSymbol.chevronUp),
                 style: .plain,
                 target: self,
                 action: #selector(didTapSearchPrev)
@@ -168,7 +168,7 @@ final class NoteViewController: UIViewController {
 
         if toolbarNextItem == nil {
             toolbarNextItem = UIBarButtonItem(
-                image: UIImage(systemName: "chevron.down"),
+                image: UIImage(systemName: SystemSymbol.chevronDown),
                 style: .plain,
                 target: self,
                 action: #selector(didTapSearchNext)
@@ -320,7 +320,7 @@ final class NoteViewController: UIViewController {
         let editButton = UIBarButtonItem(title: L10n.Common.edit, style: .plain, target: self, action: #selector(didTapEdit))
 
         let bookmarkTitle = state.isBookmarked ? L10n.Notes.Editor.Menu.Bookmark.remove : L10n.Notes.Editor.Menu.Bookmark.add
-        let bookmarkImageName = state.isBookmarked ? "bookmark.fill" : "bookmark"
+        let bookmarkImageName = state.isBookmarked ? SystemSymbol.bookmarkFill : SystemSymbol.bookmark
         let bookmarkAction = UIAction(
             title: bookmarkTitle,
             image: UIImage(systemName: bookmarkImageName),
@@ -330,18 +330,18 @@ final class NoteViewController: UIViewController {
         }
         bookmarkAction.attributes = state.canToggleBookmark ? [] : [.disabled]
 
-        let searchAction = UIAction(title: L10n.Notes.Editor.Menu.find, image: UIImage(systemName: "magnifyingglass")) { [weak self] _ in
+        let searchAction = UIAction(title: L10n.Notes.Editor.Menu.find, image: UIImage(systemName: SystemSymbol.magnifyingGlass)) { [weak self] _ in
             self?.viewModel.didTapSearch()
         }
         searchAction.attributes = (state.canSearch && state.mode != .edit) ? [] : [.disabled]
 
-        let deleteAction = UIAction(title: L10n.Notes.Editor.Menu.delete, image: UIImage(systemName: "trash"), attributes: [.destructive]) { [weak self] _ in
+        let deleteAction = UIAction(title: L10n.Notes.Editor.Menu.delete, image: UIImage(systemName: SystemSymbol.trash), attributes: [.destructive]) { [weak self] _ in
             self?.confirmDelete()
         }
         deleteAction.attributes = state.isDeleteVisible ? [.destructive] : [.disabled, .destructive]
 
         let menu = UIMenu(title: "", children: [bookmarkAction, searchAction, deleteAction])
-        let menuButton = UIBarButtonItem(image: UIImage(systemName: "line.3.horizontal.decrease"), menu: menu)
+        let menuButton = UIBarButtonItem(image: UIImage(systemName: SystemSymbol.menuDecrease), menu: menu)
 
         if state.mode == .edit {
             let doneButton = makeSystemCheckmarkButton(isEnabled: state.isSaveEnabled && !state.isLoading)
@@ -352,7 +352,7 @@ final class NoteViewController: UIViewController {
     }
 
     private func makeSystemCheckmarkButton(isEnabled: Bool) -> UIBarButtonItem {
-        let image = UIImage(systemName: "checkmark") ?? UIImage()
+        let image = UIImage(systemName: SystemSymbol.checkmark) ?? UIImage()
         let button = UIButton.systemButton(with: image, target: self, action: #selector(didTapSave))
         button.isEnabled = isEnabled
         button.tintColor = isEnabled ? .systemBlue : .tertiaryLabel

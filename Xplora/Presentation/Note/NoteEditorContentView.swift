@@ -72,7 +72,7 @@ final class NoteEditorContentView: UIView {
         placeTitleLabel.numberOfLines = 0
         placeTitleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        placeTitleBookmarkImageView.image = UIImage(systemName: "bookmark.fill")
+        placeTitleBookmarkImageView.image = UIImage(systemName: SystemSymbol.bookmarkFill)
         placeTitleBookmarkImageView.tintColor = .systemOrange
         placeTitleBookmarkImageView.contentMode = .scaleAspectFit
         placeTitleBookmarkImageView.isHidden = true
