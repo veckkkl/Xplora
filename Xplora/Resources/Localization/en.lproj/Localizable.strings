@@ -53,8 +53,6 @@
 
 "notes.presentation.untitled" = "Untitled";
 
-"placeholder.stub_format" = "%@ (stub)";
-
 "timeline.empty.title" = "No trips yet";
 "timeline.error.load" = "Couldn't load trips. Please try again.";
 "timeline.trip.notes.one" = "1 note";

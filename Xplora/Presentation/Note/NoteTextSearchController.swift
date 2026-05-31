@@ -155,7 +155,7 @@ final class NoteTextSearchController: NSObject {
     private func configureToolbar(parentView: UIView) {
         if toolbarPrevItem == nil {
             toolbarPrevItem = UIBarButtonItem(
-                image: UIImage(systemName: "chevron.up"),
+                image: UIImage(systemName: SystemSymbol.chevronUp),
                 style: .plain,
                 target: self,
                 action: #selector(didTapPrev)
@@ -165,7 +165,7 @@ final class NoteTextSearchController: NSObject {
 
         if toolbarNextItem == nil {
             toolbarNextItem = UIBarButtonItem(
-                image: UIImage(systemName: "chevron.down"),
+                image: UIImage(systemName: SystemSymbol.chevronDown),
                 style: .plain,
                 target: self,
                 action: #selector(didTapNext)

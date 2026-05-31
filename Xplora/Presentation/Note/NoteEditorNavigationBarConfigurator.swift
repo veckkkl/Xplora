@@ -35,7 +35,7 @@ enum NoteEditorNavigationBarConfigurator {
     /// Builds the custom chevron back button.
     static func makeBackButton(target: Any, action: Selector) -> UIBarButtonItem {
         UIBarButtonItem(
-            image: UIImage(systemName: "chevron.backward"),
+            image: UIImage(systemName: SystemSymbol.chevronBackward),
             style: .plain,
             target: target,
             action: action
@@ -62,7 +62,7 @@ enum NoteEditorNavigationBarConfigurator {
 
         let menu = makeMenu(state: state, handlers: menuHandlers)
         let menuButton = UIBarButtonItem(
-            image: UIImage(systemName: "line.3.horizontal.decrease"),
+            image: UIImage(systemName: SystemSymbol.menuDecrease),
             menu: menu
         )
 
@@ -87,7 +87,7 @@ enum NoteEditorNavigationBarConfigurator {
         let bookmarkTitle = state.isBookmarked
             ? L10n.Notes.Editor.Menu.Bookmark.remove
             : L10n.Notes.Editor.Menu.Bookmark.add
-        let bookmarkImageName = state.isBookmarked ? "bookmark.fill" : "bookmark"
+        let bookmarkImageName = state.isBookmarked ? SystemSymbol.bookmarkFill : SystemSymbol.bookmark
         let bookmarkAction = UIAction(
             title: bookmarkTitle,
             image: UIImage(systemName: bookmarkImageName),
@@ -99,7 +99,7 @@ enum NoteEditorNavigationBarConfigurator {
 
         let searchAction = UIAction(
             title: L10n.Notes.Editor.Menu.find,
-            image: UIImage(systemName: "magnifyingglass")
+            image: UIImage(systemName: SystemSymbol.magnifyingGlass)
         ) { _ in
             handlers.onTapSearch()
         }
@@ -107,7 +107,7 @@ enum NoteEditorNavigationBarConfigurator {
 
         let deleteAction = UIAction(
             title: L10n.Notes.Editor.Menu.delete,
-            image: UIImage(systemName: "trash"),
+            image: UIImage(systemName: SystemSymbol.trash),
             attributes: [.destructive]
         ) { _ in
             handlers.onConfirmDelete()
@@ -122,7 +122,7 @@ enum NoteEditorNavigationBarConfigurator {
         target: Any,
         action: Selector
     ) -> UIBarButtonItem {
-        let image = UIImage(systemName: "checkmark") ?? UIImage()
+        let image = UIImage(systemName: SystemSymbol.checkmark) ?? UIImage()
         let button = UIButton.systemButton(with: image, target: target, action: action)
         button.isEnabled = isEnabled
         button.tintColor = isEnabled ? .systemBlue : .tertiaryLabel
