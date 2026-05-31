@@ -82,4 +82,47 @@ struct ProfileDetailsViewModelTests {
     @Test func validateName_fullName_returnsValid() {
         #expect(sut.validateName("Valentina Balde") == .valid("Valentina Balde"))
     }
+
+    // MARK: - Spec example values (program-of-tests document)
+
+    @Test func validateName_specExample_Valentina_isValid() {
+        #expect(sut.validateName("Valentina") == .valid("Valentina"))
+    }
+
+    @Test func validateName_specExample_CyrillicValentina_isValid() {
+        #expect(sut.validateName("Валентина") == .valid("Валентина"))
+    }
+
+    @Test func validateName_specExample_AnnaMariaHyphen_isValid() {
+        #expect(sut.validateName("Anna-Maria") == .valid("Anna-Maria"))
+    }
+
+    @Test func validateName_specExample_OConnor_isValid() {
+        #expect(sut.validateName("O'Connor") == .valid("O'Connor"))
+    }
+
+    @Test func validateName_specExample_JRSmithDots_isValid() {
+        #expect(sut.validateName("J. R. Smith") == .valid("J. R. Smith"))
+    }
+
+    @Test func validateName_specExample_CyrillicAnnaMaria_isValid() {
+        #expect(sut.validateName("Анна Мария") == .valid("Анна Мария"))
+    }
+
+    @Test func validateName_specExample_digitsInName_isRejected() {
+        #expect(sut.validateName("Valentina123") == .invalidCharacters)
+    }
+
+    @Test func validateName_specExample_exclamation_isRejected() {
+        #expect(sut.validateName("Name!") == .invalidCharacters)
+    }
+
+    @Test func validateName_specExample_oneOverMaxLength_isTooLong() {
+        let overLimit = String(repeating: "Я", count: ProfileUserSettings.maxNameLength + 1)
+        #expect(sut.validateName(overLimit) == .tooLong(maxLength: ProfileUserSettings.maxNameLength))
+    }
+
+    @Test func validateName_specExample_trimAroundCyrillic_isTrimmed() {
+        #expect(sut.validateName("  Анна  ") == .valid("Анна"))
+    }
 }

@@ -125,4 +125,85 @@ struct ProfileViewModelTests {
         sut.didToggleDarkTheme(true)
         #expect(route == nil)
     }
+
+    // MARK: - didUpdateUserName / didUpdateResidenceCountry mutual independence
+
+    @Test func didUpdateUserName_doesNotCallResidenceUpdate() {
+        let (sut, _, updateUser) = makeSUT(user: makeUser())
+        sut.viewDidLoad()
+        sut.didUpdateUserName("New Name")
+        #expect(updateUser.residenceCallCount == 0)
+    }
+
+    @Test func didUpdateResidenceCountry_callsResidenceUpdateOnce() {
+        let (sut, _, updateUser) = makeSUT(user: makeUser())
+        sut.viewDidLoad()
+        sut.didUpdateResidenceCountry("FR")
+        #expect(updateUser.residenceCallCount == 1)
+        #expect((updateUser.updatedResidenceCountryCode ?? nil) == "FR")
+    }
+
+    @Test func didUpdateResidenceCountry_doesNotCallNameUpdate() {
+        let (sut, _, updateUser) = makeSUT(user: makeUser())
+        sut.viewDidLoad()
+        sut.didUpdateResidenceCountry("FR")
+        #expect(updateUser.callCount == 0)
+    }
+
+    @Test func didUpdateResidenceCountry_nil_propagatesNilToUseCase() {
+        let (sut, _, updateUser) = makeSUT(user: makeUser(name: "X"))
+        sut.viewDidLoad()
+        sut.didUpdateResidenceCountry(nil)
+        #expect(updateUser.residenceCallCount == 1)
+        // outer optional is .some (use case was called), inner optional is .none (nil propagated)
+        #expect(updateUser.updatedResidenceCountryCode != nil)
+        #expect((updateUser.updatedResidenceCountryCode ?? nil) == nil)
+    }
+
+    // MARK: - No side effects on plain viewDidLoad
+
+    @Test func viewDidLoad_userExists_doesNotInvokeUpdateUseCases() {
+        let (sut, _, updateUser) = makeSUT(user: makeUser())
+        sut.viewDidLoad()
+        #expect(updateUser.callCount == 0)
+        #expect(updateUser.residenceCallCount == 0)
+    }
+
+    @Test func viewDidLoad_noUser_doesNotInvokeUpdateUseCases() {
+        let (sut, _, updateUser) = makeSUT(user: nil)
+        sut.viewDidLoad()
+        #expect(updateUser.callCount == 0)
+        #expect(updateUser.residenceCallCount == 0)
+    }
+
+    // MARK: - Card content from AuthUser
+
+    @Test func viewDidLoad_userExists_cardCarriesResidenceFromUser() {
+        let user = AuthUser(
+            id: "id",
+            name: "Anna",
+            createdAt: Date(),
+            residenceCountryCode: "IT",
+            isWorldCitizen: false
+        )
+        let (sut, _, _) = makeSUT(user: user)
+        var captured: [ProfileSectionModel] = []
+        sut.onSectionsChange = { captured = $0 }
+        sut.viewDidLoad()
+        // residence is consumed via route .openProfileDetails — verify via tap:
+        var route: ProfileRoute?
+        sut.onRoute = { route = $0 }
+        sut.didSelectItem(at: IndexPath(row: 0, section: 0))
+        guard case .openProfileDetails(_, let code) = route else {
+            Issue.record("Expected .openProfileDetails route")
+            return
+        }
+        #expect(code == "IT")
+        // sanity: the user's name is the one on the card
+        guard case .profileCard(let card) = captured.first?.items.first else {
+            Issue.record("Missing profileCard item")
+            return
+        }
+        #expect(card.name == "Anna")
+    }
 }
