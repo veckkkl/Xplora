@@ -11,21 +11,7 @@ import UIKit
 final class NoteViewController: UIViewController {
     private let viewModel: NoteViewModelInput & NoteViewModelOutput
 
-    private let scrollView = UIScrollView()
-    private let contentView = UIView()
-    private let stackView = UIStackView()
-
-    private let photoSectionView = NotePhotoSectionView()
-    private let locationSectionView = NoteLocationSectionView()
-    private let placeTitleRow = UIStackView()
-    private let placeTitleLabel = UILabel()
-    private let placeTitleBookmarkImageView = UIImageView()
-    private let headerTitleTextField = UITextField()
-    private let dateLabel = UILabel()
-    private let separatorAboveDate = UIView()
-    private let separatorAboveText = UIView()
-    private let textView = UITextView()
-    private let textPlaceholderLabel = UILabel()
+    private let editorContentView = NoteEditorContentView()
     private let activityIndicator = UIActivityIndicatorView(style: .large)
 
     private let searchContainerView = UIView()
@@ -82,7 +68,7 @@ final class NoteViewController: UIViewController {
     }
 
     private func configureBackButton() {
-        let backImage = UIImage(systemName: "chevron.backward")
+        let backImage = UIImage(systemName: SystemSymbol.chevronBackward)
         navigationItem.hidesBackButton = true
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: backImage,
@@ -93,105 +79,9 @@ final class NoteViewController: UIViewController {
     }
 
     private func setupLayout() {
-        stackView.axis = .vertical
-        stackView.spacing = 10
-        stackView.alignment = .fill
-        stackView.distribution = .fill
-
-        placeTitleRow.axis = .horizontal
-        placeTitleRow.alignment = .center
-        placeTitleRow.spacing = 8
-
-        placeTitleLabel.font = UIFont.systemFont(ofSize: 28, weight: .bold)
-        placeTitleLabel.textColor = .label
-        placeTitleLabel.numberOfLines = 0
-        placeTitleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-
-        placeTitleBookmarkImageView.image = UIImage(systemName: "bookmark.fill")
-        placeTitleBookmarkImageView.tintColor = .systemOrange
-        placeTitleBookmarkImageView.contentMode = .scaleAspectFit
-        placeTitleBookmarkImageView.isHidden = true
-        placeTitleBookmarkImageView.setContentCompressionResistancePriority(.required, for: .horizontal)
-
-        headerTitleTextField.placeholder = L10n.Notes.Editor.Title.placeholder
-        headerTitleTextField.borderStyle = .none
-        headerTitleTextField.backgroundColor = .clear
-        headerTitleTextField.font = UIFont.systemFont(ofSize: 28, weight: .bold)
-        headerTitleTextField.textColor = .label
-        headerTitleTextField.isUserInteractionEnabled = true
-
-        dateLabel.font = UIFont.systemFont(ofSize: 14, weight: .bold)
-        dateLabel.textColor = .secondaryLabel
-
-        textView.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        textView.textColor = .label
-        textView.backgroundColor = .clear
-        textView.layer.cornerRadius = 0
-        textView.textContainerInset = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
-        textView.textContainer.lineFragmentPadding = 0
-        textView.delegate = self
-        textView.isScrollEnabled = false
-        let textTap = UITapGestureRecognizer(target: self, action: #selector(didTapText))
-        textView.addGestureRecognizer(textTap)
-
-        textPlaceholderLabel.text = L10n.Notes.Editor.Text.placeholder
-        textPlaceholderLabel.textColor = .tertiaryLabel
-        textPlaceholderLabel.font = UIFont.preferredFont(forTextStyle: .body)
-        textView.addSubview(textPlaceholderLabel)
-
-        textPlaceholderLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(8)
-            make.leading.equalToSuperview()
-            make.trailing.lessThanOrEqualToSuperview()
-        }
-
-        view.addSubview(scrollView)
-        scrollView.addSubview(contentView)
-        contentView.addSubview(stackView)
-
-        separatorAboveDate.backgroundColor = .separator
-        separatorAboveText.backgroundColor = .separator
-
-        placeTitleRow.addArrangedSubview(placeTitleLabel)
-        placeTitleRow.addArrangedSubview(placeTitleBookmarkImageView)
-        stackView.addArrangedSubview(placeTitleRow)
-        stackView.addArrangedSubview(headerTitleTextField)
-        stackView.addArrangedSubview(photoSectionView)
-        stackView.addArrangedSubview(locationSectionView)
-        stackView.addArrangedSubview(separatorAboveDate)
-        stackView.addArrangedSubview(dateLabel)
-        stackView.addArrangedSubview(separatorAboveText)
-        stackView.addArrangedSubview(textView)
-
-        placeTitleBookmarkImageView.snp.makeConstraints { make in
-            make.size.equalTo(CGSize(width: 20, height: 20))
-        }
-
-        separatorAboveDate.snp.makeConstraints { make in
-            make.height.equalTo(1)
-        }
-
-        separatorAboveText.snp.makeConstraints { make in
-            make.height.equalTo(1)
-        }
-
-        textView.snp.makeConstraints { make in
-            make.height.greaterThanOrEqualTo(240)
-        }
-
-        scrollView.snp.makeConstraints { make in
+        view.addSubview(editorContentView)
+        editorContentView.snp.makeConstraints { make in
             make.edges.equalTo(view.safeAreaLayoutGuide)
-        }
-
-        contentView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-            make.width.equalToSuperview()
-        }
-
-        stackView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(20)
-            make.leading.trailing.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().offset(-24)
         }
 
         view.addSubview(activityIndicator)
@@ -202,29 +92,33 @@ final class NoteViewController: UIViewController {
     }
 
     private func setupActions() {
-        headerTitleTextField.addTarget(self, action: #selector(titleDidChange), for: .editingChanged)
-        let headerTitleTap = UITapGestureRecognizer(target: self, action: #selector(didTapHeaderTitle))
-        headerTitleTextField.addGestureRecognizer(headerTitleTap)
+        editorContentView.textView.delegate = self
+        let textTap = UITapGestureRecognizer(target: self, action: #selector(didTapText))
+        editorContentView.textView.addGestureRecognizer(textTap)
 
-        photoSectionView.onRemovePhoto = { [weak self] index in
+        editorContentView.headerTitleTextField.addTarget(self, action: #selector(titleDidChange), for: .editingChanged)
+        let headerTitleTap = UITapGestureRecognizer(target: self, action: #selector(didTapHeaderTitle))
+        editorContentView.headerTitleTextField.addGestureRecognizer(headerTitleTap)
+
+        editorContentView.photoSectionView.onRemovePhoto = { [weak self] index in
             self?.viewModel.didRemovePhoto(at: index)
         }
-        photoSectionView.onAddPhoto = { [weak self] in
+        editorContentView.photoSectionView.onAddPhoto = { [weak self] in
             self?.viewModel.didTapAddPhoto()
         }
-        locationSectionView.onAddTapped = { [weak self] in
+        editorContentView.locationSectionView.onAddTapped = { [weak self] in
             self?.presentLocationSearch()
         }
-        locationSectionView.onOpenTapped = { [weak self] in
+        editorContentView.locationSectionView.onOpenTapped = { [weak self] in
             self?.openCurrentLocationInMaps()
         }
-        locationSectionView.onRemoveTapped = { [weak self] in
+        editorContentView.locationSectionView.onRemoveTapped = { [weak self] in
             self?.viewModel.didRemoveLocation()
         }
 
         let dateTap = UITapGestureRecognizer(target: self, action: #selector(didTapDate))
-        dateLabel.isUserInteractionEnabled = true
-        dateLabel.addGestureRecognizer(dateTap)
+        editorContentView.dateLabel.isUserInteractionEnabled = true
+        editorContentView.dateLabel.addGestureRecognizer(dateTap)
     }
 
     private func setupSearchBar() {
@@ -264,7 +158,7 @@ final class NoteViewController: UIViewController {
     private func configureSearchToolbar() {
         if toolbarPrevItem == nil {
             toolbarPrevItem = UIBarButtonItem(
-                image: UIImage(systemName: "chevron.up"),
+                image: UIImage(systemName: SystemSymbol.chevronUp),
                 style: .plain,
                 target: self,
                 action: #selector(didTapSearchPrev)
@@ -274,7 +168,7 @@ final class NoteViewController: UIViewController {
 
         if toolbarNextItem == nil {
             toolbarNextItem = UIBarButtonItem(
-                image: UIImage(systemName: "chevron.down"),
+                image: UIImage(systemName: SystemSymbol.chevronDown),
                 style: .plain,
                 target: self,
                 action: #selector(didTapSearchNext)
@@ -349,8 +243,8 @@ final class NoteViewController: UIViewController {
 
         let searchBarHeight: CGFloat = searchContainerView.isHidden ? 0 : 52
         let bottomInset = searchBarOffset + searchBarHeight + 8
-        scrollView.contentInset.bottom = bottomInset
-        scrollView.verticalScrollIndicatorInsets.bottom = bottomInset
+        editorContentView.scrollView.contentInset.bottom = bottomInset
+        editorContentView.scrollView.verticalScrollIndicatorInsets.bottom = bottomInset
         view.layoutIfNeeded()
     }
 
@@ -358,20 +252,20 @@ final class NoteViewController: UIViewController {
         let previousMode = lastState?.mode
         lastState = state
 
-        placeTitleLabel.text = state.placeTitle
-        placeTitleBookmarkImageView.isHidden = !state.isBookmarked
-        if headerTitleTextField.text != state.title, !headerTitleTextField.isFirstResponder {
-            headerTitleTextField.text = state.title
+        editorContentView.placeTitleLabel.text = state.placeTitle
+        editorContentView.placeTitleBookmarkImageView.isHidden = !state.isBookmarked
+        if editorContentView.headerTitleTextField.text != state.title, !editorContentView.headerTitleTextField.isFirstResponder {
+            editorContentView.headerTitleTextField.text = state.title
         }
-        dateLabel.text = state.dateText
-        photoSectionView.configure(
+        editorContentView.dateLabel.text = state.dateText
+        editorContentView.photoSectionView.configure(
             .init(
                 photoURLs: state.photoURLs,
                 isEditing: state.mode == .edit,
                 canAddPhoto: state.canAddPhoto
             )
         )
-        locationSectionView.configure(
+        editorContentView.locationSectionView.configure(
             .init(
                 mode: state.mode == .edit ? .edit : .view,
                 hasLocation: state.hasLocation,
@@ -381,14 +275,14 @@ final class NoteViewController: UIViewController {
         )
 
         let isEditing = state.mode == .edit
-        placeTitleRow.isHidden = isEditing
-        headerTitleTextField.isHidden = !isEditing
-        headerTitleTextField.isEnabled = isEditing
-        headerTitleTextField.isUserInteractionEnabled = isEditing
+        editorContentView.placeTitleRow.isHidden = isEditing
+        editorContentView.headerTitleTextField.isHidden = !isEditing
+        editorContentView.headerTitleTextField.isEnabled = isEditing
+        editorContentView.headerTitleTextField.isUserInteractionEnabled = isEditing
 
         if isEditing, previousMode != .edit {
             DispatchQueue.main.async { [weak self] in
-                self?.headerTitleTextField.becomeFirstResponder()
+                self?.editorContentView.headerTitleTextField.becomeFirstResponder()
             }
         }
 
@@ -396,17 +290,17 @@ final class NoteViewController: UIViewController {
             didTapSearchDone()
         }
 
-        separatorAboveDate.isHidden = !isEditing
-        separatorAboveText.isHidden = !isEditing
+        editorContentView.separatorAboveDate.isHidden = !isEditing
+        editorContentView.separatorAboveText.isHidden = !isEditing
 
-        textView.isEditable = isEditing
-        textView.isSelectable = isEditing
-        textView.isUserInteractionEnabled = true
-        textPlaceholderLabel.isHidden = !state.text.isEmpty || !isEditing
+        editorContentView.textView.isEditable = isEditing
+        editorContentView.textView.isSelectable = isEditing
+        editorContentView.textView.isUserInteractionEnabled = true
+        editorContentView.textPlaceholderLabel.isHidden = !state.text.isEmpty || !isEditing
 
-        if !textView.isFirstResponder {
+        if !editorContentView.textView.isFirstResponder {
             if isEditing {
-                textView.text = state.text
+                editorContentView.textView.text = state.text
             } else {
                 applySearchHighlight(text: state.text, query: currentSearchQuery)
             }
@@ -426,7 +320,7 @@ final class NoteViewController: UIViewController {
         let editButton = UIBarButtonItem(title: L10n.Common.edit, style: .plain, target: self, action: #selector(didTapEdit))
 
         let bookmarkTitle = state.isBookmarked ? L10n.Notes.Editor.Menu.Bookmark.remove : L10n.Notes.Editor.Menu.Bookmark.add
-        let bookmarkImageName = state.isBookmarked ? "bookmark.fill" : "bookmark"
+        let bookmarkImageName = state.isBookmarked ? SystemSymbol.bookmarkFill : SystemSymbol.bookmark
         let bookmarkAction = UIAction(
             title: bookmarkTitle,
             image: UIImage(systemName: bookmarkImageName),
@@ -436,18 +330,18 @@ final class NoteViewController: UIViewController {
         }
         bookmarkAction.attributes = state.canToggleBookmark ? [] : [.disabled]
 
-        let searchAction = UIAction(title: L10n.Notes.Editor.Menu.find, image: UIImage(systemName: "magnifyingglass")) { [weak self] _ in
+        let searchAction = UIAction(title: L10n.Notes.Editor.Menu.find, image: UIImage(systemName: SystemSymbol.magnifyingGlass)) { [weak self] _ in
             self?.viewModel.didTapSearch()
         }
         searchAction.attributes = (state.canSearch && state.mode != .edit) ? [] : [.disabled]
 
-        let deleteAction = UIAction(title: L10n.Notes.Editor.Menu.delete, image: UIImage(systemName: "trash"), attributes: [.destructive]) { [weak self] _ in
+        let deleteAction = UIAction(title: L10n.Notes.Editor.Menu.delete, image: UIImage(systemName: SystemSymbol.trash), attributes: [.destructive]) { [weak self] _ in
             self?.confirmDelete()
         }
         deleteAction.attributes = state.isDeleteVisible ? [.destructive] : [.disabled, .destructive]
 
         let menu = UIMenu(title: "", children: [bookmarkAction, searchAction, deleteAction])
-        let menuButton = UIBarButtonItem(image: UIImage(systemName: "line.3.horizontal.decrease"), menu: menu)
+        let menuButton = UIBarButtonItem(image: UIImage(systemName: SystemSymbol.menuDecrease), menu: menu)
 
         if state.mode == .edit {
             let doneButton = makeSystemCheckmarkButton(isEnabled: state.isSaveEnabled && !state.isLoading)
@@ -458,7 +352,7 @@ final class NoteViewController: UIViewController {
     }
 
     private func makeSystemCheckmarkButton(isEnabled: Bool) -> UIBarButtonItem {
-        let image = UIImage(systemName: "checkmark") ?? UIImage()
+        let image = UIImage(systemName: SystemSymbol.checkmark) ?? UIImage()
         let button = UIButton.systemButton(with: image, target: self, action: #selector(didTapSave))
         button.isEnabled = isEnabled
         button.tintColor = isEnabled ? .systemBlue : .tertiaryLabel
@@ -468,21 +362,13 @@ final class NoteViewController: UIViewController {
     }
 
     private func showError(message: String) {
-        let alert = UIAlertController(title: L10n.Notes.Editor.Alert.Error.title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
-        present(alert, animated: true)
+        present(NoteEditorAlertFactory.makeErrorAlert(message: message), animated: true)
     }
 
     private func confirmDelete() {
-        let alert = UIAlertController(
-            title: L10n.Notes.Editor.Alert.Delete.title,
-            message: L10n.Notes.Editor.Alert.Delete.message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: L10n.Common.cancel, style: .cancel))
-        alert.addAction(UIAlertAction(title: L10n.Common.delete, style: .destructive) { [weak self] _ in
+        let alert = NoteEditorAlertFactory.makeDeleteConfirmation { [weak self] in
             self?.viewModel.didTapDeleteConfirmed()
-        })
+        }
         present(alert, animated: true)
     }
 
@@ -491,20 +377,11 @@ final class NoteViewController: UIViewController {
         guard state.mode == .edit else { return }
 
         if state.hasUnsavedChanges {
-            let alert = UIAlertController(
-                title: L10n.Notes.Editor.Alert.Unsaved.title,
-                message: L10n.Notes.Editor.Alert.Unsaved.message,
-                preferredStyle: .alert
+            let alert = NoteEditorAlertFactory.makeExitConfirmation(
+                isSaveEnabled: state.isSaveEnabled,
+                onDiscard: { [weak self] in self?.exitScreen() },
+                onSave: { [weak self] in self?.viewModel.didTapSave() }
             )
-            alert.addAction(UIAlertAction(title: L10n.Common.cancel, style: .cancel))
-            alert.addAction(UIAlertAction(title: L10n.Common.discard, style: .destructive) { [weak self] _ in
-                self?.exitScreen()
-            })
-            let saveAction = UIAlertAction(title: L10n.Common.save, style: .default) { [weak self] _ in
-                self?.viewModel.didTapSave()
-            }
-            saveAction.isEnabled = state.isSaveEnabled
-            alert.addAction(saveAction)
             present(alert, animated: true)
         } else {
             exitScreen()
@@ -513,58 +390,52 @@ final class NoteViewController: UIViewController {
 
     private func applySearchHighlight(text: String, query: String) {
         currentSearchQuery = query
-        guard !query.isEmpty else {
-            searchMatches = []
-            currentMatchIndex = 0
-            textView.attributedText = NSAttributedString(string: text, attributes: [
-                .font: UIFont.systemFont(ofSize: 16, weight: .medium),
-                .foregroundColor: UIColor.label
-            ])
-            return
-        }
 
-        let attributed = NSMutableAttributedString(string: text, attributes: [
+        let baseAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 16, weight: .medium),
             .foregroundColor: UIColor.label
-        ])
+        ]
+        let matchAttributes: [NSAttributedString.Key: Any] = [
+            .backgroundColor: UIColor.systemYellow.withAlphaComponent(0.28)
+        ]
+        let activeMatchAttributes: [NSAttributedString.Key: Any] = [
+            .backgroundColor: UIColor.systemYellow.withAlphaComponent(0.7),
+            .foregroundColor: UIColor.label
+        ]
 
-        let lowercasedText = text.lowercased()
-        let lowercasedQuery = query.lowercased()
-        var searchRange = lowercasedText.startIndex..<lowercasedText.endIndex
-        searchMatches = []
+        let result = NoteTextHighlighter.highlight(
+            text: text,
+            query: query,
+            activeMatchIndex: currentMatchIndex,
+            baseAttributes: baseAttributes,
+            matchAttributes: matchAttributes,
+            activeMatchAttributes: activeMatchAttributes
+        )
 
-        while let range = lowercasedText.range(of: lowercasedQuery, options: [], range: searchRange) {
-            let nsRange = NSRange(range, in: lowercasedText)
-            searchMatches.append(nsRange)
-            attributed.addAttribute(.backgroundColor, value: UIColor.systemYellow.withAlphaComponent(0.28), range: nsRange)
-            searchRange = range.upperBound..<lowercasedText.endIndex
-        }
+        searchMatches = result.matches
+        editorContentView.textView.attributedText = result.attributedText
 
-        if !searchMatches.isEmpty {
-            currentMatchIndex = min(currentMatchIndex, searchMatches.count - 1)
-            let currentMatch = searchMatches[currentMatchIndex]
-            attributed.addAttribute(.backgroundColor, value: UIColor.systemYellow.withAlphaComponent(0.7), range: currentMatch)
-            attributed.addAttribute(.foregroundColor, value: UIColor.label, range: currentMatch)
-            textView.attributedText = attributed
-            textView.scrollRangeToVisible(currentMatch)
-        } else {
-            textView.attributedText = attributed
+        if query.isEmpty {
+            currentMatchIndex = 0
+        } else if !result.matches.isEmpty {
+            currentMatchIndex = min(currentMatchIndex, result.matches.count - 1)
+            editorContentView.textView.scrollRangeToVisible(result.matches[currentMatchIndex])
         }
         updateSearchNavigationButtons()
     }
 
     @objc private func titleDidChange() {
-        viewModel.didChangeTitle(headerTitleTextField.text)
+        viewModel.didChangeTitle(editorContentView.headerTitleTextField.text)
     }
 
     @objc private func didTapHeaderTitle() {
         guard let state = lastState, state.mode == .edit else { return }
-        headerTitleTextField.becomeFirstResponder()
+        editorContentView.headerTitleTextField.becomeFirstResponder()
     }
 
     @objc private func didTapText() {
         guard let state = lastState, state.mode == .edit else { return }
-        textView.becomeFirstResponder()
+        editorContentView.textView.becomeFirstResponder()
     }
 
     @objc private func didTapEdit() {
@@ -664,17 +535,17 @@ final class NoteViewController: UIViewController {
 
     @objc private func didTapFormat() {
         guard let state = lastState, state.mode == .edit else { return }
-        let selectedRange = textView.selectedRange
+        let selectedRange = editorContentView.textView.selectedRange
         if selectedRange.length > 0 {
-            let attributed = NSMutableAttributedString(attributedString: textView.attributedText ?? NSAttributedString(string: textView.text))
+            let attributed = NSMutableAttributedString(attributedString: editorContentView.textView.attributedText ?? NSAttributedString(string: editorContentView.textView.text))
             let boldFont = UIFont.systemFont(ofSize: 16, weight: .bold)
             attributed.addAttribute(.font, value: boldFont, range: selectedRange)
-            textView.attributedText = attributed
-            textView.selectedRange = selectedRange
+            editorContentView.textView.attributedText = attributed
+            editorContentView.textView.selectedRange = selectedRange
         } else {
             isBoldTyping.toggle()
             let font = isBoldTyping ? UIFont.systemFont(ofSize: 16, weight: .bold) : UIFont.systemFont(ofSize: 16, weight: .medium)
-            textView.typingAttributes[.font] = font
+            editorContentView.textView.typingAttributes[.font] = font
         }
     }
 
@@ -693,20 +564,16 @@ final class NoteViewController: UIViewController {
             return
         }
 
-        let alert = UIAlertController(title: L10n.Notes.Editor.Photo.Add.title, message: nil, preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: L10n.Notes.Editor.Photo.Source.camera, style: .default) { [weak self] _ in
-            self?.presentCameraPicker()
-        })
-        alert.addAction(UIAlertAction(title: L10n.Notes.Editor.Photo.Source.library, style: .default) { [weak self] _ in
-            self?.presentPhotoLibraryPicker()
-        })
-        alert.addAction(UIAlertAction(title: L10n.Common.cancel, style: .cancel))
+        let alert = NoteEditorAlertFactory.makePhotoSourceActionSheet(
+            onCamera: { [weak self] in self?.presentCameraPicker() },
+            onLibrary: { [weak self] in self?.presentPhotoLibraryPicker() }
+        )
 
         if let popover = alert.popoverPresentationController {
-            popover.sourceView = photoSectionView
+            popover.sourceView = editorContentView.photoSectionView
             popover.sourceRect = CGRect(
-                x: photoSectionView.bounds.midX,
-                y: photoSectionView.bounds.midY,
+                x: editorContentView.photoSectionView.bounds.midX,
+                y: editorContentView.photoSectionView.bounds.midY,
                 width: 1,
                 height: 1
             )
@@ -794,20 +661,20 @@ final class NoteViewController: UIViewController {
             applySearchHighlight(text: state.text, query: "")
         }
         updateSearchNavigationButtons()
-        scrollView.contentInset.bottom = 16
-        scrollView.verticalScrollIndicatorInsets.bottom = 16
+        editorContentView.scrollView.contentInset.bottom = 16
+        editorContentView.scrollView.verticalScrollIndicatorInsets.bottom = 16
     }
 
     @objc private func didTapSearchPrev() {
         guard !searchMatches.isEmpty else { return }
         currentMatchIndex = max(0, currentMatchIndex - 1)
-        applySearchHighlight(text: textView.text ?? "", query: currentSearchQuery)
+        applySearchHighlight(text: editorContentView.textView.text ?? "", query: currentSearchQuery)
     }
 
     @objc private func didTapSearchNext() {
         guard !searchMatches.isEmpty else { return }
         currentMatchIndex = min(searchMatches.count - 1, currentMatchIndex + 1)
-        applySearchHighlight(text: textView.text ?? "", query: currentSearchQuery)
+        applySearchHighlight(text: editorContentView.textView.text ?? "", query: currentSearchQuery)
     }
 
     private func updateSearchNavigationButtons() {
@@ -842,7 +709,7 @@ final class NoteViewController: UIViewController {
 extension NoteViewController: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         viewModel.didChangeText(textView.text)
-        textPlaceholderLabel.isHidden = !textView.text.isEmpty
+        editorContentView.textPlaceholderLabel.isHidden = !textView.text.isEmpty
     }
 }
 
@@ -877,78 +744,5 @@ extension NoteViewController: UIImagePickerControllerDelegate, UINavigationContr
         picker.dismiss(animated: true)
         guard let image = info[.originalImage] as? UIImage else { return }
         viewModel.didCapturePhoto(image)
-    }
-}
-
-private final class NoteDatePickerSheetViewController: UIViewController {
-    private let titleText: String
-    private let minimumDate: Date?
-    private let maximumDate: Date?
-    private let onSave: (Date) -> Void
-    private let datePicker = UIDatePicker()
-
-    init(
-        titleText: String,
-        initialDate: Date,
-        minimumDate: Date?,
-        maximumDate: Date?,
-        onSave: @escaping (Date) -> Void
-    ) {
-        self.titleText = titleText
-        self.minimumDate = minimumDate
-        self.maximumDate = maximumDate
-        self.onSave = onSave
-        super.init(nibName: nil, bundle: nil)
-        var clampedDate = initialDate
-        if let minimumDate, clampedDate < minimumDate {
-            clampedDate = minimumDate
-        }
-        if let maximumDate, clampedDate > maximumDate {
-            clampedDate = maximumDate
-        }
-        datePicker.date = clampedDate
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .systemBackground
-        title = titleText
-
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: L10n.Common.cancel,
-            style: .plain,
-            target: self,
-            action: #selector(didTapCancel)
-        )
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: L10n.Common.save,
-            style: .done,
-            target: self,
-            action: #selector(didTapSave)
-        )
-
-        datePicker.datePickerMode = .date
-        datePicker.preferredDatePickerStyle = .wheels
-        datePicker.minimumDate = minimumDate
-        datePicker.maximumDate = maximumDate
-
-        view.addSubview(datePicker)
-        datePicker.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview()
-            make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(8)
-            make.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-8)
-        }
-    }
-
-    @objc private func didTapCancel() {
-        dismiss(animated: true)
-    }
-
-    @objc private func didTapSave() {
-        onSave(datePicker.date)
     }
 }
