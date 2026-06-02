@@ -22,9 +22,14 @@ enum TripPhotoPresentationMetrics {
         maxWidth: .greatestFiniteMagnitude,
         minWidth: 0
     )
-    static let noteCollageHeightScale: CGFloat = 0.62
-    static let noteCollageMaxHeightRatio: CGFloat = 0.54
-    static let noteCollageMinHeight: CGFloat = 128
+    // Note-screen collage is scaled 1.5× taller than the list preview so the
+    // user can actually see the photos they attached. All three values bump
+    // together (engine multiplier × scale, the width-relative cap, and the
+    // pixel floor for short collages) so the proportional growth holds for
+    // every layout case from 1 to 10 photos.
+    static let noteCollageHeightScale: CGFloat = 0.93
+    static let noteCollageMaxHeightRatio: CGFloat = 0.81
+    static let noteCollageMinHeight: CGFloat = 192
 
     static let notePlaceholderWidthPolicy = TripPhotoWidthPolicy(
         widthRatio: 0.98,

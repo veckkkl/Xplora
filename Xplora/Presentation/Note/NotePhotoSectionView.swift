@@ -20,7 +20,6 @@ final class NotePhotoSectionView: UIView {
     private let collageView = TripPhotoCollageView()
     private let emptyPlaceholderControl = UIControl()
     private let emptyPlaceholderIcon = UIImageView()
-    private let addPhotoButton = UIButton(type: .system)
 
     private var collageHeightConstraint: Constraint?
     private var collageWidthConstraint: Constraint?
@@ -48,12 +47,17 @@ final class NotePhotoSectionView: UIView {
         collageContainer.isHidden = !hasPhotos
         emptyPlaceholderControl.isHidden = !(state.isEditing && !hasPhotos)
 
-        addPhotoButton.isHidden = !(state.isEditing && hasPhotos)
-        addPhotoButton.isEnabled = state.canAddPhoto
-        addPhotoButton.tintColor = state.canAddPhoto ? .label : .tertiaryLabel
-
         if hasPhotos {
-            collageView.configure(urls: state.photoURLs, showRemoveButton: state.isEditing, mode: .noteFull)
+            collageView.configure(
+                urls: state.photoURLs,
+                showRemoveButton: state.isEditing,
+                // When editing and not at the photo cap, append a "+" tile so
+                // the grid grows from n to n+1; once the cap is reached we
+                // simply drop the placeholder — matching how iOS Photos hides
+                // the add affordance at the limit.
+                showAddPlaceholder: state.isEditing && state.canAddPhoto,
+                mode: .noteFull
+            )
         }
 
         updateLayoutMetrics()
@@ -78,17 +82,8 @@ final class NotePhotoSectionView: UIView {
         emptyPlaceholderIcon.contentMode = .scaleAspectFit
         emptyPlaceholderIcon.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 42, weight: .regular)
 
-        addPhotoButton.setImage(UIImage(systemName: "plus"), for: .normal)
-        addPhotoButton.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.88)
-        addPhotoButton.layer.cornerRadius = 16
-        addPhotoButton.layer.cornerCurve = .continuous
-        addPhotoButton.layer.borderColor = UIColor.separator.withAlphaComponent(0.28).cgColor
-        addPhotoButton.layer.borderWidth = 0.8
-        addPhotoButton.addTarget(self, action: #selector(didTapAddPhoto), for: .touchUpInside)
-
         addSubview(collageContainer)
         collageContainer.addSubview(collageView)
-        collageContainer.addSubview(addPhotoButton)
 
         addSubview(emptyPlaceholderControl)
         emptyPlaceholderControl.addSubview(emptyPlaceholderIcon)
@@ -118,13 +113,11 @@ final class NotePhotoSectionView: UIView {
             make.size.equalTo(CGSize(width: 44, height: 44))
         }
 
-        addPhotoButton.snp.makeConstraints { make in
-            make.trailing.bottom.equalToSuperview().inset(10)
-            make.size.equalTo(CGSize(width: 32, height: 32))
-        }
-
         collageView.onPhotoRemove = { [weak self] index in
             self?.onRemovePhoto?(index)
+        }
+        collageView.onAddPhoto = { [weak self] in
+            self?.onAddPhoto?()
         }
     }
 

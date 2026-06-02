@@ -111,6 +111,52 @@ enum TripPhotoCollageLayoutEngine {
         }
     }
 
+    struct AdaptiveLayoutSpec {
+        let displayedCount: Int
+        let mode: TripPhotoCollageDisplayMode
+        let hasOverflowBadge: Bool
+    }
+
+    /// A single compositional layout that re-reads the current spec from the
+    /// host on every section build. Use this instead of `makeLayout(...)` +
+    /// `setCollectionViewLayout` when the cell count can change at runtime:
+    /// `invalidateLayout()` is enough to switch between collage cases, so
+    /// there's no transient state where the data source has N items but the
+    /// layout still has N±1 frames (which is what corrupted the collage on
+    /// photo delete).
+    static func makeAdaptiveLayout(
+        specProvider: @escaping () -> AdaptiveLayoutSpec
+    ) -> UICollectionViewLayout {
+        return UICollectionViewCompositionalLayout { _, _ in
+            let spec = specProvider()
+            let spacing: CGFloat = spec.mode == .preview ? 2 : 3
+            let layoutCase = resolveLayoutCase(
+                displayedCount: spec.displayedCount,
+                mode: spec.mode,
+                hasOverflowBadge: spec.hasOverflowBadge
+            )
+            let frames = frames(for: layoutCase)
+
+            let group = NSCollectionLayoutGroup.custom(
+                layoutSize: NSCollectionLayoutSize(
+                    widthDimension: .fractionalWidth(1.0),
+                    heightDimension: .fractionalHeight(1.0)
+                )
+            ) { groupEnvironment in
+                let containerSize = groupEnvironment.container.effectiveContentSize
+                return customItems(
+                    for: frames,
+                    in: containerSize,
+                    spacing: spacing
+                )
+            }
+
+            let section = NSCollectionLayoutSection(group: group)
+            section.contentInsets = .zero
+            return section
+        }
+    }
+
     private static func resolveLayoutCase(
         displayedCount: Int,
         mode: TripPhotoCollageDisplayMode,

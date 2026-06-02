@@ -29,9 +29,7 @@ final class NoteLocationSectionView: UIView {
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
 
-    private let removeHitButton = UIButton(type: .custom)
-    private let removeBackgroundView = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterial))
-    private let removeIconView = UIImageView()
+    private let removeHitButton = NoteCircularRemoveButton(iconSize: 22)
 
     private var currentState = State(mode: .view, hasLocation: false, title: "", subtitle: "")
 
@@ -97,23 +95,11 @@ final class NoteLocationSectionView: UIView {
         subtitleLabel.lineBreakMode = .byTruncatingTail
         subtitleLabel.isUserInteractionEnabled = false
 
-        removeBackgroundView.clipsToBounds = true
-        removeBackgroundView.layer.cornerRadius = 11
-        removeBackgroundView.layer.cornerCurve = .continuous
-        removeBackgroundView.layer.borderColor = UIColor.separator.withAlphaComponent(0.24).cgColor
-        removeBackgroundView.layer.borderWidth = 0.6
-
-        removeIconView.image = UIImage(systemName: "xmark")
-        removeIconView.tintColor = .label
-        removeIconView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 9, weight: .semibold)
-
         addSubview(cardControl)
         cardControl.addSubview(iconView)
         cardControl.addSubview(textStack)
 
         addSubview(removeHitButton)
-        removeHitButton.addSubview(removeBackgroundView)
-        removeBackgroundView.contentView.addSubview(removeIconView)
 
         textStack.addArrangedSubview(titleLabel)
         textStack.addArrangedSubview(subtitleLabel)
@@ -128,25 +114,20 @@ final class NoteLocationSectionView: UIView {
             make.size.equalTo(CGSize(width: 16, height: 16))
         }
 
+        // 44×44 hit area aligned to the trailing edge; the visible 22pt glyph
+        // sits ~10pt off the chip edge so it lines up with the photo cross.
         removeHitButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(8)
+            make.trailing.equalToSuperview()
             make.centerY.equalToSuperview()
-            make.size.equalTo(CGSize(width: 32, height: 32))
+            make.size.equalTo(CGSize(width: 44, height: 44))
         }
-
-        removeBackgroundView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.size.equalTo(CGSize(width: 22, height: 22))
-        }
-
-        removeIconView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
+        removeHitButton.placeIcon(insetFromTop: nil, insetFromTrailing: 10)
 
         textStack.snp.makeConstraints { make in
             make.top.bottom.equalToSuperview().inset(6)
             make.leading.equalTo(iconView.snp.trailing).offset(8)
-            make.trailing.equalTo(removeHitButton.snp.leading).offset(-6)
+            // Leave room for the visible glyph (22pt) plus its 10pt inset.
+            make.trailing.equalToSuperview().offset(-40)
         }
     }
 
