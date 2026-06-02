@@ -58,7 +58,7 @@ protocol NoteViewModelInput: AnyObject {
     func didCapturePhoto(_ image: UIImage)
     func didFinishPhotoLibraryPicking(results: [PHPickerResult])
     func didRemovePhoto(at index: Int)
-    func didSelectLocation(placeName: String, address: String?, latitude: Double, longitude: Double)
+    func didSelectLocation(placeName: String, address: String?, countryCode: String?, latitude: Double, longitude: Double)
     func didRemoveLocation()
     func didUpdateTripDateRange(startDate: Date, endDate: Date)
 }
@@ -288,7 +288,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
 
         let normalizedExistingPhotos = normalizePhotos(current.photos)
         var existingAssetIdentifiers = Set(normalizedExistingPhotos.compactMap(\.photoLibraryAssetId))
-        var existingHashes = Set(normalizedExistingPhotos.compactMap { fileHash(for: URL(fileURLWithPath: $0.localPath)) })
+        var existingHashes = Set(normalizedExistingPhotos.compactMap { fileHash(for: NotePhotoFileStorage.absoluteURL(for: $0.localPath)) })
         var addedHashes = Set<String>()
         var updatedPhotos = normalizedExistingPhotos
         let availableSlots = maxPhotoCount - updatedPhotos.count
@@ -327,10 +327,10 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
             }
 
             do {
-                let fileURL = try saveImageData(data, noteId: current.id)
+                let relativePath = try saveImageData(data, noteId: current.id)
                 let photo = NotePhoto(
                     id: UUID().uuidString,
-                    localPath: fileURL.path,
+                    localPath: relativePath,
                     createdAt: Date(),
                     orderIndex: updatedPhotos.count,
                     photoLibraryAssetId: pickedPhoto.assetIdentifier
@@ -371,26 +371,14 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
 
     private func didCompletePhotoLibrarySelection(selectedAssetIdentifiers: Set<String>, newlyPickedPhotos: [NotePickedPhoto]) {
         guard mode == .edit else { return }
-        guard var current = draft else { return }
 
-        var photos = normalizePhotos(current.photos)
-        let removedPhotos = photos.filter { photo in
-            guard let assetIdentifier = photo.photoLibraryAssetId else { return false }
-            return !selectedAssetIdentifiers.contains(assetIdentifier)
-        }
-        if !removedPhotos.isEmpty {
-            for photo in removedPhotos {
-                handleRemovedPhotoFileLifecycle(photo: photo)
-            }
-            photos.removeAll { photo in
-                guard let assetIdentifier = photo.photoLibraryAssetId else { return false }
-                return !selectedAssetIdentifiers.contains(assetIdentifier)
-            }
-            current.photos = normalizePhotos(photos)
-            draft = current
-            publish()
-        }
-
+        // The library picker is an "add more" workflow only. Existing photos
+        // are passed in as `preselectedAssetIdentifiers` for visual context,
+        // but we never sync deselections back — a cancelled picker returns
+        // an empty results array, which would otherwise wipe the entire
+        // gallery. Removal is exclusively driven by the cross button on the
+        // photo cell (`didRemovePhoto(at:)`).
+        _ = selectedAssetIdentifiers
         guard !newlyPickedPhotos.isEmpty else { return }
         didAddPhotos(newlyPickedPhotos)
     }
@@ -406,7 +394,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         publish()
     }
 
-    func didSelectLocation(placeName: String, address: String?, latitude: Double, longitude: Double) {
+    func didSelectLocation(placeName: String, address: String?, countryCode: String?, latitude: Double, longitude: Double) {
         guard var current = draft else { return }
         let trimmedName = placeName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return }
@@ -415,6 +403,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
             placeName: trimmedName,
             city: city,
             country: country,
+            countryCode: countryCode,
             latitude: latitude,
             longitude: longitude
         )
@@ -485,7 +474,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         guard let current = draft else { return }
         let normalizedRange = effectiveDateRange(for: current)
         let orderedPhotos = normalizePhotos(current.photos)
-        let photoURLs = orderedPhotos.map { URL(fileURLWithPath: $0.localPath) }
+        let photoURLs = orderedPhotos.map { NotePhotoFileStorage.absoluteURL(for: $0.localPath) }
         let preselectedAssetIdentifiers = orderedPhotos.compactMap(\.photoLibraryAssetId)
         let hasLocationText = current.location?.hasDisplayableValue == true
         let locationCoordinate = hasLocationText ? current.coordinate : nil
@@ -569,15 +558,17 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         return mutableNote
     }
 
-    private func saveImageData(_ data: Data, noteId: String) throws -> URL {
-        let directoryURL = try notesDirectoryURL(noteId: noteId)
+    private func saveImageData(_ data: Data, noteId: String) throws -> String {
+        let directoryURL = try NotePhotoFileStorage.notesDirectoryURL(noteId: noteId)
         if !FileManager.default.fileExists(atPath: directoryURL.path) {
             try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         }
 
         let fileURL = directoryURL.appendingPathComponent("\(UUID().uuidString).jpg")
         try data.write(to: fileURL, options: .atomic)
-        return fileURL
+        // Persist relative to Application Support so the link survives
+        // container-path changes between launches.
+        return NotePhotoFileStorage.relativePath(for: fileURL)
     }
 
     private func handleRemovedPhotoFileLifecycle(photo: NotePhoto) {
@@ -618,34 +609,16 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
     }
 
     private func removeFile(at localPath: String) {
-        let url = URL(fileURLWithPath: localPath)
+        let url = NotePhotoFileStorage.absoluteURL(for: localPath)
         guard FileManager.default.fileExists(atPath: url.path) else { return }
         try? FileManager.default.removeItem(at: url)
     }
 
     private func clearEmptyNotesDirectory(noteId: String) {
-        guard let directoryURL = try? notesDirectoryURL(noteId: noteId) else { return }
+        guard let directoryURL = try? NotePhotoFileStorage.notesDirectoryURL(noteId: noteId) else { return }
         guard let contents = try? FileManager.default.contentsOfDirectory(atPath: directoryURL.path) else { return }
         guard contents.isEmpty else { return }
         try? FileManager.default.removeItem(at: directoryURL)
-    }
-
-    private func notesDirectoryURL(noteId: String) throws -> URL {
-        let baseDirectory = try applicationSupportDirectoryURL()
-        return baseDirectory
-            .appendingPathComponent("Notes", isDirectory: true)
-            .appendingPathComponent(noteId, isDirectory: true)
-    }
-
-    private func applicationSupportDirectoryURL() throws -> URL {
-        guard let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            throw NSError(domain: "NoteViewModel", code: 1)
-        }
-
-        if !FileManager.default.fileExists(atPath: url.path) {
-            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        }
-        return url
     }
 
     private func fileHash(for url: URL) -> String? {
