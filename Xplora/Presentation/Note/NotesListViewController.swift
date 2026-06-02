@@ -18,6 +18,17 @@ final class NotesListViewController: UIViewController {
     init(viewModel: NotesListViewModelInput & NotesListViewModelOutput) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
+        // Set the title here, not in viewDidLoad: UIKit captures the
+        // destination's navigation bar at the start of the push animation,
+        // before viewDidLoad runs. Late assignment makes the country flag
+        // pop in mid-transition.
+        title = viewModel.screenTitle
+        navigationItem.title = viewModel.screenTitle
+        // The parent (Timeline) renders a *large* title — without an
+        // explicit override here, UIKit animates the large→inline collapse
+        // during the push, which reads as the title "appearing late".
+        // Forcing `.never` keeps the new screen inline from frame one.
+        navigationItem.largeTitleDisplayMode = .never
     }
 
     required init?(coder: NSCoder) {
@@ -38,7 +49,6 @@ final class NotesListViewController: UIViewController {
 
     private func setupUI() {
         view.backgroundColor = .systemGroupedBackground
-        title = L10n.Notes.List.title
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .add,
@@ -50,7 +60,11 @@ final class NotesListViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 180
+        // A more realistic estimate (collage 210 + text + insets ≈ 340) lets
+        // UIKit budget enough vertical space on first render so cells past
+        // row 0 aren't squeezed into a photo-only sliver before the actual
+        // measurement pass.
+        tableView.estimatedRowHeight = 340
         tableView.separatorStyle = .none
         tableView.backgroundColor = .clear
 
@@ -138,5 +152,26 @@ extension NotesListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         viewModel.didSelectItem(at: indexPath.row)
+    }
+
+    func tableView(
+        _ tableView: UITableView,
+        trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
+    ) -> UISwipeActionsConfiguration? {
+        let action = UIContextualAction(
+            style: .destructive,
+            title: L10n.Common.delete
+        ) { [weak self] _, _, completion in
+            self?.viewModel.didDeleteItem(at: indexPath.row)
+            // Tell UIKit the action completed so the trailing button slides
+            // away; the row itself is removed by the next publish() pass.
+            completion(true)
+        }
+        action.image = UIImage(systemName: "trash")
+        let config = UISwipeActionsConfiguration(actions: [action])
+        // Disable full-swipe so an accidental long swipe doesn't delete
+        // without the explicit button tap.
+        config.performsFirstActionWithFullSwipe = false
+        return config
     }
 }

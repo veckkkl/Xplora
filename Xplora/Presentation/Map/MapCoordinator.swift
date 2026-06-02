@@ -76,9 +76,18 @@ final class MapCoordinator {
 
     private func showNotes() {
         let getAllNotesUseCase: GetAllNotesUseCase = locator.resolve(GetAllNotesUseCase.self)
-        let notesViewModel = NotesListViewModel(getAllNotesUseCase: getAllNotesUseCase)
+        let tripNotesCountProvider: TripNotesCountProviding = locator.resolve(TripNotesCountProviding.self)
+        let deleteNoteUseCase: DeleteNoteUseCase = locator.resolve(DeleteNoteUseCase.self)
+        let notesViewModel = NotesListViewModel(
+            getAllNotesUseCase: getAllNotesUseCase,
+            tripNotesCountProvider: tripNotesCountProvider,
+            deleteNoteUseCase: deleteNoteUseCase
+        )
         let notesViewController = NotesListViewController(viewModel: notesViewModel)
         notesViewController.hidesBottomBarWhenPushed = true
+        // Pre-load so viewDidLoad fires before the push animation, keeping
+        // the navbar title and add button in place from frame one.
+        notesViewController.loadViewIfNeeded()
 
         notesViewModel.onRoute = { [weak self] route in
             guard let self, let noteRouter = self.noteRouter else { return }
@@ -88,6 +97,11 @@ final class MapCoordinator {
             case .open(let noteId):
                 noteRouter.showNote(noteId: noteId, coordinate: nil, output: self)
             }
+        }
+        // Refresh the map pins after a swipe-delete so the user returns to
+        // a map that matches their notes list.
+        notesViewModel.onNoteDeleted = { [weak self] _ in
+            self?.mapViewModel?.refreshMarkers()
         }
 
         navigationController.pushViewController(notesViewController, animated: true)

@@ -159,7 +159,10 @@ extension TimelineViewController: UITableViewDataSource {
         cell.configure(
             with: item,
             isFirstInSection: tripIndex == 0,
-            isLastInSection: tripIndex == section.items.count - 1
+            isLastInSection: tripIndex == section.items.count - 1,
+            onNotesTap: { [weak self] in
+                self?.viewModel.didTapNotes(tripId: item.id)
+            }
         )
         return cell
     }

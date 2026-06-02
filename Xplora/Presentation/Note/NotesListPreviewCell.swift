@@ -24,6 +24,7 @@ final class NotesListPreviewCell: UITableViewCell {
 
     private var collageHeightConstraint: Constraint?
     private var hasPhotos = false
+    private var lastResolvedWidth: CGFloat = 0
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -36,7 +37,17 @@ final class NotesListPreviewCell: UITableViewCell {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        updateCollageHeightIfNeeded()
+        // Re-resolve once the real bounds are known. Cells past row 0 are
+        // sometimes dequeued before the table view has assigned them a
+        // width, so the height set in configure() relies on the screen-
+        // width fallback in preferredCollageWidth(). When the cell finally
+        // gets its true width here, we recompute so the card grows to fit
+        // the photo + text instead of clipping everything past the collage.
+        let width = preferredCollageWidth()
+        if abs(width - lastResolvedWidth) > 0.5 {
+            updateCollageHeightIfNeeded()
+            invalidateIntrinsicContentSize()
+        }
     }
 
     override func prepareForReuse() {
@@ -52,6 +63,10 @@ final class NotesListPreviewCell: UITableViewCell {
         bookmarkImageView.isHidden = true
         collageView.isHidden = true
         hasPhotos = false
+        // Stale height from the previous content would inflate the next row
+        // budget; reset back to zero so configure() can recompute fresh.
+        collageHeightConstraint?.update(offset: 0)
+        lastResolvedWidth = 0
     }
 
     func configure(with item: NotesListItemViewState) {
@@ -141,6 +156,13 @@ final class NotesListPreviewCell: UITableViewCell {
 
         dateLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         dateLabel.textColor = .tertiaryLabel
+        dateLabel.numberOfLines = 1
+        // Keep date and location at their natural height so a too-tight row
+        // budget never crops them — the collage is the only flexible piece.
+        dateLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        dateLabel.setContentHuggingPriority(.required, for: .vertical)
+        locationLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        titleLabel.setContentCompressionResistancePriority(.required, for: .vertical)
 
         collageView.layer.cornerRadius = 12
         collageView.clipsToBounds = true
@@ -189,20 +211,33 @@ final class NotesListPreviewCell: UITableViewCell {
         }
     }
 
+    private func preferredCollageWidth() -> CGFloat {
+        // Use the most stable width source available — preferring the
+        // contentView only when it's actually been sized. During the first
+        // batch of dequeues, cells past row 0 are configured before the
+        // table view's layout pass has had a chance to size them, and a
+        // 0-width contentView produces a 0-height collage that breaks the
+        // row's height budget.
+        let horizontalInset = (TripPhotoPresentationMetrics.listCardHorizontalInset
+                              + TripPhotoPresentationMetrics.listContentInset) * 2
+        let candidates: [CGFloat] = [
+            contentView.bounds.width,
+            superview?.bounds.width ?? 0,
+            window?.bounds.width ?? 0,
+            UIScreen.main.bounds.width
+        ]
+        let base = candidates.first(where: { $0 > 0 }) ?? UIScreen.main.bounds.width
+        return max(0, base - horizontalInset)
+    }
+
     private func updateCollageHeightIfNeeded() {
         guard hasPhotos else {
             collageHeightConstraint?.update(offset: 0)
+            lastResolvedWidth = 0
             return
         }
 
-        let width: CGFloat
-        if collageView.bounds.width > 0 {
-            width = collageView.bounds.width
-        } else {
-            let horizontalInset = (TripPhotoPresentationMetrics.listCardHorizontalInset + TripPhotoPresentationMetrics.listContentInset) * 2
-            width = max(0, contentView.bounds.width - horizontalInset)
-        }
-
+        let width = preferredCollageWidth()
         let baseHeight = collageView.preferredHeight(forWidth: width)
         let scaledHeight = baseHeight * TripPhotoPresentationMetrics.listCollageHeightScale
         let finalHeight = max(
@@ -210,5 +245,6 @@ final class NotesListPreviewCell: UITableViewCell {
             min(TripPhotoPresentationMetrics.listCollageMaxHeight, scaledHeight)
         )
         collageHeightConstraint?.update(offset: finalHeight)
+        lastResolvedWidth = width
     }
 }

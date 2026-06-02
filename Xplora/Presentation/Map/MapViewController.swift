@@ -62,7 +62,14 @@ final class MapViewController: UIViewController {
         mapView.cameraBoundary = nil
         mapView.cameraZoomRange = nil
         mapView.delegate = self
-        mapView.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: CountryVisitAnnotationView.reuseIdentifier)
+        mapView.register(
+            CountryVisitAnnotationView.self,
+            forAnnotationViewWithReuseIdentifier: CountryVisitAnnotationView.reuseIdentifier
+        )
+        mapView.register(
+            CountryVisitClusterAnnotationView.self,
+            forAnnotationViewWithReuseIdentifier: CountryVisitClusterAnnotationView.reuseIdentifier
+        )
         view.addSubview(mapView)
 
         mapView.snp.makeConstraints { make in
@@ -176,25 +183,111 @@ final class MapViewController: UIViewController {
 
 extension MapViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        guard let annotation = annotation as? CountryVisitAnnotation else { return nil }
-        let view = mapView.dequeueReusableAnnotationView(withIdentifier: CountryVisitAnnotationView.reuseIdentifier, for: annotation)
+        if let cluster = annotation as? MKClusterAnnotation {
+            return makeClusterAnnotationView(for: cluster, in: mapView)
+        }
+        if let visitAnnotation = annotation as? CountryVisitAnnotation {
+            return makeMarkerAnnotationView(for: visitAnnotation, in: mapView)
+        }
+        return nil
+    }
+
+    private func makeMarkerAnnotationView(
+        for annotation: CountryVisitAnnotation,
+        in mapView: MKMapView
+    ) -> MKAnnotationView {
+        let view = mapView.dequeueReusableAnnotationView(
+            withIdentifier: CountryVisitAnnotationView.reuseIdentifier,
+            for: annotation
+        )
         view.annotation = annotation
 
-        if let markerView = view as? MKMarkerAnnotationView {
-            markerView.canShowCallout = true
-            markerView.markerTintColor = UIColor(named: "accent_orange") ?? .systemOrange
-            markerView.glyphImage = UIImage(systemName: "mappin")
-            markerView.titleVisibility = .hidden
-            markerView.subtitleVisibility = .hidden
-            let previewModel = viewModel.previewModel(for: annotation.marker)
-            let calloutView = TripNoteCalloutView(model: previewModel)
-            calloutView.onTap = { [weak self] in
-                self?.viewModel.didSelectMarker(annotation.marker)
-            }
-            markerView.detailCalloutAccessoryView = calloutView
-        }
+        let noteIds = annotation.marker.noteIds
+        guard let markerView = view as? MKMarkerAnnotationView else { return view }
 
+        if noteIds.count > 1 {
+            // Same-coordinate stack: render as a multi-note pin with the
+            // count, and serve a carousel callout — MapKit's clustering would
+            // never fire because distance is zero.
+            markerView.glyphImage = nil
+            markerView.glyphText = "\(noteIds.count)"
+            markerView.markerTintColor = Self.multiNotePinColor
+            markerView.canShowCallout = true
+            attachClusterCallout(to: markerView, noteIds: noteIds)
+        } else {
+            markerView.glyphText = nil
+            markerView.glyphImage = UIImage(systemName: "mappin")
+            // Reset color explicitly — the view might have been pooled while
+            // representing a multi-note marker.
+            markerView.markerTintColor = Self.singleNotePinColor
+            markerView.canShowCallout = true
+            attachSingleCallout(to: markerView, marker: annotation.marker)
+        }
         return view
+    }
+
+    private func makeClusterAnnotationView(
+        for cluster: MKClusterAnnotation,
+        in mapView: MKMapView
+    ) -> MKAnnotationView {
+        let view = mapView.dequeueReusableAnnotationView(
+            withIdentifier: CountryVisitClusterAnnotationView.reuseIdentifier,
+            for: cluster
+        )
+        view.annotation = cluster
+
+        if let clusterView = view as? MKMarkerAnnotationView {
+            clusterView.canShowCallout = true
+            clusterView.markerTintColor = Self.multiNotePinColor
+            let noteIds = noteIds(in: cluster)
+            attachClusterCallout(to: clusterView, noteIds: noteIds)
+        }
+        return view
+    }
+
+    private static let singleNotePinColor: UIColor = UIColor(named: "accent_orange") ?? .systemOrange
+    private static let multiNotePinColor: UIColor = UIColor.systemRed
+
+    private func attachSingleCallout(to markerView: MKMarkerAnnotationView, marker: CountryVisitMarker) {
+        let previewModel = viewModel.previewModel(for: marker)
+        let calloutView = TripNoteCalloutView(model: previewModel)
+        calloutView.onTap = { [weak self] in
+            self?.viewModel.didSelectMarker(marker)
+        }
+        markerView.detailCalloutAccessoryView = calloutView
+    }
+
+    private func attachClusterCallout(to markerView: MKMarkerAnnotationView, noteIds: [String]) {
+        let previews = viewModel.previewModels(forNoteIds: noteIds)
+        if previews.count <= 1 {
+            // Defensive: if grouping is degenerate, fall back to the single
+            // callout so we never show an empty carousel.
+            if let first = previews.first {
+                let calloutView = TripNoteCalloutView(model: first.preview)
+                calloutView.onTap = { [weak self] in
+                    self?.viewModel.didSelectNote(noteId: first.noteId)
+                }
+                markerView.detailCalloutAccessoryView = calloutView
+            } else {
+                markerView.detailCalloutAccessoryView = nil
+            }
+            return
+        }
+        let carousel = TripNotesClusterCalloutView(previews: previews)
+        carousel.onSelectNote = { [weak self] noteId in
+            self?.viewModel.didSelectNote(noteId: noteId)
+        }
+        // No explicit size constraints — the carousel reports a correct
+        // intrinsicContentSize (tallest card + page control), MapKit grows
+        // the balloon to match. Avoiding the manual constraint also keeps
+        // the cards from being squeezed by a too-small fallback height.
+        markerView.detailCalloutAccessoryView = carousel
+    }
+
+    private func noteIds(in cluster: MKClusterAnnotation) -> [String] {
+        cluster.memberAnnotations
+            .compactMap { $0 as? CountryVisitAnnotation }
+            .flatMap { $0.marker.noteIds }
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {

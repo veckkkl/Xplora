@@ -11,6 +11,10 @@ struct NoteLocation: Codable, Equatable {
     var placeName: String
     var city: String
     var country: String
+    // ISO 3166-1 alpha-2 code (e.g. "FR"). Optional because legacy notes saved
+    // before this field was introduced won't have it, and not every MapKit
+    // placemark exposes a country code.
+    var countryCode: String?
     var latitude: Double
     var longitude: Double
 
@@ -25,16 +29,30 @@ struct NoteLocation: Codable, Equatable {
         !placeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    init(placeName: String, city: String, country: String, latitude: Double, longitude: Double) {
+    init(
+        placeName: String,
+        city: String,
+        country: String,
+        countryCode: String? = nil,
+        latitude: Double,
+        longitude: Double
+    ) {
         self.placeName = placeName
         self.city = city
         self.country = country
+        self.countryCode = NoteLocation.normalizedCountryCode(countryCode)
         self.latitude = latitude
         self.longitude = longitude
     }
 
     // Backward-compatible initializer for existing UI integration.
-    init(placeName: String, address: String?, latitude: Double, longitude: Double) {
+    init(
+        placeName: String,
+        address: String?,
+        countryCode: String? = nil,
+        latitude: Double,
+        longitude: Double
+    ) {
         let trimmedAddress = address?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let components = trimmedAddress
             .split(separator: ",")
@@ -48,9 +66,16 @@ struct NoteLocation: Codable, Equatable {
             placeName: placeName,
             city: parsedCity,
             country: parsedCountry,
+            countryCode: countryCode,
             latitude: latitude,
             longitude: longitude
         )
+    }
+
+    private static func normalizedCountryCode(_ raw: String?) -> String? {
+        guard let raw else { return nil }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        return trimmed.isEmpty ? nil : trimmed
     }
 }
 
@@ -84,15 +109,19 @@ struct Note: Identifiable, Equatable {
 
     var photoURLs: [URL] {
         get {
+            // Resolve persisted paths through NotePhotoFileStorage so notes
+            // keep working across app relaunches when the container path
+            // changes (we store relative paths, legacy absolute paths are
+            // resolved as-is).
             photos
                 .sorted { $0.orderIndex < $1.orderIndex }
-                .map { URL(fileURLWithPath: $0.localPath) }
+                .map { NotePhotoFileStorage.absoluteURL(for: $0.localPath) }
         }
         set {
             photos = newValue.enumerated().map { index, url in
                 NotePhoto(
                     id: UUID().uuidString,
-                    localPath: url.path,
+                    localPath: NotePhotoFileStorage.relativePath(for: url),
                     createdAt: Date(),
                     orderIndex: index,
                     photoLibraryAssetId: nil

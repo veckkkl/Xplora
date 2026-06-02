@@ -12,7 +12,7 @@ final class TripPhotoCell: UICollectionViewCell {
     private let imageView = UIImageView()
     private let overflowOverlayView = UIView()
     private let overflowLabel = UILabel()
-    private let removeButton = TripPhotoRemoveButton()
+    private let removeButton = NoteCircularRemoveButton(iconSize: 28)
 
     private var onRemove: (() -> Void)?
 
@@ -88,54 +88,18 @@ final class TripPhotoCell: UICollectionViewCell {
         removeButton.addTarget(self, action: #selector(didTapRemove), for: .touchUpInside)
         contentView.addSubview(removeButton)
 
+        // 44×44 hit area pinned to the top-trailing corner; the visible icon
+        // is nudged 6pt away from the edges so it sits like the native iOS
+        // attachment cross.
         removeButton.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(4)
-            make.trailing.equalToSuperview().offset(-4)
-            make.size.equalTo(CGSize(width: 34, height: 34))
+            make.top.equalToSuperview()
+            make.trailing.equalToSuperview()
+            make.size.equalTo(CGSize(width: 44, height: 44))
         }
+        removeButton.placeIcon(insetFromTop: 6, insetFromTrailing: 6)
     }
 
     @objc private func didTapRemove() {
         onRemove?()
-    }
-}
-
-private final class TripPhotoRemoveButton: UIControl {
-    private let backgroundView = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterial))
-    private let iconView = UIImageView()
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupView()
-    }
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setupView()
-    }
-
-    private func setupView() {
-        accessibilityLabel = L10n.Common.removePhoto
-
-        addSubview(backgroundView)
-        backgroundView.clipsToBounds = true
-        backgroundView.layer.cornerRadius = 12
-        backgroundView.layer.cornerCurve = .continuous
-        backgroundView.layer.borderColor = UIColor.separator.withAlphaComponent(0.26).cgColor
-        backgroundView.layer.borderWidth = 0.6
-
-        backgroundView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.size.equalTo(CGSize(width: 24, height: 24))
-        }
-
-        iconView.image = UIImage(systemName: "xmark")
-        iconView.tintColor = .label
-        iconView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
-        backgroundView.contentView.addSubview(iconView)
-
-        iconView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
     }
 }

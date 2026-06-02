@@ -17,16 +17,33 @@ final class StatisticsViewModel {
     var onStateChange: ((StatisticsViewState) -> Void)?
 
     private let getStatisticsUseCase: GetStatisticsUseCase
+    private var hasLoadedOnce = false
 
     init(getStatisticsUseCase: GetStatisticsUseCase) {
         self.getStatisticsUseCase = getStatisticsUseCase
     }
 
     func viewDidLoad() {
-        onStateChange?(.loading)
+        load(showLoadingSpinner: true)
+    }
+
+    /// Re-fetches statistics whenever the screen becomes visible (e.g. user
+    /// just added a trip on the Timeline tab and switched back here). The
+    /// spinner is suppressed on subsequent loads so the existing cards stay
+    /// on screen and silently update once new data arrives.
+    func viewWillAppear() {
+        guard hasLoadedOnce else { return }
+        load(showLoadingSpinner: false)
+    }
+
+    private func load(showLoadingSpinner: Bool) {
+        if showLoadingSpinner {
+            onStateChange?(.loading)
+        }
         Task {
             do {
                 let summary = try await getStatisticsUseCase.execute()
+                hasLoadedOnce = true
                 onStateChange?(.content(makeViewData(from: summary)))
             } catch {
                 onStateChange?(.error("Не удалось загрузить статистику"))

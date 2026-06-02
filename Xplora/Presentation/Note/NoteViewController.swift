@@ -45,6 +45,24 @@ final class NoteViewController: UIViewController {
         viewModel.viewDidLoad()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // Reclaim the interactive swipe-back gesture: UINavigationController
+        // disables it by default when the leftBarButtonItem is custom (our
+        // chevron back button). Hosting it through our delegate restores the
+        // standard edge swipe.
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        navigationController?.interactivePopGestureRecognizer?.delegate = self
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // Release the delegate so other screens own the gesture again.
+        if navigationController?.interactivePopGestureRecognizer?.delegate === self {
+            navigationController?.interactivePopGestureRecognizer?.delegate = nil
+        }
+    }
+
     private func setupSearchController() {
         searchController.parentView = view
         searchController.textView = editorContentView.textView
@@ -435,15 +453,18 @@ final class NoteViewController: UIViewController {
             let placeName = self.resolvedPlaceName(mapItem: mapItem, completion: completion)
             let address = self.resolvedAddress(mapItem: mapItem, completion: completion)
             let coordinate = mapItem.placemark.coordinate
+            let countryCode = mapItem.placemark.isoCountryCode
             self.viewModel.didSelectLocation(
                 placeName: placeName,
                 address: address,
+                countryCode: countryCode,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude
             )
         }
-        controller.modalPresentationStyle = .pageSheet
-        present(controller, animated: true)
+        let navigation = UINavigationController(rootViewController: controller)
+        navigation.modalPresentationStyle = .pageSheet
+        present(navigation, animated: true)
     }
 
     private func resolvedPlaceName(mapItem: MKMapItem, completion: MKLocalSearchCompletion) -> String {
@@ -480,3 +501,19 @@ extension NoteViewController: UITextViewDelegate {
     }
 }
 
+extension NoteViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard gestureRecognizer === navigationController?.interactivePopGestureRecognizer else {
+            return true
+        }
+        // Only the root note screen pops; otherwise nothing to swipe back to.
+        guard (navigationController?.viewControllers.count ?? 0) > 1 else { return false }
+        // Block the gesture when there are unsaved changes so a stray swipe
+        // doesn't discard the draft. The chevron back button still routes
+        // through the confirm dialog.
+        if let state = lastState, state.mode == .edit, state.hasUnsavedChanges {
+            return false
+        }
+        return true
+    }
+}
