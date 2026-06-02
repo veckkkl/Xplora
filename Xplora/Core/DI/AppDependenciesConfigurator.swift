@@ -50,7 +50,7 @@ enum AppDependenciesConfigurator {
             DeleteTripUseCaseImpl(tripsRepo: tripsRepo)
 
         let tripNotesCountProvider: TripNotesCountProviding =
-            StoredTripNotesCountProvider(tripsRepo: tripsRepo)
+            NoteLocationTripNotesCountProvider()
 
         locator.register(ValidateTripDateRangeUseCase.self, instance: validateTripDateRangeUseCase)
         locator.register(GetTripsUseCase.self, instance: getTripsUseCase)

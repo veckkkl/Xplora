@@ -837,11 +837,19 @@ internal enum L10n {
         internal static let placeholder = L10n.tr("Localizable", "notes.location.search.placeholder", fallback: "Search location")
         /// Location
         internal static let title = L10n.tr("Localizable", "notes.location.search.title", fallback: "Location")
+        internal enum Empty {
+          /// No places found. Try a different query.
+          internal static let message = L10n.tr("Localizable", "notes.location.search.empty.message", fallback: "No places found. Try a different query.")
+        }
         internal enum Error {
           /// Couldn't fetch this location. Try another one.
           internal static let message = L10n.tr("Localizable", "notes.location.search.error.message", fallback: "Couldn't fetch this location. Try another one.")
           /// Location unavailable
           internal static let title = L10n.tr("Localizable", "notes.location.search.error.title", fallback: "Location unavailable")
+        }
+        internal enum Network {
+          /// Place search needs an internet connection. Check your network and try again.
+          internal static let message = L10n.tr("Localizable", "notes.location.search.network.message", fallback: "Place search needs an internet connection. Check your network and try again.")
         }
       }
       internal enum Section {
@@ -1191,11 +1199,25 @@ internal enum L10n {
     }
     internal enum Trip {
       internal enum Notes {
-        /// 1 note
-        internal static let one = L10n.tr("Localizable", "timeline.trip.notes.one", fallback: "1 note")
+        /// %d note
+        internal static func one(_ p1: Int) -> String {
+          return L10n.tr("Localizable", "timeline.trip.notes.one", p1, fallback: "%d note")
+        }
+        /// %d notes
+        internal static func few(_ p1: Int) -> String {
+          return L10n.tr("Localizable", "timeline.trip.notes.few", p1, fallback: "%d notes")
+        }
+        /// %d notes
+        internal static func many(_ p1: Int) -> String {
+          return L10n.tr("Localizable", "timeline.trip.notes.many", p1, fallback: "%d notes")
+        }
         /// %d notes
         internal static func other(_ p1: Int) -> String {
           return L10n.tr("Localizable", "timeline.trip.notes.other", p1, fallback: "%d notes")
+        }
+        /// Plural-aware count text resolved via Localizable.stringsdict.
+        internal static func count(_ p1: Int) -> String {
+          return L10n.tr("Localizable", "timeline.trip.notes.count", p1, fallback: "%d notes")
         }
       }
     }

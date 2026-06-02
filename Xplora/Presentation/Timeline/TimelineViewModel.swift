@@ -29,6 +29,7 @@ struct TimelineViewState: Equatable {
 enum TimelineRoute {
     case addTrip
     case editTripDates(tripId: UUID, place: CatalogPlace, startDate: Date, endDate: Date)
+    case showTripNotes(trip: Trip, place: CatalogPlace)
 }
 
 @MainActor
@@ -38,6 +39,7 @@ protocol TimelineViewModelInput: AnyObject {
     func didTapAdd()
     func didTapEditDates(tripId: UUID)
     func didConfirmDelete(tripId: UUID)
+    func didTapNotes(tripId: UUID)
     func refresh()
 }
 
@@ -56,8 +58,11 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
 
     private let getTripsUseCase: GetTripsUseCase
     private let getCatalogPlaces: GetCatalogPlacesUseCase
+    private let getAllNotesUseCase: GetAllNotesUseCase
     private let deleteTripUseCase: DeleteTripUseCase
+    private let tripNotesCountProvider: TripNotesCountProviding
     private var trips: [Trip] = []
+    private var notes: [Note] = []
     private var catalogByCode: [String: CatalogPlace] = [:]
     private var isLoading = false
 
@@ -71,11 +76,15 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
     init(
         getTripsUseCase: GetTripsUseCase,
         getCatalogPlaces: GetCatalogPlacesUseCase,
-        deleteTripUseCase: DeleteTripUseCase
+        getAllNotesUseCase: GetAllNotesUseCase,
+        deleteTripUseCase: DeleteTripUseCase,
+        tripNotesCountProvider: TripNotesCountProviding
     ) {
         self.getTripsUseCase = getTripsUseCase
         self.getCatalogPlaces = getCatalogPlaces
+        self.getAllNotesUseCase = getAllNotesUseCase
         self.deleteTripUseCase = deleteTripUseCase
+        self.tripNotesCountProvider = tripNotesCountProvider
     }
 
     func viewDidLoad() {
@@ -107,6 +116,17 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
         )
     }
 
+    func didTapNotes(tripId: UUID) {
+        guard let trip = trips.first(where: { $0.id == tripId }) else { return }
+        // Defensive: only route when there is at least one matching note. The
+        // cell already hides the tap target in that case, but a stale tap
+        // race (reload between configure and tap) shouldn't open an empty
+        // screen.
+        guard tripNotesCountProvider.notesCount(for: trip, notes: notes) > 0 else { return }
+        let place = catalogPlace(for: trip.placeCode)
+        onRoute?(.showTripNotes(trip: trip, place: place))
+    }
+
     func didConfirmDelete(tripId: UUID) {
         Task {
             do {
@@ -126,8 +146,10 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
             do {
                 async let tripsTask = getTripsUseCase.execute()
                 async let placesTask = getCatalogPlaces.execute()
-                let (loadedTrips, loadedPlaces) = try await (tripsTask, placesTask)
+                async let notesTask = getAllNotesUseCase.execute()
+                let (loadedTrips, loadedPlaces, loadedNotes) = try await (tripsTask, placesTask, notesTask)
                 trips = loadedTrips
+                notes = loadedNotes
                 catalogByCode = Dictionary(
                     uniqueKeysWithValues: loadedPlaces.map { ($0.code.uppercased(), $0) }
                 )
@@ -136,6 +158,7 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
             } catch {
                 isLoading = false
                 trips = []
+                notes = []
                 catalogByCode = [:]
                 publish()
                 onError?(L10n.Timeline.Error.load)
@@ -169,12 +192,13 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
 
     private func makeItem(from trip: Trip) -> TripTimelineItem {
         let place = catalogPlace(for: trip.placeCode)
+        let count = tripNotesCountProvider.notesCount(for: trip, notes: notes)
         return TripTimelineItem(
             id: trip.id,
             flag: place.flag,
             countryName: place.localizedName,
             dateRangeText: formatRange(start: trip.startDate, end: trip.endDate),
-            notesText: notesText(for: trip.notesCount)
+            notesText: notesText(for: count)
         )
     }
 
@@ -193,8 +217,40 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
 
     private func notesText(for count: Int) -> String? {
         guard count > 0 else { return nil }
-        return count == 1
-            ? L10n.Timeline.Trip.Notes.one
-            : L10n.Timeline.Trip.Notes.other(count)
+        // Pure-Swift plural picking — Xcode 16's PBXFileSystemSynchronizedRootGroup
+        // is unreliable about bundling .stringsdict files, which made the
+        // dictionary-driven fallback return "1 заметок" instead of "1 заметка".
+        // Branching on the active locale picks the correct CLDR form against
+        // explicit `.one / .few / .many` keys in Localizable.strings.
+        switch Self.pluralCategory(count: count, locale: .autoupdatingCurrent) {
+        case .one:
+            return L10n.Timeline.Trip.Notes.one(count)
+        case .few:
+            return L10n.Timeline.Trip.Notes.few(count)
+        case .many:
+            return L10n.Timeline.Trip.Notes.many(count)
+        case .other:
+            return L10n.Timeline.Trip.Notes.other(count)
+        }
+    }
+
+    private enum PluralCategory {
+        case one, few, many, other
+    }
+
+    /// CLDR-style plural category for the languages we support. East-Slavic
+    /// languages (ru/uk/be) need one/few/many; everything else collapses to
+    /// the English-style one/other split.
+    private static func pluralCategory(count: Int, locale: Locale) -> PluralCategory {
+        let language = locale.language.languageCode?.identifier ?? ""
+        let eastSlavic: Set<String> = ["ru", "uk", "be"]
+        guard eastSlavic.contains(language) else {
+            return count == 1 ? .one : .other
+        }
+        let mod10 = abs(count) % 10
+        let mod100 = abs(count) % 100
+        if mod10 == 1 && mod100 != 11 { return .one }
+        if (2...4).contains(mod10) && !(12...14).contains(mod100) { return .few }
+        return .many
     }
 }

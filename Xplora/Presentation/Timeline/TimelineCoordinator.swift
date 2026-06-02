@@ -11,6 +11,15 @@ final class TimelineCoordinator {
     private let locator: ServiceLocator
     private weak var timelineViewModel: TimelineViewModel?
     private weak var pickerViewController: TripCountryPickerViewController?
+    private weak var tripNotesViewModel: NotesListViewModel?
+    private lazy var noteRouter: NoteRouter = {
+        let builder = NoteModuleBuilder(
+            getNoteUseCase: locator.resolve(GetNoteUseCase.self),
+            saveNoteUseCase: locator.resolve(SaveNoteUseCase.self),
+            deleteNoteUseCase: locator.resolve(DeleteNoteUseCase.self)
+        )
+        return NoteRouterImpl(navigationController: navigationController, builder: builder)
+    }()
 
     init(navigationController: UINavigationController, locator: ServiceLocator = .shared) {
         self.navigationController = navigationController
@@ -20,11 +29,15 @@ final class TimelineCoordinator {
     func start() {
         let getTripsUseCase: GetTripsUseCase = locator.resolve(GetTripsUseCase.self)
         let getCatalogPlaces: GetCatalogPlacesUseCase = locator.resolve(GetCatalogPlacesUseCase.self)
+        let getAllNotesUseCase: GetAllNotesUseCase = locator.resolve(GetAllNotesUseCase.self)
         let deleteTripUseCase: DeleteTripUseCase = locator.resolve(DeleteTripUseCase.self)
+        let tripNotesCountProvider: TripNotesCountProviding = locator.resolve(TripNotesCountProviding.self)
         let viewModel = TimelineViewModel(
             getTripsUseCase: getTripsUseCase,
             getCatalogPlaces: getCatalogPlaces,
-            deleteTripUseCase: deleteTripUseCase
+            getAllNotesUseCase: getAllNotesUseCase,
+            deleteTripUseCase: deleteTripUseCase,
+            tripNotesCountProvider: tripNotesCountProvider
         )
         let viewController = TimelineViewController(viewModel: viewModel)
 
@@ -49,7 +62,49 @@ final class TimelineCoordinator {
                     endDate: endDate
                 )
             )
+        case let .showTripNotes(trip, place):
+            pushTripNotes(trip: trip, place: place)
         }
+    }
+
+    private func pushTripNotes(trip: Trip, place: CatalogPlace) {
+        let getAllNotesUseCase: GetAllNotesUseCase = locator.resolve(GetAllNotesUseCase.self)
+        let tripNotesCountProvider: TripNotesCountProviding =
+            locator.resolve(TripNotesCountProviding.self)
+        let deleteNoteUseCase: DeleteNoteUseCase = locator.resolve(DeleteNoteUseCase.self)
+
+        let title = "\(place.flag) \(place.localizedName)"
+            .trimmingCharacters(in: .whitespaces)
+
+        let viewModel = NotesListViewModel(
+            getAllNotesUseCase: getAllNotesUseCase,
+            tripNotesCountProvider: tripNotesCountProvider,
+            deleteNoteUseCase: deleteNoteUseCase,
+            filter: .trip(trip),
+            screenTitle: title
+        )
+        viewModel.onRoute = { [weak self] route in
+            guard let self else { return }
+            switch route {
+            case .addNew:
+                self.noteRouter.showNote(noteId: nil, coordinate: nil, output: self)
+            case .open(let noteId):
+                self.noteRouter.showNote(noteId: noteId, coordinate: nil, output: self)
+            }
+        }
+        // After a swipe-delete on the trip-filtered list, refresh the Timeline
+        // so the trip's note count updates too.
+        viewModel.onNoteDeleted = { [weak self] _ in
+            self?.timelineViewModel?.refresh()
+        }
+        let viewController = NotesListViewController(viewModel: viewModel)
+        viewController.hidesBottomBarWhenPushed = true
+        // Force viewDidLoad to run before the push animation starts so the
+        // tableView/title/etc. are wired in by the time UIKit takes its
+        // navbar snapshot — otherwise the title flickers in mid-transition.
+        viewController.loadViewIfNeeded()
+        navigationController.pushViewController(viewController, animated: true)
+        tripNotesViewModel = viewModel
     }
 
     private func pushCountryPicker() {
@@ -100,5 +155,18 @@ extension TimelineCoordinator: TripDateRangeModuleOutput {
 
     func tripDateRangeDidCancel() {
         navigationController.popViewController(animated: true)
+    }
+}
+
+extension TimelineCoordinator: NoteModuleOutput {
+    func noteModuleDidSave(note: Note) {
+        // The save may have changed countryCode / dates → refresh both lists.
+        tripNotesViewModel?.viewWillAppear()
+        timelineViewModel?.refresh()
+    }
+
+    func noteModuleDidDelete(noteId: String) {
+        tripNotesViewModel?.viewWillAppear()
+        timelineViewModel?.refresh()
     }
 }

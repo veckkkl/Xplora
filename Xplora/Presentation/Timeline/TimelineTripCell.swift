@@ -17,6 +17,7 @@ final class TimelineTripCell: UITableViewCell {
     private let dateLabel = UILabel()
     private let notesLabel = UILabel()
     private let nameRow = UIStackView()
+    private var onNotesTap: (() -> Void)?
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -29,23 +30,36 @@ final class TimelineTripCell: UITableViewCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
+        notesLabel.attributedText = nil
         notesLabel.text = nil
         notesLabel.isHidden = true
+        notesLabel.isUserInteractionEnabled = false
+        onNotesTap = nil
         lineTopView.isHidden = false
         lineBottomView.isHidden = false
     }
 
-    func configure(with item: TripTimelineItem, isFirstInSection: Bool, isLastInSection: Bool) {
+    func configure(
+        with item: TripTimelineItem,
+        isFirstInSection: Bool,
+        isLastInSection: Bool,
+        onNotesTap: (() -> Void)? = nil
+    ) {
         flagLabel.text = item.flag
         countryLabel.text = item.countryName
         dateLabel.text = item.dateRangeText
 
         if let notesText = item.notesText {
-            notesLabel.text = notesText
+            notesLabel.attributedText = makeUnderlinedText(notesText)
             notesLabel.isHidden = false
+            notesLabel.isUserInteractionEnabled = true
+            self.onNotesTap = onNotesTap
         } else {
+            notesLabel.attributedText = nil
             notesLabel.text = nil
             notesLabel.isHidden = true
+            notesLabel.isUserInteractionEnabled = false
+            self.onNotesTap = nil
         }
 
         lineTopView.isHidden = isFirstInSection
@@ -77,11 +91,15 @@ final class TimelineTripCell: UITableViewCell {
         dateLabel.textColor = .secondaryLabel
 
         notesLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
-        notesLabel.textColor = .systemBlue
+        notesLabel.textColor = .secondaryLabel
         notesLabel.textAlignment = .right
         notesLabel.isHidden = true
         notesLabel.setContentHuggingPriority(.required, for: .horizontal)
         notesLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        // Enlarge the tap target slightly by isolating the label gesture.
+        notesLabel.isUserInteractionEnabled = false
+        let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleNotesTap))
+        notesLabel.addGestureRecognizer(tapRecognizer)
 
         nameRow.axis = .horizontal
         nameRow.spacing = 8
@@ -129,12 +147,30 @@ final class TimelineTripCell: UITableViewCell {
         dateLabel.snp.makeConstraints { make in
             make.top.equalTo(nameRow.snp.bottom).offset(4)
             make.leading.equalTo(nameRow)
+            make.trailing.lessThanOrEqualTo(notesLabel.snp.leading).offset(-8)
             make.bottom.equalToSuperview().offset(-14)
         }
 
+        // Sit vertically between the country name and the date — visually
+        // anchored to the midpoint between the two text baselines.
         notesLabel.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-20)
-            make.centerY.equalTo(dateLabel)
+            make.centerY.equalTo(contentView)
         }
+    }
+
+    private func makeUnderlinedText(_ text: String) -> NSAttributedString {
+        NSAttributedString(
+            string: text,
+            attributes: [
+                .underlineStyle: NSUnderlineStyle.single.rawValue,
+                .foregroundColor: UIColor.secondaryLabel,
+                .font: UIFont.systemFont(ofSize: 13, weight: .regular)
+            ]
+        )
+    }
+
+    @objc private func handleNotesTap() {
+        onNotesTap?()
     }
 }

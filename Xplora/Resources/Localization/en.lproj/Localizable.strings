@@ -45,8 +45,10 @@
 "notes.list.error.load" = "Couldn't load notes. Please try again.";
 "notes.list.title" = "Notes";
 
+"notes.location.search.empty.message" = "No places found. Try a different query.";
 "notes.location.search.error.message" = "Couldn't fetch this location. Try another one.";
 "notes.location.search.error.title" = "Location unavailable";
+"notes.location.search.network.message" = "Place search needs an internet connection. Check your network and try again.";
 "notes.location.search.placeholder" = "Search location";
 "notes.location.search.title" = "Location";
 "notes.location.section.add" = "Add location";
@@ -55,8 +57,11 @@
 
 "timeline.empty.title" = "No trips yet";
 "timeline.error.load" = "Couldn't load trips. Please try again.";
-"timeline.trip.notes.one" = "1 note";
+"timeline.trip.notes.one" = "%d note";
+"timeline.trip.notes.few" = "%d notes";
+"timeline.trip.notes.many" = "%d notes";
 "timeline.trip.notes.other" = "%d notes";
+"timeline.trip.notes.count" = "%d notes";
 "timeline.menu.edit_dates" = "Edit dates";
 "timeline.menu.delete" = "Delete";
 "timeline.delete.alert.title" = "Delete trip?";

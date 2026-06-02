@@ -45,8 +45,10 @@
 "notes.list.error.load" = "Не удалось загрузить заметки. Попробуйте еще раз.";
 "notes.list.title" = "Заметки";
 
+"notes.location.search.empty.message" = "Ничего не найдено. Попробуйте другой запрос.";
 "notes.location.search.error.message" = "Не удалось получить эту локацию. Попробуйте другую.";
 "notes.location.search.error.title" = "Локация недоступна";
+"notes.location.search.network.message" = "Для поиска мест нужен интернет. Проверьте подключение и попробуйте ещё раз.";
 "notes.location.search.placeholder" = "Поиск места";
 "notes.location.search.title" = "Местоположение";
 "notes.location.section.add" = "Добавить локацию";
@@ -55,8 +57,11 @@
 
 "timeline.empty.title" = "Поездок пока нет";
 "timeline.error.load" = "Не удалось загрузить поездки. Попробуйте ещё раз.";
-"timeline.trip.notes.one" = "1 заметка";
-"timeline.trip.notes.other" = "%d заметок";
+"timeline.trip.notes.one" = "%d заметка";
+"timeline.trip.notes.few" = "%d заметки";
+"timeline.trip.notes.many" = "%d заметок";
+"timeline.trip.notes.other" = "%d заметки";
+"timeline.trip.notes.count" = "%d заметок";
 "timeline.menu.edit_dates" = "Изменить даты";
 "timeline.menu.delete" = "Удалить";
 "timeline.delete.alert.title" = "Удалить поездку?";
