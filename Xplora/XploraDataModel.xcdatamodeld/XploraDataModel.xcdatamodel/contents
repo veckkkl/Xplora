@@ -12,6 +12,7 @@
         <attribute name="placeName" optional="YES" attributeType="String"/>
         <attribute name="city" optional="YES" attributeType="String"/>
         <attribute name="country" optional="YES" attributeType="String"/>
+        <attribute name="countryCode" optional="YES" attributeType="String"/>
         <attribute name="latitude" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
         <attribute name="longitude" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
         <relationship name="photos" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDNotePhoto" inverseName="note" inverseEntity="CDNotePhoto"/>

@@ -49,12 +49,14 @@ enum NoteCoreDataMapper {
             managedObject.placeName = location.placeName
             managedObject.city = location.city
             managedObject.country = location.country
+            managedObject.countryCode = location.countryCode
             managedObject.setValue(location.latitude, forKey: #keyPath(CDNote.latitude))
             managedObject.setValue(location.longitude, forKey: #keyPath(CDNote.longitude))
         } else {
             managedObject.placeName = nil
             managedObject.city = nil
             managedObject.country = nil
+            managedObject.countryCode = nil
             managedObject.setValue(nil, forKey: #keyPath(CDNote.latitude))
             managedObject.setValue(nil, forKey: #keyPath(CDNote.longitude))
         }
@@ -89,6 +91,8 @@ enum NoteCoreDataMapper {
         let placeName = (managedObject.placeName ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let city = (managedObject.city ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let country = (managedObject.country ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let rawCountryCode = (managedObject.countryCode ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let countryCode: String? = rawCountryCode.isEmpty ? nil : rawCountryCode.uppercased()
         let latitude = doubleValue(for: #keyPath(CDNote.latitude), in: managedObject)
         let longitude = doubleValue(for: #keyPath(CDNote.longitude), in: managedObject)
 
@@ -100,6 +104,7 @@ enum NoteCoreDataMapper {
             placeName: placeName,
             city: city,
             country: country,
+            countryCode: countryCode,
             latitude: latitude,
             longitude: longitude
         )
