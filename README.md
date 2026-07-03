@@ -20,7 +20,7 @@
   <img src="screenshots/статистика.png" width="200"/>
   <img src="screenshots/вишлист.png" width="200"/>
   <img src="screenshots/настройки.png" width="200"/>
-  <img src="screenshots/профиль.png" width="200"/>
+  <img src="screenshots/заметки_анг.png" width="200"/>
 </p>
 
 ---
