@@ -11,7 +11,6 @@
   <img src="https://img.shields.io/badge/UI-UIKit-lightgrey" />
   <img src="https://img.shields.io/badge/Architecture-Clean%20%2B%20MVVM--C-brightgreen" />
   <img src="https://img.shields.io/badge/Tests-Swift%20Testing-purple" />
-  <img src="https://img.shields.io/badge/license-MIT-black" />
 </p>
 
 <p align="center">
