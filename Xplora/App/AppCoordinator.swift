@@ -61,9 +61,11 @@ final class AppCoordinator {
     }
 
     func handleLogout() {
-        let logout = locator.resolve(LogoutUseCase.self)
-        logout.execute()
+        let resetUserData = locator.resolve(ResetUserDataUseCase.self)
         mapCoordinator = nil
+        timelineCoordinator = nil
+        ProfileUserSettings.reset()
+        Task { await resetUserData.execute() }
         showOnboarding()
     }
 

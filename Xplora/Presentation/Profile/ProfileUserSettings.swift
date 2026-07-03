@@ -39,6 +39,16 @@ enum ProfileUserSettings {
         UserDefaults.standard.set(isVisible, forKey: Keys.isStatusVisible)
     }
 
+    static func reset() {
+        if let fileName = currentAvatarFileName {
+            let fileURL = avatarDirectoryURL.appendingPathComponent(fileName)
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+        UserDefaults.standard.removeObject(forKey: Keys.name)
+        UserDefaults.standard.removeObject(forKey: Keys.isStatusVisible)
+        UserDefaults.standard.removeObject(forKey: Keys.avatarFileName)
+    }
+
     @discardableResult
     static func saveAvatarImage(_ image: UIImage) -> String? {
         guard let data = image.jpegData(compressionQuality: 0.9) else { return nil }

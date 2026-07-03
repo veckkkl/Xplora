@@ -17,4 +17,5 @@ protocol NotesRepo {
     func getNote(id: String) async throws -> Note
     func save(note: Note) async throws -> Note
     func delete(noteId: String) async throws
+    func deleteAll() async throws
 }

@@ -8,4 +8,5 @@ protocol WishlistRepo {
     func add(_ country: WishlistCountry) async throws
     func remove(id: UUID) async throws
     func toggle(id: UUID) async throws
+    func deleteAll() async throws
 }

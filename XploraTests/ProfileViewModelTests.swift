@@ -115,6 +115,15 @@ struct ProfileViewModelTests {
         #expect(updateUser.callCount == 0)
     }
 
+    @Test func didConfirmDeleteData_firesLogoutRoute() {
+        let (sut, _, _) = makeSUT(user: makeUser())
+        sut.viewDidLoad()
+        var route: ProfileRoute?
+        sut.onRoute = { route = $0 }
+        sut.didConfirmDeleteData()
+        #expect(route == .logout)
+    }
+
     // MARK: - didToggleDarkTheme
 
     @Test func didToggleDarkTheme_doesNotFireLogoutRoute() {

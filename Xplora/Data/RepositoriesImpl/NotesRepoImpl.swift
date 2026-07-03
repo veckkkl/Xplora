@@ -62,6 +62,19 @@ final class NotesRepoImpl: NotesRepo {
         }
     }
 
+    func deleteAll() async throws {
+        try await performInViewContext { context in
+            let request = CDNote.fetchRequest()
+            let notes = try context.fetch(request)
+            for note in notes {
+                context.delete(note)
+            }
+            if context.hasChanges {
+                try context.save()
+            }
+        }
+    }
+
     private func fetchManagedNote(id: String, in context: NSManagedObjectContext) throws -> CDNote? {
         let request = CDNote.fetchRequest()
         request.fetchLimit = 1

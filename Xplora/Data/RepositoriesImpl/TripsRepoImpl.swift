@@ -47,4 +47,8 @@ final class TripsRepoImpl: TripsRepo {
         trips.removeAll { $0.id == tripId }
         storage.trips = trips
     }
+
+    func deleteAll() async throws {
+        storage.trips = []
+    }
 }
