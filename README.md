@@ -15,6 +15,7 @@
 
 <p align="center">
   <img src="screenshots/карта.png" width="200"/>
+  <img src="screenshots/карта_заметка.png" width="200"/>
   <img src="screenshots/хронология.png" width="200"/>
   <img src="screenshots/статистика.png" width="200"/>
   <img src="screenshots/вишлист.png" width="200"/>
