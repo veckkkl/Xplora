@@ -63,6 +63,7 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
     private let getAllNotesUseCase: GetAllNotesUseCase
     private let tripNotesCountProvider: TripNotesCountProviding
     private let deleteNoteUseCase: DeleteNoteUseCase
+    private let photoStore: NotePhotoStore
     private let filter: NotesListFilter
     private var notes: [Note] = []
     private var isLoading = false
@@ -76,12 +77,14 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
         getAllNotesUseCase: GetAllNotesUseCase,
         tripNotesCountProvider: TripNotesCountProviding,
         deleteNoteUseCase: DeleteNoteUseCase,
+        photoStore: NotePhotoStore,
         filter: NotesListFilter = .all,
         screenTitle: String? = nil
     ) {
         self.getAllNotesUseCase = getAllNotesUseCase
         self.tripNotesCountProvider = tripNotesCountProvider
         self.deleteNoteUseCase = deleteNoteUseCase
+        self.photoStore = photoStore
         self.filter = filter
         self.screenTitle = screenTitle ?? L10n.Notes.List.title
     }
@@ -112,10 +115,12 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
         notes.remove(at: index)
         publish()
 
-        Task { [deleteNoteUseCase, onNoteDeleted, onError] in
+        Task { [deleteNoteUseCase, photoStore, onNoteDeleted, onError] in
             do {
                 try await deleteNoteUseCase.execute(noteId: note.id)
-                NotesListViewModel.cleanupPhotoFiles(for: note)
+                // Best-effort: a leftover file doesn't affect the deleted
+                // note, and failures are logged by the store.
+                try? await photoStore.deleteAllPhotos(noteId: note.id)
                 onNoteDeleted?(note.id)
             } catch {
                 // Restore the row on failure and surface an error so the user
@@ -127,19 +132,6 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
                     onError?(L10n.Notes.List.Error.load)
                 }
             }
-        }
-    }
-
-    private static func cleanupPhotoFiles(for note: Note) {
-        for photo in note.photos {
-            let url = NotePhotoFileStorage.absoluteURL(for: photo.localPath)
-            try? FileManager.default.removeItem(at: url)
-        }
-        // Drop the per-note directory if it's now empty.
-        if let dirURL = try? NotePhotoFileStorage.notesDirectoryURL(noteId: note.id),
-           let contents = try? FileManager.default.contentsOfDirectory(atPath: dirURL.path),
-           contents.isEmpty {
-            try? FileManager.default.removeItem(at: dirURL)
         }
     }
 

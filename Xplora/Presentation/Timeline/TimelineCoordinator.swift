@@ -16,7 +16,8 @@ final class TimelineCoordinator {
         let builder = NoteModuleBuilder(
             getNoteUseCase: locator.resolve(GetNoteUseCase.self),
             saveNoteUseCase: locator.resolve(SaveNoteUseCase.self),
-            deleteNoteUseCase: locator.resolve(DeleteNoteUseCase.self)
+            deleteNoteUseCase: locator.resolve(DeleteNoteUseCase.self),
+            photoStore: locator.resolve(NotePhotoStore.self)
         )
         return NoteRouterImpl(navigationController: navigationController, builder: builder)
     }()
@@ -80,6 +81,7 @@ final class TimelineCoordinator {
             getAllNotesUseCase: getAllNotesUseCase,
             tripNotesCountProvider: tripNotesCountProvider,
             deleteNoteUseCase: deleteNoteUseCase,
+            photoStore: locator.resolve(NotePhotoStore.self),
             filter: .trip(trip),
             screenTitle: title
         )

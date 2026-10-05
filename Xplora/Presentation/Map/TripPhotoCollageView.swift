@@ -167,10 +167,11 @@ final class TripPhotoCollageView: UIView {
                 ) as? TripPhotoCell else {
                     return UICollectionViewCell()
                 }
-                let cachedImage = self.imageLoader.cachedImage(for: photo.url)
+                let pixelSize = self.previewPixelSize(for: cell)
+                let cachedImage = self.imageLoader.cachedImage(for: photo.url, pixelSize: pixelSize)
                 self.configureCell(cell, item: photo, image: cachedImage)
                 if cachedImage == nil {
-                    self.imageLoader.loadImage(from: photo.url) { [weak self, weak collectionView, weak cell] image in
+                    self.imageLoader.loadImage(from: photo.url, pixelSize: pixelSize) { [weak self, weak collectionView, weak cell] image in
                         guard let self, let collectionView, let cell else { return }
                         guard let currentIndexPath = collectionView.indexPath(for: cell),
                               self.displayedItems.indices.contains(currentIndexPath.item),
@@ -205,6 +206,17 @@ final class TripPhotoCollageView: UIView {
         // empty state in; subsequent diffs (add / remove) animate.
         let isInitial = dataSource.snapshot().numberOfItems == 0
         dataSource.apply(snapshot, animatingDifferences: !isInitial)
+    }
+
+    /// Longest side of the tile in pixels, so the loader decodes a preview
+    /// sized for the tile instead of the stored photo.
+    private func previewPixelSize(for cell: UICollectionViewCell) -> Int {
+        let pointSize = max(cell.bounds.width, cell.bounds.height)
+        // Before the first layout pass the tile has no size yet; assume a
+        // full-width tile.
+        let fallbackPointSize = max(collectionView.bounds.width, UIScreen.main.bounds.width)
+        let scale = traitCollection.displayScale > 0 ? traitCollection.displayScale : UIScreen.main.scale
+        return Int(((pointSize > 0 ? pointSize : fallbackPointSize) * scale).rounded(.up))
     }
 
     private func configureCell(_ cell: TripPhotoCell, item: PhotoItem, image: UIImage?) {

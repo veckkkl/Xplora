@@ -39,7 +39,8 @@ final class MapCoordinator {
         let noteBuilder = NoteModuleBuilder(
             getNoteUseCase: getNoteUseCase,
             saveNoteUseCase: saveNoteUseCase,
-            deleteNoteUseCase: deleteNoteUseCase
+            deleteNoteUseCase: deleteNoteUseCase,
+            photoStore: locator.resolve(NotePhotoStore.self)
         )
         noteRouter = NoteRouterImpl(navigationController: navigationController, builder: noteBuilder)
     }
@@ -81,7 +82,8 @@ final class MapCoordinator {
         let notesViewModel = NotesListViewModel(
             getAllNotesUseCase: getAllNotesUseCase,
             tripNotesCountProvider: tripNotesCountProvider,
-            deleteNoteUseCase: deleteNoteUseCase
+            deleteNoteUseCase: deleteNoteUseCase,
+            photoStore: locator.resolve(NotePhotoStore.self)
         )
         let notesViewController = NotesListViewController(viewModel: notesViewModel)
         notesViewController.hidesBottomBarWhenPushed = true
