@@ -396,7 +396,7 @@ final class ProfileDetailsViewController: UIViewController {
     private func refreshProfileData() {
         let currentName = ProfileUserSettings.currentName
 
-        initialsLabel.text = ProfileUserSettings.initials(from: currentName)
+        initialsLabel.setAvatarInitials(ProfileUserSettings.initials(from: currentName))
         applyAvatarImage(ProfileUserSettings.loadCurrentAvatarImage())
         nameLabel.text = currentName
         statusLabel.text = displayStatus.title

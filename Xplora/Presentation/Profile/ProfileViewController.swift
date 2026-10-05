@@ -100,20 +100,6 @@ final class ProfileViewController: UIViewController {
                     options: .init(tintColor: .tertiaryLabel)
                 )
             )
-        case .toggle(let isOn):
-            let themeSwitch = UISwitch()
-            themeSwitch.onTintColor = .systemBlue
-            themeSwitch.isOn = isOn
-            themeSwitch.accessibilityIdentifier = "profile.darkThemeSwitch"
-            themeSwitch.tag = indexTag(section: sectionIndex, row: rowIndex)
-            themeSwitch.removeTarget(self, action: #selector(self.didChangeDarkThemeSwitch(_:)), for: .valueChanged)
-            themeSwitch.addTarget(self, action: #selector(self.didChangeDarkThemeSwitch(_:)), for: .valueChanged)
-
-            let configuration = UICellAccessory.CustomViewConfiguration(
-                customView: themeSwitch,
-                placement: .trailing(displayed: .always)
-            )
-            accessories.append(.customView(configuration: configuration))
         }
 
         cell.accessories = accessories
@@ -344,10 +330,18 @@ final class ProfileViewController: UIViewController {
             }
             viewController.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(viewController, animated: true)
-        case .openLanguageSelection:
-            let viewController = LanguageSelectionViewController()
+        case .openThemeSelection(let currentTheme):
+            let viewController = ThemeSelectionViewController(selectedTheme: currentTheme)
+            viewController.onSelect = { [weak self] theme in
+                self?.viewModel.didSelectTheme(theme)
+            }
             viewController.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(viewController, animated: true)
+        case .openAppLanguageSettings:
+            // iOS owns the per-app language (Settings → Xplora → Language)
+            // and relaunches the app after it changes.
+            guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+            UIApplication.shared.open(url)
         case .openAboutXplora:
             let viewController = AboutXploraViewController()
             viewController.hidesBottomBarWhenPushed = true
@@ -464,20 +458,6 @@ final class ProfileViewController: UIViewController {
         }
     }
 
-    private func indexTag(section: Int, row: Int) -> Int {
-        (section * 1_000) + row
-    }
-
-    @objc private func didChangeDarkThemeSwitch(_ sender: UISwitch) {
-        let section = sender.tag / 1_000
-        let row = sender.tag % 1_000
-
-        guard sections.indices.contains(section) else { return }
-        guard sections[section].items.indices.contains(row) else { return }
-        guard case .action(let actionItem) = sections[section].items[row], actionItem.action == .darkTheme else { return }
-
-        viewModel.didToggleDarkTheme(sender.isOn)
-    }
 }
 
 private final class ProfileSectionHeaderView: UICollectionReusableView {

@@ -85,6 +85,18 @@
 "tab.wishlist" = "Вишлист";
 
 "statistics.title" = "Исследовано";
+"statistics.error.load" = "Не удалось загрузить статистику. Попробуйте ещё раз.";
+"statistics.total.title" = "Всего";
+"statistics.total.subtitle" = "Среди %d стран ООН";
+"statistics.total.world" = "Мир";
+"statistics.total.countries" = "Страны";
+"statistics.percent" = "%d %%";
+"statistics.continents.title" = "Континенты";
+"statistics.continents.subtitle" = "Включая Антарктиду";
+"statistics.countries.title" = "Страны";
+"statistics.countries.subtitle" = "Страны, признанные ООН";
+"statistics.continent.subtitle.un_countries" = "Страны, признанные ООН";
+"statistics.continent.subtitle.all_territories" = "Все территории";
 
 "wishlist.title" = "Вишлист";
 "wishlist.add.title" = "Добавить страну";
@@ -470,7 +482,7 @@
 "profile.section.app" = "Приложение";
 "profile.section.data" = "Данные";
 
-"profile.item.dark_theme" = "Тёмная тема";
+"profile.item.theme" = "Тема";
 "profile.item.language" = "Язык";
 "profile.item.share" = "Поделиться";
 "profile.item.rate_app" = "Оценить приложение";
@@ -505,9 +517,11 @@
 "profile.details.avatar.take_photo" = "Камера";
 "profile.details.avatar.camera_unavailable" = "Камера недоступна";
 "profile.details.avatar.preview_title" = "Новое фото профиля";
-"profile.language_selection.title" = "Язык";
 "profile.language_selection.placeholder" = "Выбор языка будет реализован на следующем этапе.";
-"profile.language_selection.restart_message" = "Язык применится после перезапуска приложения.";
+"profile.theme.system" = "Системная";
+"profile.theme.light" = "Светлая";
+"profile.theme.dark" = "Тёмная";
+"profile.theme.footer" = "«Системная» повторяет оформление, выбранное в настройках устройства.";
 "profile.about.title" = "О Xplora";
 "profile.about.placeholder" = "Экран «О Xplora» будет реализован на следующем этапе.";
 "profile.about.subtitle" = "Дневник путешествий и впечатлений";
@@ -550,6 +564,9 @@
 "profile.stub.share_with_friends" = "Функция «Поделиться» будет реализована на следующем этапе.";
 "profile.stub.delete_data" = "Сценарий удаления данных будет реализован на следующем этапе.";
 
+"onboarding.subtitle" = "Отмечайте все места, где вы побывали.";
+"onboarding.name.placeholder" = "Ваше имя";
+"onboarding.get_started" = "Начать";
 "onboarding.country.picker_title" = "Страна проживания";
 "onboarding.country.placeholder" = "Выберите страну";
 "onboarding.error.country_required" = "Выберите страну или отметьте «Гражданин мира»";

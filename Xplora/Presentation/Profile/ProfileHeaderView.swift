@@ -65,7 +65,6 @@ final class ProfileHeaderView: UIControl {
 
     func configure(with item: ProfileCardItem) {
         applyAvatar(fileName: item.avatarFileName, initials: item.initials)
-        avatarLabel.text = item.initials
         nameLabel.text = item.name
         subtitleLabel.text = item.status.title
         subtitleLabel.isHidden = !item.isStatusVisible
@@ -240,12 +239,12 @@ final class ProfileHeaderView: UIControl {
         }
     }
 
-    private func applyAvatar(fileName: String?, initials: String) {
+    private func applyAvatar(fileName: String?, initials: String?) {
         let image = ProfileUserSettings.loadAvatarImage(fileName: fileName)
         avatarImageView.image = image
         avatarImageView.isHidden = image == nil
         avatarLabel.isHidden = image != nil
-        avatarLabel.text = initials
+        avatarLabel.setAvatarInitials(initials)
     }
 }
 

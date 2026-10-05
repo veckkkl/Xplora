@@ -46,7 +46,7 @@ final class StatisticsViewModel {
                 hasLoadedOnce = true
                 onStateChange?(.content(makeViewData(from: summary)))
             } catch {
-                onStateChange?(.error("Не удалось загрузить статистику"))
+                onStateChange?(.error(L10n.Statistics.Error.load))
             }
         }
     }
@@ -56,27 +56,27 @@ final class StatisticsViewModel {
     private func makeViewData(from summary: StatisticsSummary) -> StatisticsViewData {
         StatisticsViewData(
             totalCard: StatisticsTotalCardViewData(
-                title: "Всего",
-                subtitle: "Среди \(summary.totalUNCount) стран ООН",
-                leftValue: "\(summary.worldProgressPercent) %",
-                leftCaption: "Мир",
+                title: L10n.Statistics.Total.title,
+                subtitle: L10n.Statistics.Total.subtitle(summary.totalUNCount),
+                leftValue: L10n.Statistics.percent(summary.worldProgressPercent),
+                leftCaption: L10n.Statistics.Total.world,
                 rightValue: "\(summary.visitedUNCount)",
-                rightCaption: "Страны",
+                rightCaption: L10n.Statistics.Total.countries,
                 progress: Double(summary.worldProgressPercent) / 100.0
             ),
             continentsCard: StatisticsSingleValueCardViewData(
-                title: "Континенты",
-                subtitle: "Включая Антарктику",
+                title: L10n.Statistics.Continents.title,
+                subtitle: L10n.Statistics.Continents.subtitle,
                 value: "\(summary.visitedContinentsCount) / \(summary.totalContinentsCount)"
             ),
             countriesCard: StatisticsSingleValueCardViewData(
-                title: "Страны",
-                subtitle: "Страны, признанные ООН",
+                title: L10n.Statistics.Countries.title,
+                subtitle: L10n.Statistics.Countries.subtitle,
                 value: "\(summary.visitedUNCount) / \(summary.totalUNCount)"
             ),
             continentCards: summary.continentItems.map { item in
                 StatisticsSingleValueCardViewData(
-                    title: item.continent.russianName,
+                    title: item.continent.localizedName,
                     subtitle: item.continent.subtitleText,
                     value: "\(item.visitedCount) / \(item.totalCount)"
                 )
@@ -85,23 +85,12 @@ final class StatisticsViewModel {
     }
 }
 
-// MARK: - Continent + Russian name
+// MARK: - Continent subtitle
 
 private extension Continent {
-    var russianName: String {
-        switch self {
-        case .africa:       return "Африка"
-        case .asia:         return "Азия"
-        case .europe:       return "Европа"
-        case .northAmerica: return "Северная Америка"
-        case .southAmerica: return "Южная Америка"
-        case .oceania:      return "Океания"
-        case .antarctica:   return "Антарктика"
-        case .other:        return "Другое"
-        }
-    }
-
     var subtitleText: String {
-        self == .antarctica ? "Все территории" : "Страны, признанные ООН"
+        self == .antarctica
+            ? L10n.Statistics.Continent.Subtitle.allTerritories
+            : L10n.Statistics.Continent.Subtitle.unCountries
     }
 }

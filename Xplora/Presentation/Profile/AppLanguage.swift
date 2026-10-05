@@ -5,27 +5,28 @@
 
 import Foundation
 
+/// Language the app UI is actually rendered in. The choice itself is owned by
+/// iOS (Settings → Xplora → Language), so nothing is stored here.
 enum AppLanguage: String, CaseIterable {
     case ru
     case en
 
-    private static let userDefaultsKey = "profile.selected_language"
+    static let fallback: AppLanguage = .en
 
     static var current: AppLanguage {
-        if let bundleCode = Bundle.main.preferredLocalizations.first,
-           let language = AppLanguage(localeCode: bundleCode) {
-            return language
-        }
-        if let rawValue = UserDefaults.standard.string(forKey: userDefaultsKey),
-           let language = AppLanguage(rawValue: rawValue) {
-            return language
-        }
-        return defaultLanguage
+        resolve(preferredLocalizations: Bundle.main.preferredLocalizations)
     }
 
-    static func save(_ language: AppLanguage) {
-        UserDefaults.standard.set(language.rawValue, forKey: userDefaultsKey)
+    static func resolve(preferredLocalizations: [String]) -> AppLanguage {
+        preferredLocalizations.lazy.compactMap(AppLanguage.init(localeCode:)).first ?? fallback
     }
+
+    /// Earlier builds saved an in-app language pick that iOS never honoured.
+    static func removeLegacyStoredSelection(from defaults: UserDefaults = .standard) {
+        defaults.removeObject(forKey: legacySelectionKey)
+    }
+
+    static let legacySelectionKey = "profile.selected_language"
 
     var displayName: String {
         switch self {
@@ -36,14 +37,9 @@ enum AppLanguage: String, CaseIterable {
         }
     }
 
-    // Matches "ru", "ru-RU", "en", "en-US", etc. against short rawValue codes.
+    // Matches "ru", "ru-RU", "en_US", etc. against short rawValue codes.
     private init?(localeCode: String) {
-        let prefix = localeCode.split(separator: "-", maxSplits: 1).first.map(String.init) ?? localeCode
-        self.init(rawValue: prefix)
-    }
-
-    private static var defaultLanguage: AppLanguage {
-        let systemCode = Locale.current.language.languageCode?.identifier ?? "en"
-        return systemCode.hasPrefix("ru") ? .ru : .en
+        let prefix = localeCode.split(whereSeparator: { $0 == "-" || $0 == "_" }).first.map(String.init) ?? localeCode
+        self.init(rawValue: prefix.lowercased())
     }
 }
