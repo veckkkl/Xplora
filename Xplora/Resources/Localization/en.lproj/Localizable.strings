@@ -85,6 +85,18 @@
 "tab.wishlist" = "Wishlist";
 
 "statistics.title" = "Statistics";
+"statistics.error.load" = "Couldn't load statistics. Please try again.";
+"statistics.total.title" = "Total";
+"statistics.total.subtitle" = "Out of %d UN countries";
+"statistics.total.world" = "World";
+"statistics.total.countries" = "Countries";
+"statistics.percent" = "%d%%";
+"statistics.continents.title" = "Continents";
+"statistics.continents.subtitle" = "Including Antarctica";
+"statistics.countries.title" = "Countries";
+"statistics.countries.subtitle" = "UN-recognized countries";
+"statistics.continent.subtitle.un_countries" = "UN-recognized countries";
+"statistics.continent.subtitle.all_territories" = "All territories";
 
 "wishlist.title" = "Wishlist";
 "wishlist.add.title" = "Add Country";
@@ -470,7 +482,7 @@
 "profile.section.app" = "App";
 "profile.section.data" = "Data";
 
-"profile.item.dark_theme" = "Dark Theme";
+"profile.item.theme" = "Theme";
 "profile.item.language" = "Language";
 "profile.item.share" = "Share";
 "profile.item.rate_app" = "Rate App";
@@ -505,9 +517,11 @@
 "profile.details.avatar.take_photo" = "Camera";
 "profile.details.avatar.camera_unavailable" = "Camera is unavailable";
 "profile.details.avatar.preview_title" = "New Profile Photo";
-"profile.language_selection.title" = "Language";
 "profile.language_selection.placeholder" = "Language selection will be implemented in the next step.";
-"profile.language_selection.restart_message" = "Language will be applied after restarting the app.";
+"profile.theme.system" = "System";
+"profile.theme.light" = "Light";
+"profile.theme.dark" = "Dark";
+"profile.theme.footer" = "System matches your device's appearance setting.";
 "profile.about.title" = "About Xplora";
 "profile.about.placeholder" = "About Xplora screen will be implemented in the next step.";
 "profile.about.subtitle" = "Travel journal for your experiences";
@@ -550,6 +564,9 @@
 "profile.stub.share_with_friends" = "Share flow will be implemented in the next step.";
 "profile.stub.delete_data" = "Delete data flow will be implemented in the next step.";
 
+"onboarding.subtitle" = "Track everywhere you've been.";
+"onboarding.name.placeholder" = "Your name";
+"onboarding.get_started" = "Get Started";
 "onboarding.country.picker_title" = "Country of Residence";
 "onboarding.country.placeholder" = "Select Country";
 "onboarding.error.country_required" = "Please select a country or choose World Citizen";

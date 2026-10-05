@@ -7,7 +7,8 @@ import Foundation
 
 enum ProfileRoute: Equatable {
     case openProfileDetails(status: TravelStatus, residenceCountryCode: String?)
-    case openLanguageSelection
+    case openThemeSelection(current: AppTheme)
+    case openAppLanguageSettings
     case openAboutXplora
     case openPrivacyPolicy
     case shareApp
@@ -20,7 +21,7 @@ enum ProfileRoute: Equatable {
 protocol ProfileViewModelInput: AnyObject {
     func viewDidLoad()
     func didSelectItem(at indexPath: IndexPath)
-    func didToggleDarkTheme(_ isOn: Bool)
+    func didSelectTheme(_ theme: AppTheme)
     func didUpdateUserName(_ name: String)
     func didUpdateResidenceCountry(_ residenceCountryCode: String?)
 }
@@ -41,9 +42,9 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
     private let getStatistics: GetStatisticsUseCase
     private let getTrips: GetTripsUseCase
     private let travelStatusResolver: TravelStatusResolver
+    private let themeManager: AppThemeManaging
 
     private var sections: [ProfileSectionModel] = []
-    private var isDarkThemeEnabled = AppThemeManager.isDarkThemeEnabled
     private var profileStats = ProfileStatsSnapshot.zero
 
     init(
@@ -51,13 +52,15 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         updateCurrentUser: UpdateCurrentUserUseCase,
         getStatistics: GetStatisticsUseCase,
         getTrips: GetTripsUseCase,
-        travelStatusResolver: TravelStatusResolver = TravelStatusResolver()
+        travelStatusResolver: TravelStatusResolver = TravelStatusResolver(),
+        themeManager: AppThemeManaging = AppThemeManager()
     ) {
         self.getCurrentUser = getCurrentUser
         self.updateCurrentUser = updateCurrentUser
         self.getStatistics = getStatistics
         self.getTrips = getTrips
         self.travelStatusResolver = travelStatusResolver
+        self.themeManager = themeManager
     }
 
     func viewDidLoad() {
@@ -84,18 +87,12 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
                 residenceCountryCode: (try? getCurrentUser.execute())?.residenceCountryCode
             ))
         case .action(let actionItem):
-            switch actionItem.action {
-            case .darkTheme:
-                didToggleDarkTheme(!isDarkThemeEnabled)
-            default:
-                onRoute?(route(for: actionItem.action))
-            }
+            onRoute?(route(for: actionItem.action))
         }
     }
 
-    func didToggleDarkTheme(_ isOn: Bool) {
-        isDarkThemeEnabled = isOn
-        AppThemeManager.apply(isDark: isOn)
+    func didSelectTheme(_ theme: AppTheme) {
+        themeManager.apply(theme)
         refreshSections()
     }
 
@@ -136,12 +133,12 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
                 section: .appearance,
                 items: [
                     .action(ProfileActionItem(
-                        action: .darkTheme,
-                        title: L10n.Profile.Item.darkTheme,
-                        value: nil,
+                        action: .theme,
+                        title: L10n.Profile.Item.theme,
+                        value: themeManager.currentTheme.title,
                         style: .standard,
-                        accessory: .toggle(isDarkThemeEnabled),
-                        iconSystemName: "moon.fill",
+                        accessory: .disclosure,
+                        iconSystemName: "circle.lefthalf.filled",
                         iconTint: .blue
                     )),
                     .action(ProfileActionItem(
@@ -270,9 +267,8 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
 
     private func route(for action: ProfileItemAction) -> ProfileRoute {
         switch action {
-        case .darkTheme:
-            preconditionFailure("Handled before route(for:) is called.")
-        case .language:       return .openLanguageSelection
+        case .theme:          return .openThemeSelection(current: themeManager.currentTheme)
+        case .language:       return .openAppLanguageSettings
         case .rateApp:        return .rateApp
         case .about:          return .openAboutXplora
         case .privacyPolicy:  return .openPrivacyPolicy

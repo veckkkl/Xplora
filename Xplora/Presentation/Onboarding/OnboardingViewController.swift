@@ -45,7 +45,7 @@ final class OnboardingViewController: UIViewController {
 
     private let subtitleLabel: UILabel = {
         let l = UILabel()
-        l.text = "Track everywhere you've been."
+        l.text = L10n.Onboarding.subtitle
         l.font = .systemFont(ofSize: 15)
         l.textColor = .secondaryLabel
         l.textAlignment = .center
@@ -65,7 +65,7 @@ final class OnboardingViewController: UIViewController {
 
     private let nameField: UITextField = {
         let f = UITextField()
-        f.placeholder = "Your name"
+        f.placeholder = L10n.Onboarding.Name.placeholder
         f.autocorrectionType = .no
         f.autocapitalizationType = .words
         f.returnKeyType = .continue
@@ -162,7 +162,7 @@ final class OnboardingViewController: UIViewController {
 
     private let continueButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = "Get Started"
+        config.title = L10n.Onboarding.getStarted
         config.cornerStyle = .large
         config.baseBackgroundColor = .systemBlue
         config.baseForegroundColor = .white

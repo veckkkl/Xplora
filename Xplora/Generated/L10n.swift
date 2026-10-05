@@ -863,6 +863,10 @@ internal enum L10n {
     }
   }
   internal enum Onboarding {
+    /// Get Started
+    internal static let getStarted = L10n.tr("Localizable", "onboarding.get_started", fallback: "Get Started")
+    /// Track everywhere you've been.
+    internal static let subtitle = L10n.tr("Localizable", "onboarding.subtitle", fallback: "Track everywhere you've been.")
     internal enum Country {
       /// Country of Residence
       internal static let pickerTitle = L10n.tr("Localizable", "onboarding.country.picker_title", fallback: "Country of Residence")
@@ -872,6 +876,10 @@ internal enum L10n {
     internal enum Error {
       /// Please select a country or choose World Citizen
       internal static let countryRequired = L10n.tr("Localizable", "onboarding.error.country_required", fallback: "Please select a country or choose World Citizen")
+    }
+    internal enum Name {
+      /// Your name
+      internal static let placeholder = L10n.tr("Localizable", "onboarding.name.placeholder", fallback: "Your name")
     }
     internal enum WorldCitizen {
       /// I don't live in one country
@@ -1032,8 +1040,6 @@ internal enum L10n {
     internal enum Item {
       /// About Xplora
       internal static let aboutXplora = L10n.tr("Localizable", "profile.item.about_xplora", fallback: "About Xplora")
-      /// Dark Theme
-      internal static let darkTheme = L10n.tr("Localizable", "profile.item.dark_theme", fallback: "Dark Theme")
       /// Delete Data
       internal static let deleteData = L10n.tr("Localizable", "profile.item.delete_data", fallback: "Delete Data")
       /// Language
@@ -1046,6 +1052,8 @@ internal enum L10n {
       internal static let share = L10n.tr("Localizable", "profile.item.share", fallback: "Share")
       /// Share with Friends
       internal static let shareWithFriends = L10n.tr("Localizable", "profile.item.share_with_friends", fallback: "Share with Friends")
+      /// Theme
+      internal static let theme = L10n.tr("Localizable", "profile.item.theme", fallback: "Theme")
     }
     internal enum Language {
       /// English
@@ -1064,10 +1072,6 @@ internal enum L10n {
     internal enum LanguageSelection {
       /// Language selection will be implemented in the next step.
       internal static let placeholder = L10n.tr("Localizable", "profile.language_selection.placeholder", fallback: "Language selection will be implemented in the next step.")
-      /// Language will be applied after restarting the app.
-      internal static let restartMessage = L10n.tr("Localizable", "profile.language_selection.restart_message", fallback: "Language will be applied after restarting the app.")
-      /// Language
-      internal static let title = L10n.tr("Localizable", "profile.language_selection.title", fallback: "Language")
     }
     internal enum Privacy {
       /// Could not open Privacy Policy
@@ -1125,10 +1129,60 @@ internal enum L10n {
       /// Settings
       internal static let title = L10n.tr("Localizable", "profile.tab.title", fallback: "Settings")
     }
+    internal enum Theme {
+      /// Dark
+      internal static let dark = L10n.tr("Localizable", "profile.theme.dark", fallback: "Dark")
+      /// System matches your device's appearance setting.
+      internal static let footer = L10n.tr("Localizable", "profile.theme.footer", fallback: "System matches your device's appearance setting.")
+      /// Light
+      internal static let light = L10n.tr("Localizable", "profile.theme.light", fallback: "Light")
+      /// System
+      internal static let system = L10n.tr("Localizable", "profile.theme.system", fallback: "System")
+    }
   }
   internal enum Statistics {
+    /// %d%%
+    internal static func percent(_ p1: Int) -> String {
+      return L10n.tr("Localizable", "statistics.percent", p1, fallback: "%d%%")
+    }
     /// Statistics
     internal static let title = L10n.tr("Localizable", "statistics.title", fallback: "Statistics")
+    internal enum Continent {
+      internal enum Subtitle {
+        /// All territories
+        internal static let allTerritories = L10n.tr("Localizable", "statistics.continent.subtitle.all_territories", fallback: "All territories")
+        /// UN-recognized countries
+        internal static let unCountries = L10n.tr("Localizable", "statistics.continent.subtitle.un_countries", fallback: "UN-recognized countries")
+      }
+    }
+    internal enum Continents {
+      /// Including Antarctica
+      internal static let subtitle = L10n.tr("Localizable", "statistics.continents.subtitle", fallback: "Including Antarctica")
+      /// Continents
+      internal static let title = L10n.tr("Localizable", "statistics.continents.title", fallback: "Continents")
+    }
+    internal enum Countries {
+      /// UN-recognized countries
+      internal static let subtitle = L10n.tr("Localizable", "statistics.countries.subtitle", fallback: "UN-recognized countries")
+      /// Countries
+      internal static let title = L10n.tr("Localizable", "statistics.countries.title", fallback: "Countries")
+    }
+    internal enum Error {
+      /// Couldn't load statistics. Please try again.
+      internal static let load = L10n.tr("Localizable", "statistics.error.load", fallback: "Couldn't load statistics. Please try again.")
+    }
+    internal enum Total {
+      /// Countries
+      internal static let countries = L10n.tr("Localizable", "statistics.total.countries", fallback: "Countries")
+      /// Out of %d UN countries
+      internal static func subtitle(_ p1: Int) -> String {
+        return L10n.tr("Localizable", "statistics.total.subtitle", p1, fallback: "Out of %d UN countries")
+      }
+      /// Total
+      internal static let title = L10n.tr("Localizable", "statistics.total.title", fallback: "Total")
+      /// World
+      internal static let world = L10n.tr("Localizable", "statistics.total.world", fallback: "World")
+    }
   }
   internal enum Tab {
     /// Profile
@@ -1199,9 +1253,9 @@ internal enum L10n {
     }
     internal enum Trip {
       internal enum Notes {
-        /// %d note
-        internal static func one(_ p1: Int) -> String {
-          return L10n.tr("Localizable", "timeline.trip.notes.one", p1, fallback: "%d note")
+        /// %d notes
+        internal static func count(_ p1: Int) -> String {
+          return L10n.tr("Localizable", "timeline.trip.notes.count", p1, fallback: "%d notes")
         }
         /// %d notes
         internal static func few(_ p1: Int) -> String {
@@ -1211,13 +1265,13 @@ internal enum L10n {
         internal static func many(_ p1: Int) -> String {
           return L10n.tr("Localizable", "timeline.trip.notes.many", p1, fallback: "%d notes")
         }
+        /// %d note
+        internal static func one(_ p1: Int) -> String {
+          return L10n.tr("Localizable", "timeline.trip.notes.one", p1, fallback: "%d note")
+        }
         /// %d notes
         internal static func other(_ p1: Int) -> String {
           return L10n.tr("Localizable", "timeline.trip.notes.other", p1, fallback: "%d notes")
-        }
-        /// Plural-aware count text resolved via Localizable.stringsdict.
-        internal static func count(_ p1: Int) -> String {
-          return L10n.tr("Localizable", "timeline.trip.notes.count", p1, fallback: "%d notes")
         }
       }
     }

@@ -2,8 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Xplora uses the camera so you can take photos for your travel notes and profile picture.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Used to detect your current country and add it to your wishlist.</string>
+	<string>Xplora uses your location to show where you are on the map and to add the country you're in to your wishlist.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Xplora uses your photo library so you can add photos to your travel notes and profile picture.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

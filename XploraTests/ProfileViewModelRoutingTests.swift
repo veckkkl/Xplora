@@ -41,7 +41,8 @@ struct ProfileViewModelRoutingTests {
             getCurrentUser: getUser,
             updateCurrentUser: updateUser,
             getStatistics: statistics,
-            getTrips: trips
+            getTrips: trips,
+            themeManager: MockAppThemeManager()
         )
         return SUT(viewModel: vm, getUser: getUser, updateUser: updateUser, statistics: statistics, trips: trips)
     }
@@ -112,24 +113,24 @@ struct ProfileViewModelRoutingTests {
 
     // MARK: - Action rows → routes
 
-    @Test func selectLanguageItem_emitsOpenLanguageSelection() {
+    @Test func selectLanguageItem_emitsOpenAppLanguageSettings() {
         let sut = makeSUT(user: makeUser())
         sut.viewModel.viewDidLoad()
         var route: ProfileRoute?
         sut.viewModel.onRoute = { route = $0 }
-        // appearance section, row 1 = language (row 0 is darkTheme toggle)
+        // appearance section, row 1 = language (row 0 is theme)
         sut.viewModel.didSelectItem(at: IndexPath(row: 1, section: SectionIndex.appearance))
-        #expect(route == .openLanguageSelection)
+        #expect(route == .openAppLanguageSettings)
     }
 
-    @Test func selectDarkThemeItem_doesNotEmitRoute() {
+    @Test func selectThemeItem_emitsOpenThemeSelectionWithCurrentTheme() {
         let sut = makeSUT(user: makeUser())
         sut.viewModel.viewDidLoad()
         var route: ProfileRoute?
         sut.viewModel.onRoute = { route = $0 }
-        // appearance section, row 0 = darkTheme toggle → handled inline, no route
+        // appearance section, row 0 = theme
         sut.viewModel.didSelectItem(at: IndexPath(row: 0, section: SectionIndex.appearance))
-        #expect(route == nil)
+        #expect(route == .openThemeSelection(current: .system))
     }
 
     @Test func selectShareItem_emitsShareAppRoute() {

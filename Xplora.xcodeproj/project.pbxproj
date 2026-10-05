@@ -329,9 +329,6 @@
 				DEVELOPMENT_TEAM = Y7P8TX96Q5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Xplora/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Allow camera access to attach photos to your notes.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to show your position on the map.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allow photo library access to attach photos to your notes.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -364,9 +361,6 @@
 				DEVELOPMENT_TEAM = Y7P8TX96Q5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Xplora/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Allow camera access to attach photos to your notes.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to show your position on the map.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allow photo library access to attach photos to your notes.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

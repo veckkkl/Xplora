@@ -25,7 +25,8 @@ struct ProfileViewModelTests {
             getCurrentUser: getUser,
             updateCurrentUser: updateUser,
             getStatistics: MockGetStatisticsUseCase(),
-            getTrips: MockGetTripsUseCase()
+            getTrips: MockGetTripsUseCase(),
+            themeManager: MockAppThemeManager()
         )
         return (sut, getUser, updateUser)
     }
@@ -115,14 +116,14 @@ struct ProfileViewModelTests {
         #expect(updateUser.callCount == 0)
     }
 
-    // MARK: - didToggleDarkTheme
+    // MARK: - didSelectTheme
 
-    @Test func didToggleDarkTheme_doesNotFireLogoutRoute() {
+    @Test func didSelectTheme_doesNotFireLogoutRoute() {
         let (sut, _, _) = makeSUT(user: makeUser())
         sut.viewDidLoad()
         var route: ProfileRoute?
         sut.onRoute = { route = $0 }
-        sut.didToggleDarkTheme(true)
+        sut.didSelectTheme(.dark)
         #expect(route == nil)
     }
 

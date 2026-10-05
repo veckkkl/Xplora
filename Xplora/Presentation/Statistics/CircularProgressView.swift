@@ -57,16 +57,25 @@ final class CircularProgressView: UIView {
         backgroundColor = .clear
 
         trackLayer.fillColor = UIColor.clear.cgColor
-        trackLayer.strokeColor = UIColor.systemGray5.cgColor
         trackLayer.lineWidth = lineWidth
         trackLayer.lineCap = .round
         layer.addSublayer(trackLayer)
 
         progressLayer.fillColor = UIColor.clear.cgColor
-        progressLayer.strokeColor = UIColor.systemBlue.cgColor
         progressLayer.lineWidth = lineWidth
         progressLayer.lineCap = .round
         progressLayer.strokeEnd = 0
         layer.addSublayer(progressLayer)
+
+        updateStrokeColors()
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.updateStrokeColors()
+        }
+    }
+
+    // CGColors don't follow dynamic UIColors, so re-resolve them on theme changes.
+    private func updateStrokeColors() {
+        trackLayer.strokeColor = UIColor.systemGray5.resolvedColor(with: traitCollection).cgColor
+        progressLayer.strokeColor = UIColor.systemBlue.resolvedColor(with: traitCollection).cgColor
     }
 }

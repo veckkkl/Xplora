@@ -27,7 +27,7 @@ enum ProfileSection: Int, CaseIterable {
 }
 
 enum ProfileItemAction: Equatable {
-    case darkTheme
+    case theme
     case language
     case rateApp
     case about
@@ -51,7 +51,6 @@ struct ProfileStatsSnapshot: Equatable {
 enum ProfileRowAccessory: Equatable {
     case none
     case disclosure
-    case toggle(Bool)
 }
 
 enum ProfileRowStyle: Equatable {
@@ -91,7 +90,7 @@ struct ProfileCardItem: Hashable {
         let tint: ProfileIconTint
     }
 
-    let initials: String
+    let initials: String?
     let avatarFileName: String?
     let name: String
     let status: TravelStatus

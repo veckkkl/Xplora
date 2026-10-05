@@ -73,20 +73,16 @@ enum ProfileUserSettings {
         return UIImage(data: data)
     }
 
-    static func initials(from name: String) -> String {
-        let components = name
+    /// Up to two initials from the first letters of the name's words, or `nil`
+    /// when the name has no letters (the avatar then shows a neutral person icon).
+    static func initials(from name: String) -> String? {
+        let letters = name
             .split(whereSeparator: { $0.isWhitespace || $0.isNewline })
+            .compactMap { word in word.first(where: \.isLetter) }
             .prefix(2)
+            .map { String($0).uppercased() }
 
-        let letters = components.compactMap { component in
-            component.first.map { String($0).uppercased() }
-        }
-
-        if letters.isEmpty {
-            return "VB"
-        }
-
-        return letters.joined()
+        return letters.isEmpty ? nil : letters.joined()
     }
 
     private static var avatarDirectoryURL: URL {

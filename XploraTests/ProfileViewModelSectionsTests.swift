@@ -33,7 +33,8 @@ struct ProfileViewModelSectionsTests {
             getCurrentUser: getUser,
             updateCurrentUser: updateUser,
             getStatistics: MockGetStatisticsUseCase(),
-            getTrips: MockGetTripsUseCase()
+            getTrips: MockGetTripsUseCase(),
+            themeManager: MockAppThemeManager()
         )
         return (sut, getUser, updateUser)
     }
@@ -65,7 +66,7 @@ struct ProfileViewModelSectionsTests {
         }
     }
 
-    @Test func appearanceSection_containsDarkThemeAndLanguageActions() {
+    @Test func appearanceSection_containsThemeAndLanguageActions() {
         let sections = sections(after: { _ in })
         guard let appearance = sections.first(where: { $0.section == .appearance }) else {
             Issue.record("Missing appearance section")
@@ -75,7 +76,7 @@ struct ProfileViewModelSectionsTests {
             if case .action(let a) = item { return a.action }
             return nil
         }
-        #expect(actions == [.darkTheme, .language])
+        #expect(actions == [.theme, .language])
     }
 
     @Test func appSection_containsAllExpectedActionsInOrder() {
@@ -149,15 +150,32 @@ struct ProfileViewModelSectionsTests {
         #expect(refreshCount == 0)
     }
 
-    @Test func didToggleDarkTheme_changingValue_emitsSectionsRefresh() {
+    @Test func didSelectTheme_changingValue_emitsThemeRowWithNewValue() {
         let (sut, _, _) = makeSUT(user: makeUser())
         sut.viewDidLoad()
         var captured: [ProfileSectionModel] = []
         sut.onSectionsChange = { captured = $0 }
-        // Flip whichever current value is to a guaranteed-different one
-        sut.didToggleDarkTheme(true)
-        sut.didToggleDarkTheme(false)
-        #expect(captured.isEmpty == false)
+        sut.didSelectTheme(.dark)
+
+        let themeRow = captured
+            .first(where: { $0.section == .appearance })?
+            .items
+            .compactMap { item -> ProfileActionItem? in
+                if case .action(let action) = item, action.action == .theme { return action }
+                return nil
+            }
+            .first
+        #expect(themeRow?.value == AppTheme.dark.title)
+        #expect(themeRow?.accessory == .disclosure)
+    }
+
+    @Test func profileCard_initials_emptyName_isNilForNeutralAvatar() {
+        let sections = sections(after: { _ in }, user: makeUser(name: "   "))
+        guard case .profileCard(let card) = sections.first?.items.first else {
+            Issue.record("Missing profileCard item")
+            return
+        }
+        #expect(card.initials == nil)
     }
 
     @Test func didUpdateUserName_changingValue_emitsRefreshWithNewName() {

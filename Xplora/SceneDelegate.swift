@@ -18,7 +18,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         guard let windowScene = scene as? UIWindowScene else { return }
         let window = UIWindow(windowScene: windowScene)
-        window.overrideUserInterfaceStyle = AppThemeManager.isDarkThemeEnabled ? .dark : .light
+        let themeManager = AppThemeManager()
+        themeManager.migrateLegacyValueIfNeeded()
+        window.overrideUserInterfaceStyle = themeManager.currentTheme.userInterfaceStyle
+        AppLanguage.removeLegacyStoredSelection()
         self.window = window
         AppDependenciesConfigurator.configure(ServiceLocator.shared)
 

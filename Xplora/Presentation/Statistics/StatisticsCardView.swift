@@ -134,7 +134,9 @@ final class StatisticsCardView: UIView {
     // MARK: - Setup
 
     private func setup() {
-        backgroundColor = .systemBackground
+        // Paired with the screen's .systemGroupedBackground: white on light gray in
+        // Light Mode, elevated gray on black in Dark Mode.
+        backgroundColor = .secondarySystemGroupedBackground
         layer.cornerRadius = 22
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOpacity = 0.06
