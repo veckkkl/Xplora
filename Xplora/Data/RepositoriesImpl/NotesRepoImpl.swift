@@ -62,6 +62,18 @@ final class NotesRepoImpl: NotesRepo {
         }
     }
 
+    func deleteAll() async throws {
+        try await performInViewContext { context in
+            // Fetch-and-delete instead of NSBatchDeleteRequest so the cascade
+            // to CDNotePhoto runs and the view context stays in sync.
+            let notes = try context.fetch(CDNote.fetchRequest())
+            notes.forEach(context.delete)
+            if context.hasChanges {
+                try context.save()
+            }
+        }
+    }
+
     private func fetchManagedNote(id: String, in context: NSManagedObjectContext) throws -> CDNote? {
         let request = CDNote.fetchRequest()
         request.fetchLimit = 1

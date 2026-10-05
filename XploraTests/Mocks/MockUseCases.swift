@@ -67,3 +67,12 @@ final class MockGetTripsUseCase: GetTripsUseCase {
     var stubbedTrips: [Trip] = []
     func execute() async throws -> [Trip] { stubbedTrips }
 }
+
+final class MockDeleteAllUserDataUseCase: DeleteAllUserDataUseCase {
+    private(set) var callCount = 0
+    var stubbedError: Error?
+    func execute() async throws {
+        callCount += 1
+        if let stubbedError { throw stubbedError }
+    }
+}

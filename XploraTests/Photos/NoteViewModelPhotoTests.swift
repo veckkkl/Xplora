@@ -53,6 +53,10 @@ private final class InMemoryNotePhotoStore: NotePhotoStore, @unchecked Sendable 
             files = files.filter { !$0.key.hasPrefix("Notes/\(noteId)/") }
         }
     }
+
+    func deleteAllNotePhotos() async throws {
+        lock.withLock { files.removeAll() }
+    }
 }
 
 private final class StubPhotoProcessor: NotePhotoLibrarySelectionProcessing {

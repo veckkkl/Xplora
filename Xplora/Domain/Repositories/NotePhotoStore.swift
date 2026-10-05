@@ -18,4 +18,6 @@ protocol NotePhotoStore: AnyObject, Sendable {
     func deletePhoto(at localPath: String) async throws
     /// Removes every photo file stored for `noteId`.
     func deleteAllPhotos(noteId: String) async throws
+    /// Removes the whole note photo directory, including files no note references.
+    func deleteAllNotePhotos() async throws
 }

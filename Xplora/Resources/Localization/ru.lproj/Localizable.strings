@@ -6,6 +6,7 @@
 "common.map" = "Карта";
 "common.ok" = "ОК";
 "common.remove_photo" = "Удалить фото";
+"common.retry" = "Повторить";
 "common.save" = "Сохранить";
 
 "map.actions.notes" = "Заметки";
@@ -43,6 +44,7 @@
 
 "notes.list.empty.title" = "Заметок пока нет";
 "notes.list.error.load" = "Не удалось загрузить заметки. Попробуйте еще раз.";
+"notes.list.error.delete" = "Не удалось удалить заметку. Попробуйте ещё раз.";
 "notes.list.title" = "Заметки";
 
 "notes.location.search.empty.message" = "Ничего не найдено. Попробуйте другой запрос.";
@@ -110,6 +112,10 @@
 "wishlist.select.current_location" = "Добавить текущее местоположение";
 "wishlist.select.error.load" = "Не удалось загрузить страны. Проверьте интернет.";
 "wishlist.select.retry" = "Повторить";
+"wishlist.error.load" = "Не удалось загрузить вишлист.";
+"wishlist.error.add" = "Не удалось добавить место. Вишлист не изменился. Попробуйте ещё раз.";
+"wishlist.error.update" = "Не удалось обновить место. Попробуйте ещё раз.";
+"wishlist.error.remove" = "Не удалось удалить место. Попробуйте ещё раз.";
 "wishlist.duplicate.message" = "Это место уже есть в вишлисте.";
 
 "wishlist.confirm.countryOnlyExists.title" = "Страна уже добавлена";
@@ -513,6 +519,9 @@
 "profile.details.validation.empty_name" = "Введите имя";
 "profile.details.validation.too_long_name" = "Имя должно быть не длиннее %d символов.";
 "profile.details.validation.invalid_characters" = "Имя может содержать только буквы, пробел, дефис, апостроф и точку.";
+"profile.details.error.name" = "Не удалось сохранить имя. Попробуйте ещё раз.";
+"profile.details.error.residence" = "Не удалось сохранить страну проживания. Попробуйте ещё раз.";
+"profile.details.error.avatar" = "Не удалось сохранить фото. Попробуйте ещё раз.";
 "profile.details.avatar.choose_photo" = "Медиатека";
 "profile.details.avatar.take_photo" = "Камера";
 "profile.details.avatar.camera_unavailable" = "Камера недоступна";
@@ -546,10 +555,11 @@
 "profile.share.text" = "Попробуй Xplora";
 "profile.rate.title" = "Оценить приложение";
 "profile.rate.fallback_message" = "Сейчас не удалось открыть окно оценки.";
-"profile.delete.confirmation_title" = "Удалить данные?";
-"profile.delete.confirmation_message" = "Это действие нельзя отменить.";
-"profile.delete.stub_title" = "Пока недоступно";
-"profile.delete.stub_message" = "Удаление данных будет реализовано на следующем этапе.";
+"profile.delete.confirmation_title" = "Удалить все данные?";
+"profile.delete.confirmation_message" = "Все ваши поездки, заметки, фотографии, вишлист и данные профиля будут удалены с этого устройства. Это действие нельзя отменить.";
+"profile.delete.confirm_action" = "Удалить всё";
+"profile.delete.error_title" = "Не удалось удалить все данные";
+"profile.delete.error_message" = "Часть данных удалить не удалось. Попробуйте ещё раз.";
 
 "profile.language.english" = "Английский";
 "profile.language.russian" = "Русский";
@@ -562,7 +572,6 @@
 "profile.stub.about" = "Экран «О Xplora» будет реализован на следующем этапе.";
 "profile.stub.privacy_policy" = "Экран политики конфиденциальности будет реализован на следующем этапе.";
 "profile.stub.share_with_friends" = "Функция «Поделиться» будет реализована на следующем этапе.";
-"profile.stub.delete_data" = "Сценарий удаления данных будет реализован на следующем этапе.";
 
 "onboarding.subtitle" = "Отмечайте все места, где вы побывали.";
 "onboarding.name.placeholder" = "Ваше имя";
@@ -570,6 +579,13 @@
 "onboarding.country.picker_title" = "Страна проживания";
 "onboarding.country.placeholder" = "Выберите страну";
 "onboarding.error.country_required" = "Выберите страну или отметьте «Гражданин мира»";
+"onboarding.error.save_title" = "Не удалось сохранить профиль";
+"onboarding.error.save_message" = "Данные не сохранились, поэтому настройка ещё не завершена. Попробуйте ещё раз.";
+
+"auth.recovery.title" = "Не удалось загрузить локальный профиль";
+"auth.recovery.message" = "Ваши данные не удалены. Попробуйте ещё раз или сбросьте локальные данные, чтобы начать заново.";
+"auth.recovery.reset" = "Сбросить локальные данные";
+"auth.recovery.retry_failed" = "Профиль по-прежнему не загружается. Попробуйте позже.";
 "onboarding.world_citizen.subtitle" = "Я не живу в одной стране";
 "onboarding.world_citizen.title" = "Гражданин мира";
 

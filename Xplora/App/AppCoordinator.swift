@@ -20,24 +20,38 @@ final class AppCoordinator {
     }
 
     func start() {
-        let getCurrentUser = locator.resolve(GetCurrentUserUseCase.self)
-        let hasUser: Bool
-        do {
-            hasUser = try getCurrentUser.execute() != nil
-        } catch {
-            // A stored user exists but can't be read. Don't route to onboarding:
-            // completing it would overwrite the stored record.
-            hasUser = true
-        }
-        if hasUser {
-            showMainApp()
-        } else {
-            showOnboarding()
-        }
+        route(to: AppLaunchRouteResolver.resolve(getCurrentUser: locator.resolve(GetCurrentUserUseCase.self)))
         window.makeKeyAndVisible()
     }
 
     // MARK: - Routing
+
+    func route(to launchRoute: AppLaunchRoute) {
+        switch launchRoute {
+        case .onboarding:
+            showOnboarding()
+        case .mainApp:
+            showMainApp()
+        case .authRecovery:
+            showAuthRecovery()
+        }
+    }
+
+    /// A stored user exists but can't be read. Onboarding isn't offered here:
+    /// completing it would overwrite the stored record.
+    func showAuthRecovery() {
+        let viewModel = AuthRecoveryViewModel(
+            getCurrentUser: locator.resolve(GetCurrentUserUseCase.self),
+            deleteAllUserData: locator.resolve(DeleteAllUserDataUseCase.self)
+        )
+        viewModel.onRoute = { [weak self] route in
+            self?.route(to: route)
+        }
+        viewModel.onResetCompleted = { [weak self] in
+            self?.handleAllDataDeleted()
+        }
+        setRoot(AuthRecoveryViewController(viewModel: viewModel))
+    }
 
     func showMainApp() {
         let tabBarController = makeMainTabBar()
@@ -66,6 +80,15 @@ final class AppCoordinator {
             ProfileUserSettings.saveName(user.name)
         }
         showMainApp()
+    }
+
+    /// Local data is gone: drop every screen built from it and start over.
+    func handleAllDataDeleted() {
+        mapCoordinator = nil
+        timelineCoordinator = nil
+        // The stored theme was removed with the rest of the preferences.
+        window.overrideUserInterfaceStyle = AppThemeManager().currentTheme.userInterfaceStyle
+        showOnboarding()
     }
 
     func handleLogout() {
@@ -178,7 +201,8 @@ final class AppCoordinator {
             getCurrentUser: locator.resolve(GetCurrentUserUseCase.self),
             updateCurrentUser: locator.resolve(UpdateCurrentUserUseCase.self),
             getStatistics: locator.resolve(GetStatisticsUseCase.self),
-            getTrips: locator.resolve(GetTripsUseCase.self)
+            getTrips: locator.resolve(GetTripsUseCase.self),
+            deleteAllUserData: locator.resolve(DeleteAllUserDataUseCase.self)
         )
         let viewController = ProfileViewController(
             viewModel: viewModel,
@@ -186,6 +210,9 @@ final class AppCoordinator {
         )
         viewController.onLogout = { [weak self] in
             self?.handleLogout()
+        }
+        viewController.onAllDataDeleted = { [weak self] in
+            self?.handleAllDataDeleted()
         }
         let navigationController = UINavigationController(rootViewController: viewController)
         navigationController.tabBarItem = UITabBarItem(

@@ -15,6 +15,8 @@ enum ProfileRoute: Equatable {
     case rateApp
     case confirmDeleteData
     case logout
+    /// All local data was deleted; the app should start over.
+    case allDataDeleted
 }
 
 @MainActor
@@ -22,25 +24,33 @@ protocol ProfileViewModelInput: AnyObject {
     func viewDidLoad()
     func didSelectItem(at indexPath: IndexPath)
     func didSelectTheme(_ theme: AppTheme)
-    func didUpdateUserName(_ name: String)
-    func didUpdateResidenceCountry(_ residenceCountryCode: String?)
+    /// Returns `false` when the name wasn't saved.
+    @discardableResult func didUpdateUserName(_ name: String) -> Bool
+    /// Returns `false` when the country wasn't saved.
+    @discardableResult func didUpdateResidenceCountry(_ residenceCountryCode: String?) -> Bool
+    func didConfirmDeleteAllData()
 }
 
 @MainActor
 protocol ProfileViewModelOutput: AnyObject {
     var onSectionsChange: (([ProfileSectionModel]) -> Void)? { get set }
     var onRoute: ((ProfileRoute) -> Void)? { get set }
+    var onDeleteAllDataInProgress: ((Bool) -> Void)? { get set }
+    var onDeleteAllDataFailed: ((String) -> Void)? { get set }
 }
 
 @MainActor
 final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
     var onSectionsChange: (([ProfileSectionModel]) -> Void)?
     var onRoute: ((ProfileRoute) -> Void)?
+    var onDeleteAllDataInProgress: ((Bool) -> Void)?
+    var onDeleteAllDataFailed: ((String) -> Void)?
 
     private let getCurrentUser: GetCurrentUserUseCase
     private let updateCurrentUser: UpdateCurrentUserUseCase
     private let getStatistics: GetStatisticsUseCase
     private let getTrips: GetTripsUseCase
+    private let deleteAllUserData: DeleteAllUserDataUseCase
     private let travelStatusResolver: TravelStatusResolver
     private let themeManager: AppThemeManaging
 
@@ -52,6 +62,7 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         updateCurrentUser: UpdateCurrentUserUseCase,
         getStatistics: GetStatisticsUseCase,
         getTrips: GetTripsUseCase,
+        deleteAllUserData: DeleteAllUserDataUseCase,
         travelStatusResolver: TravelStatusResolver = TravelStatusResolver(),
         themeManager: AppThemeManaging = AppThemeManager()
     ) {
@@ -59,6 +70,7 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         self.updateCurrentUser = updateCurrentUser
         self.getStatistics = getStatistics
         self.getTrips = getTrips
+        self.deleteAllUserData = deleteAllUserData
         self.travelStatusResolver = travelStatusResolver
         self.themeManager = themeManager
     }
@@ -96,19 +108,45 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         refreshSections()
     }
 
-    func didUpdateUserName(_ name: String) {
+    @discardableResult
+    func didUpdateUserName(_ name: String) -> Bool {
+        defer { refreshSections() }
         do {
             try updateCurrentUser.execute(name: name)
             ProfileUserSettings.saveName(name)
+            return true
         } catch {
             // Keep the previous name everywhere; the failure is logged by storage.
+            return false
         }
-        refreshSections()
     }
 
-    func didUpdateResidenceCountry(_ residenceCountryCode: String?) {
-        try? updateCurrentUser.execute(residenceCountryCode: residenceCountryCode)
-        refreshSections()
+    @discardableResult
+    func didUpdateResidenceCountry(_ residenceCountryCode: String?) -> Bool {
+        defer { refreshSections() }
+        do {
+            try updateCurrentUser.execute(residenceCountryCode: residenceCountryCode)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    func didConfirmDeleteAllData() {
+        Task { await deleteAllData() }
+    }
+
+    func deleteAllData() async {
+        onDeleteAllDataInProgress?(true)
+        do {
+            try await deleteAllUserData.execute()
+            onDeleteAllDataInProgress?(false)
+            onRoute?(.allDataDeleted)
+        } catch {
+            // Never report success after a partial failure; the use case logs details.
+            onDeleteAllDataInProgress?(false)
+            onDeleteAllDataFailed?(L10n.Profile.Delete.errorMessage)
+        }
     }
 
     private func buildSections() -> [ProfileSectionModel] {

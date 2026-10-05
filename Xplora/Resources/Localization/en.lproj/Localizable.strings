@@ -6,6 +6,7 @@
 "common.map" = "Map";
 "common.ok" = "OK";
 "common.remove_photo" = "Remove photo";
+"common.retry" = "Retry";
 "common.save" = "Save";
 
 "map.actions.notes" = "Notes";
@@ -43,6 +44,7 @@
 
 "notes.list.empty.title" = "No notes yet";
 "notes.list.error.load" = "Couldn't load notes. Please try again.";
+"notes.list.error.delete" = "Couldn't delete the note. Please try again.";
 "notes.list.title" = "Notes";
 
 "notes.location.search.empty.message" = "No places found. Try a different query.";
@@ -110,6 +112,10 @@
 "wishlist.select.current_location" = "Add current location";
 "wishlist.select.error.load" = "Couldn't load countries. Check your internet connection.";
 "wishlist.select.retry" = "Retry";
+"wishlist.error.load" = "Couldn't load your wishlist.";
+"wishlist.error.add" = "Couldn't add the place. Your wishlist wasn't changed. Please try again.";
+"wishlist.error.update" = "Couldn't update the place. Please try again.";
+"wishlist.error.remove" = "Couldn't remove the place. Please try again.";
 "wishlist.duplicate.message" = "This place is already in your wishlist.";
 
 "wishlist.confirm.countryOnlyExists.title" = "Country already added";
@@ -513,6 +519,9 @@
 "profile.details.validation.empty_name" = "Please enter a name";
 "profile.details.validation.too_long_name" = "Name must be %d characters or fewer.";
 "profile.details.validation.invalid_characters" = "Name can only contain letters, spaces, hyphens, apostrophes, and periods.";
+"profile.details.error.name" = "Couldn't save the name. Please try again.";
+"profile.details.error.residence" = "Couldn't save the country of residence. Please try again.";
+"profile.details.error.avatar" = "Couldn't save the photo. Please try again.";
 "profile.details.avatar.choose_photo" = "Photo Library";
 "profile.details.avatar.take_photo" = "Camera";
 "profile.details.avatar.camera_unavailable" = "Camera is unavailable";
@@ -546,10 +555,11 @@
 "profile.share.text" = "Check out Xplora";
 "profile.rate.title" = "Rate App";
 "profile.rate.fallback_message" = "Unable to open the review prompt right now.";
-"profile.delete.confirmation_title" = "Delete Data?";
-"profile.delete.confirmation_message" = "This action cannot be undone.";
-"profile.delete.stub_title" = "Not Available Yet";
-"profile.delete.stub_message" = "Data deletion will be implemented in the next step.";
+"profile.delete.confirmation_title" = "Delete All Data?";
+"profile.delete.confirmation_message" = "All your trips, notes, photos, wishlist and profile data will be permanently deleted from this device. This action can't be undone.";
+"profile.delete.confirm_action" = "Delete All";
+"profile.delete.error_title" = "Couldn't Delete All Data";
+"profile.delete.error_message" = "Some of your data couldn't be deleted. Please try again.";
 
 "profile.language.english" = "English";
 "profile.language.russian" = "Russian";
@@ -562,7 +572,6 @@
 "profile.stub.about" = "About screen will be implemented in the next step.";
 "profile.stub.privacy_policy" = "Privacy Policy screen will be implemented in the next step.";
 "profile.stub.share_with_friends" = "Share flow will be implemented in the next step.";
-"profile.stub.delete_data" = "Delete data flow will be implemented in the next step.";
 
 "onboarding.subtitle" = "Track everywhere you've been.";
 "onboarding.name.placeholder" = "Your name";
@@ -570,6 +579,13 @@
 "onboarding.country.picker_title" = "Country of Residence";
 "onboarding.country.placeholder" = "Select Country";
 "onboarding.error.country_required" = "Please select a country or choose World Citizen";
+"onboarding.error.save_title" = "Couldn't Save Your Profile";
+"onboarding.error.save_message" = "Your details weren't saved, so setup isn't finished yet. Please try again.";
+
+"auth.recovery.title" = "Couldn't load your local profile";
+"auth.recovery.message" = "Your data hasn't been deleted. Try again, or reset local data to start over.";
+"auth.recovery.reset" = "Reset Local Data";
+"auth.recovery.retry_failed" = "Still couldn't load your profile. Please try again later.";
 "onboarding.world_citizen.subtitle" = "I don't live in one country";
 "onboarding.world_citizen.title" = "World Citizen";
 

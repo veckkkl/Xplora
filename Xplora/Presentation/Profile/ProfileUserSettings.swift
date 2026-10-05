@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import os
 import UIKit
 
 enum ProfileUserSettings {
@@ -58,7 +59,28 @@ enum ProfileUserSettings {
             UserDefaults.standard.set(newFileName, forKey: Keys.avatarFileName)
             return newFileName
         } catch {
+            let nsError = error as NSError
+            Logger.storage.error(
+                "Avatar save failed domain=\(nsError.domain, privacy: .public) code=\(nsError.code, privacy: .public)"
+            )
             return nil
+        }
+    }
+
+    /// Removes the stored name, status visibility, avatar reference and the
+    /// avatar directory. Throws when the avatar files can't be removed; the
+    /// UserDefaults keys are cleared either way.
+    static func removeAll(
+        defaults: UserDefaults = .standard,
+        avatarDirectoryURL: URL = avatarDirectoryURL
+    ) throws {
+        defaults.removeObject(forKey: Keys.name)
+        defaults.removeObject(forKey: Keys.isStatusVisible)
+        defaults.removeObject(forKey: Keys.avatarFileName)
+        do {
+            try FileManager.default.removeItem(at: avatarDirectoryURL)
+        } catch CocoaError.fileNoSuchFile {
+            return
         }
     }
 
@@ -85,7 +107,7 @@ enum ProfileUserSettings {
         return letters.isEmpty ? nil : letters.joined()
     }
 
-    private static var avatarDirectoryURL: URL {
+    static var avatarDirectoryURL: URL {
         let baseURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         return baseURL.appendingPathComponent("ProfileAvatar", isDirectory: true)

@@ -17,6 +17,7 @@ final class WishlistViewController: UIViewController {
 
     private var collectionView: UICollectionView!
     private var dataSource: UICollectionViewDiffableDataSource<Int, Item>!
+    private let errorStateView = ErrorStateView()
 
     init(
         viewModel: WishlistViewModelInput & WishlistViewModelOutput,
@@ -108,6 +109,13 @@ final class WishlistViewController: UIViewController {
         collectionView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
+
+        errorStateView.isHidden = true
+        errorStateView.onRetry = { [weak self] in self?.viewModel.didTapRetry() }
+        view.addSubview(errorStateView)
+        errorStateView.snp.makeConstraints { make in
+            make.edges.equalTo(view.safeAreaLayoutGuide)
+        }
     }
 
     // MARK: - Data source
@@ -145,6 +153,7 @@ final class WishlistViewController: UIViewController {
     private func bind() {
         viewModel.onStateChange = { [weak self] state in self?.apply(state) }
         viewModel.onDuplicateError = { [weak self] in self?.showDuplicateAlert() }
+        viewModel.onOperationError = { [weak self] message in self?.showOperationError(message) }
         viewModel.onShowAddCountry = { [weak self] in self?.showAddCountry() }
         viewModel.onNeedsConfirmation = { [weak self] confirmation, country in
             self?.showConfirmationAlert(confirmation, country: country)
@@ -154,11 +163,18 @@ final class WishlistViewController: UIViewController {
     private func apply(_ state: WishlistViewState) {
         var snapshot = NSDiffableDataSourceSnapshot<Int, Item>()
         snapshot.appendSections([0])
-        if state.isEmpty {
+        switch state {
+        case .content(let items):
+            snapshot.appendItems(items.map { .country($0) }, toSection: 0)
+        case .empty:
             snapshot.appendItems([.empty], toSection: 0)
-        } else {
-            snapshot.appendItems(state.items.map { .country($0) }, toSection: 0)
+        case .error(let message):
+            errorStateView.configure(message: message)
         }
+        let isError: Bool
+        if case .error = state { isError = true } else { isError = false }
+        errorStateView.isHidden = !isError
+        collectionView.isHidden = isError
         dataSource.apply(snapshot, animatingDifferences: true)
     }
 
@@ -170,6 +186,12 @@ final class WishlistViewController: UIViewController {
             message: L10n.Wishlist.Duplicate.message,
             preferredStyle: .alert
         )
+        alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
+        present(alert, animated: true)
+    }
+
+    private func showOperationError(_ message: String) {
+        let alert = UIAlertController(title: L10n.Common.error, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
         present(alert, animated: true)
     }

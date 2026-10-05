@@ -68,6 +68,17 @@ final class FileNotePhotoStore: NotePhotoStore {
         }
     }
 
+    func deleteAllNotePhotos() async throws {
+        do {
+            let directoryURL = try baseDirectoryURL()
+                .appendingPathComponent(Self.notesDirectoryName, isDirectory: true)
+            try removeItemIfPresent(at: directoryURL)
+        } catch {
+            Self.log("deleteAllNotes", error)
+            throw error
+        }
+    }
+
     // MARK: - Private
 
     private func resolve(_ localPath: String) throws -> URL {

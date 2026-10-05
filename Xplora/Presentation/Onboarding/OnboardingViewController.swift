@@ -344,6 +344,19 @@ final class OnboardingViewController: UIViewController {
         viewModel.onCountryError = { [weak self] msg in
             self?.showError(msg, in: self?.countryErrorLabel)
         }
+        viewModel.onSaveError = { [weak self] in
+            self?.showSaveErrorAlert()
+        }
+    }
+
+    private func showSaveErrorAlert() {
+        let alert = UIAlertController(
+            title: L10n.Onboarding.Error.saveTitle,
+            message: L10n.Onboarding.Error.saveMessage,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
+        present(alert, animated: true)
     }
 
     // MARK: - State

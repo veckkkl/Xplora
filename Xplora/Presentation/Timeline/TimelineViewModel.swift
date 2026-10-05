@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import os
 
 struct TripTimelineItem: Equatable {
     let id: UUID
@@ -23,7 +24,10 @@ struct TripTimelineSection: Equatable {
 struct TimelineViewState: Equatable {
     let isLoading: Bool
     let sections: [TripTimelineSection]
+    /// True only when trips were loaded and there are none.
     let isEmpty: Bool
+    /// Set when trips couldn't be loaded; shown instead of the empty state.
+    var errorMessage: String? = nil
 }
 
 enum TimelineRoute {
@@ -65,6 +69,7 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
     private var notes: [Note] = []
     private var catalogByCode: [String: CatalogPlace] = [:]
     private var isLoading = false
+    private var loadErrorMessage: String?
 
     private static let dayMonthFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -143,26 +148,49 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
         publish()
 
         Task {
-            do {
-                async let tripsTask = getTripsUseCase.execute()
-                async let placesTask = getCatalogPlaces.execute()
-                async let notesTask = getAllNotesUseCase.execute()
-                let (loadedTrips, loadedPlaces, loadedNotes) = try await (tripsTask, placesTask, notesTask)
-                trips = loadedTrips
-                notes = loadedNotes
-                catalogByCode = Dictionary(
-                    uniqueKeysWithValues: loadedPlaces.map { ($0.code.uppercased(), $0) }
-                )
-                isLoading = false
-                publish()
-            } catch {
-                isLoading = false
-                trips = []
-                notes = []
-                catalogByCode = [:]
-                publish()
-                onError?(L10n.Timeline.Error.load)
-            }
+            await performLoad()
+        }
+    }
+
+    /// Internal so tests can await a load.
+    func performLoad() async {
+        do {
+            async let tripsTask = getTripsUseCase.execute()
+            async let placesTask = getCatalogPlaces.execute()
+            async let notesTask = loadNotesForCounts()
+            let (loadedTrips, loadedPlaces) = try await (tripsTask, placesTask)
+            trips = loadedTrips
+            notes = await notesTask
+            catalogByCode = Dictionary(
+                uniqueKeysWithValues: loadedPlaces.map { ($0.code.uppercased(), $0) }
+            )
+            loadErrorMessage = nil
+        } catch {
+            let nsError = error as NSError
+            Logger.storage.error(
+                "Timeline load failed domain=\(nsError.domain, privacy: .public) code=\(nsError.code, privacy: .public)"
+            )
+            trips = []
+            notes = []
+            catalogByCode = [:]
+            loadErrorMessage = L10n.Timeline.Error.load
+        }
+        isLoading = false
+        publish()
+    }
+
+    /// Notes only feed the per-trip counts. If they can't be read (e.g. the
+    /// notes store is unavailable) trips are still shown, without counts —
+    /// hiding the trips would misrepresent data that loaded fine.
+    private func loadNotesForCounts() async -> [Note] {
+        do {
+            return try await getAllNotesUseCase.execute()
+        } catch {
+            let nsError = error as NSError
+            Logger.storage.error(
+                "Timeline notes load failed domain=\(nsError.domain, privacy: .public) code=\(nsError.code, privacy: .public)"
+            )
+            return []
         }
     }
 
@@ -181,11 +209,13 @@ final class TimelineViewModel: TimelineViewModelInput, TimelineViewModelOutput {
                 return TripTimelineSection(year: year, items: items)
             }
 
+        let errorMessage = isLoading ? nil : loadErrorMessage
         onStateChange?(
             TimelineViewState(
                 isLoading: isLoading,
                 sections: sections,
-                isEmpty: !isLoading && sections.isEmpty
+                isEmpty: !isLoading && errorMessage == nil && sections.isEmpty,
+                errorMessage: errorMessage
             )
         )
     }

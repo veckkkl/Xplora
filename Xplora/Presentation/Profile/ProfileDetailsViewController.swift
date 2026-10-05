@@ -8,8 +8,10 @@ import SnapKit
 import UIKit
 
 final class ProfileDetailsViewController: UIViewController {
-    var onNameSaved: ((String) -> Void)?
-    var onResidenceCountrySelected: ((String?) -> Void)?
+    /// Returns `false` when the name wasn't saved.
+    var onNameSaved: ((String) -> Bool)?
+    /// Returns `false` when the country wasn't saved.
+    var onResidenceCountrySelected: ((String?) -> Bool)?
     var displayStatus: TravelStatus = .adventureTraveler
     var residenceCountryCode: String?
     var getCatalogPlaces: GetCatalogPlacesUseCase?
@@ -472,9 +474,12 @@ final class ProfileDetailsViewController: UIViewController {
     }
 
     private func handleResidenceCountrySelected(_ code: String) {
+        guard onResidenceCountrySelected?(code) ?? false else {
+            presentSaveError(L10n.Profile.Details.Error.residence)
+            return
+        }
         residenceCountryCode = code
         residenceValueLabel.text = residenceCountryDisplayValue()
-        onResidenceCountrySelected?(code)
     }
 
     @objc private func didTapNameRow() {
@@ -514,12 +519,34 @@ final class ProfileDetailsViewController: UIViewController {
     private func handleNameSave(_ input: String) {
         switch viewModel.validateName(input) {
         case .valid(let normalizedName):
-            ProfileUserSettings.saveName(normalizedName)
-            onNameSaved?(normalizedName)
+            // The view model stores the name only after the user record saved.
+            let saved = onNameSaved?(normalizedName) ?? false
             refreshProfileData()
             clearEditNameAlertState()
+            if !saved {
+                presentSaveError(L10n.Profile.Details.Error.name)
+            }
         case .empty, .tooLong, .invalidCharacters:
             updateEditNameValidationState(for: input)
+        }
+    }
+
+    private func presentSaveError(_ message: String) {
+        let alert = UIAlertController(title: L10n.Common.error, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))
+        // The country picker reports its selection right before popping
+        // itself, so wait for that transition before presenting.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            let presentAlert = { [weak self] in
+                guard let self else { return }
+                (self.navigationController ?? self).present(alert, animated: true)
+            }
+            if let transitionCoordinator = self.navigationController?.transitionCoordinator {
+                transitionCoordinator.animate(alongsideTransition: nil) { _ in presentAlert() }
+            } else {
+                presentAlert()
+            }
         }
     }
 
@@ -585,7 +612,12 @@ final class ProfileDetailsViewController: UIViewController {
         }
         previewViewController.onSave = { [weak self, weak previewNavigationController] in
             guard let self else { return }
-            guard ProfileUserSettings.saveAvatarImage(image) != nil else { return }
+            guard ProfileUserSettings.saveAvatarImage(image) != nil else {
+                previewNavigationController?.dismiss(animated: true) {
+                    self.presentSaveError(L10n.Profile.Details.Error.avatar)
+                }
+                return
+            }
             self.applyAvatarImage(ProfileUserSettings.loadCurrentAvatarImage())
             previewNavigationController?.dismiss(animated: true)
         }

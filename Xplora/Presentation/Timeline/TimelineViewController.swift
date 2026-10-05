@@ -12,6 +12,7 @@ final class TimelineViewController: UIViewController {
 
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let emptyLabel = UILabel()
+    private let errorStateView = ErrorStateView()
     private let activityIndicator = UIActivityIndicatorView(style: .medium)
     private var sections: [TripTimelineSection] = []
 
@@ -71,8 +72,12 @@ final class TimelineViewController: UIViewController {
 
         activityIndicator.hidesWhenStopped = true
 
+        errorStateView.isHidden = true
+        errorStateView.onRetry = { [weak self] in self?.viewModel.refresh() }
+
         view.addSubview(tableView)
         view.addSubview(emptyLabel)
+        view.addSubview(errorStateView)
         view.addSubview(activityIndicator)
 
         tableView.snp.makeConstraints { make in
@@ -83,6 +88,10 @@ final class TimelineViewController: UIViewController {
             make.center.equalTo(view.safeAreaLayoutGuide)
             make.leading.greaterThanOrEqualToSuperview().offset(24)
             make.trailing.lessThanOrEqualToSuperview().offset(-24)
+        }
+
+        errorStateView.snp.makeConstraints { make in
+            make.edges.equalTo(view.safeAreaLayoutGuide)
         }
 
         activityIndicator.snp.makeConstraints { make in
@@ -105,6 +114,10 @@ final class TimelineViewController: UIViewController {
         tableView.reloadData()
 
         emptyLabel.isHidden = !state.isEmpty
+        errorStateView.isHidden = state.errorMessage == nil
+        if let message = state.errorMessage {
+            errorStateView.configure(message: message)
+        }
 
         if state.isLoading {
             activityIndicator.startAnimating()
