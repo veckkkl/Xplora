@@ -61,7 +61,9 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
     }
 
     func viewDidLoad() {
-        guard getCurrentUser.execute() != nil else {
+        // Only a confirmed missing user means logged out. A read error must not
+        // trigger logout, which would remove the stored record.
+        if case .success(.none) = Result(catching: { try getCurrentUser.execute() }) {
             onRoute?(.logout)
             return
         }
@@ -79,7 +81,7 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
         case .profileCard:
             onRoute?(.openProfileDetails(
                 status: currentTravelStatus(),
-                residenceCountryCode: getCurrentUser.execute()?.residenceCountryCode
+                residenceCountryCode: (try? getCurrentUser.execute())?.residenceCountryCode
             ))
         case .action(let actionItem):
             switch actionItem.action {
@@ -98,18 +100,22 @@ final class ProfileViewModel: ProfileViewModelInput, ProfileViewModelOutput {
     }
 
     func didUpdateUserName(_ name: String) {
-        updateCurrentUser.execute(name: name)
-        ProfileUserSettings.saveName(name)
+        do {
+            try updateCurrentUser.execute(name: name)
+            ProfileUserSettings.saveName(name)
+        } catch {
+            // Keep the previous name everywhere; the failure is logged by storage.
+        }
         refreshSections()
     }
 
     func didUpdateResidenceCountry(_ residenceCountryCode: String?) {
-        updateCurrentUser.execute(residenceCountryCode: residenceCountryCode)
+        try? updateCurrentUser.execute(residenceCountryCode: residenceCountryCode)
         refreshSections()
     }
 
     private func buildSections() -> [ProfileSectionModel] {
-        let userName = getCurrentUser.execute()?.name ?? ProfileUserSettings.currentName
+        let userName = (try? getCurrentUser.execute())?.name ?? ProfileUserSettings.currentName
         return [
             ProfileSectionModel(
                 section: .profileCard,

@@ -44,9 +44,10 @@ final class CatalogPlacesRepoImpl: CatalogPlacesRepo {
         do {
             let remoteCodes = try await api.fetchCountryCodes()
             let supported = CatalogPlacePolicy.filter(codes: remoteCodes)
-            storage.cachedCatalogCodes = supported.map(\.code)
+            try storage.saveCachedCatalogCodes(supported.map(\.code))
         } catch {
             // Refresh is best-effort; the policy remains the source of truth.
+            // Storage failures are already logged by LocalStorage.
         }
     }
 }

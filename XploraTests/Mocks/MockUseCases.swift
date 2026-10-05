@@ -11,20 +11,26 @@ final class MockCompleteOnboardingUseCase: CompleteOnboardingUseCase {
     private(set) var lastName: String?
     private(set) var lastCode: String?
     private(set) var lastIsWorldCitizen: Bool?
+    var stubbedError: Error?
 
     @discardableResult
-    func execute(name: String, residenceCountryCode: String?, isWorldCitizen: Bool) -> AuthUser {
+    func execute(name: String, residenceCountryCode: String?, isWorldCitizen: Bool) throws -> AuthUser {
         callCount += 1
         lastName = name
         lastCode = residenceCountryCode
         lastIsWorldCitizen = isWorldCitizen
+        if let stubbedError { throw stubbedError }
         return AuthUser(id: "mock", name: name, createdAt: Date(), residenceCountryCode: residenceCountryCode, isWorldCitizen: isWorldCitizen)
     }
 }
 
 final class MockGetCurrentUserUseCase: GetCurrentUserUseCase {
     var stubbedUser: AuthUser?
-    func execute() -> AuthUser? { stubbedUser }
+    var stubbedError: Error?
+    func execute() throws -> AuthUser? {
+        if let stubbedError { throw stubbedError }
+        return stubbedUser
+    }
 }
 
 final class MockUpdateCurrentUserUseCase: UpdateCurrentUserUseCase {
@@ -32,12 +38,15 @@ final class MockUpdateCurrentUserUseCase: UpdateCurrentUserUseCase {
     private(set) var callCount = 0
     private(set) var updatedResidenceCountryCode: String??
     private(set) var residenceCallCount = 0
-    func execute(name: String) {
+    var stubbedError: Error?
+    func execute(name: String) throws {
         callCount += 1
+        if let stubbedError { throw stubbedError }
         updatedName = name
     }
-    func execute(residenceCountryCode: String?) {
+    func execute(residenceCountryCode: String?) throws {
         residenceCallCount += 1
+        if let stubbedError { throw stubbedError }
         updatedResidenceCountryCode = residenceCountryCode
     }
 }

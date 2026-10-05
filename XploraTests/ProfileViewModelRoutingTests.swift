@@ -70,6 +70,15 @@ struct ProfileViewModelRoutingTests {
         #expect(sut.updateUser.residenceCallCount == 0)
     }
 
+    @Test func viewDidLoad_whenUserReadFails_doesNotRouteToLogout() {
+        let sut = makeSUT(user: nil)
+        sut.getUser.stubbedError = CocoaError(.coderReadCorrupt)
+        var routes: [ProfileRoute] = []
+        sut.viewModel.onRoute = { routes.append($0) }
+        sut.viewModel.viewDidLoad()
+        #expect(routes.isEmpty)
+    }
+
     // MARK: - Profile card tap
 
     @Test func didSelectProfileCard_emitsOpenProfileDetailsWithCurrentResidence() {

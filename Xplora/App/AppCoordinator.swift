@@ -21,7 +21,15 @@ final class AppCoordinator {
 
     func start() {
         let getCurrentUser = locator.resolve(GetCurrentUserUseCase.self)
-        if getCurrentUser.execute() != nil {
+        let hasUser: Bool
+        do {
+            hasUser = try getCurrentUser.execute() != nil
+        } catch {
+            // A stored user exists but can't be read. Don't route to onboarding:
+            // completing it would overwrite the stored record.
+            hasUser = true
+        }
+        if hasUser {
             showMainApp()
         } else {
             showOnboarding()
@@ -54,7 +62,7 @@ final class AppCoordinator {
 
     func handleOnboardingCompleted() {
         // Sync AuthUser.name → ProfileUserSettings so ProfileDetails screen is consistent.
-        if let user = locator.resolve(GetCurrentUserUseCase.self).execute() {
+        if let user = try? locator.resolve(GetCurrentUserUseCase.self).execute() {
             ProfileUserSettings.saveName(user.name)
         }
         showMainApp()

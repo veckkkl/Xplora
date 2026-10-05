@@ -16,12 +16,12 @@ final class AuthRepositoryImpl: AuthRepository {
         self.storage = storage
     }
 
-    func getCurrentUser() -> AuthUser? {
-        storage.load(AuthUser.self, forKey: Keys.currentUser)
+    func getCurrentUser() throws -> AuthUser? {
+        try storage.load(AuthUser.self, forKey: Keys.currentUser)
     }
 
     @discardableResult
-    func completeOnboarding(name: String, residenceCountryCode: String?, isWorldCitizen: Bool) -> AuthUser {
+    func completeOnboarding(name: String, residenceCountryCode: String?, isWorldCitizen: Bool) throws -> AuthUser {
         let user = AuthUser(
             id: UUID().uuidString,
             name: name,
@@ -29,12 +29,12 @@ final class AuthRepositoryImpl: AuthRepository {
             residenceCountryCode: residenceCountryCode,
             isWorldCitizen: isWorldCitizen
         )
-        storage.save(user, forKey: Keys.currentUser)
+        try storage.save(user, forKey: Keys.currentUser)
         return user
     }
 
-    func updateName(_ name: String) {
-        guard let user = getCurrentUser() else { return }
+    func updateName(_ name: String) throws {
+        guard let user = try getCurrentUser() else { return }
         let updated = AuthUser(
             id: user.id,
             name: name,
@@ -42,11 +42,11 @@ final class AuthRepositoryImpl: AuthRepository {
             residenceCountryCode: user.residenceCountryCode,
             isWorldCitizen: user.isWorldCitizen
         )
-        storage.save(updated, forKey: Keys.currentUser)
+        try storage.save(updated, forKey: Keys.currentUser)
     }
 
-    func updateResidenceCountry(_ residenceCountryCode: String?) {
-        guard let user = getCurrentUser() else { return }
+    func updateResidenceCountry(_ residenceCountryCode: String?) throws {
+        guard let user = try getCurrentUser() else { return }
         let updated = AuthUser(
             id: user.id,
             name: user.name,
@@ -54,7 +54,7 @@ final class AuthRepositoryImpl: AuthRepository {
             residenceCountryCode: residenceCountryCode,
             isWorldCitizen: residenceCountryCode == nil ? user.isWorldCitizen : false
         )
-        storage.save(updated, forKey: Keys.currentUser)
+        try storage.save(updated, forKey: Keys.currentUser)
     }
 
     func logout() {
