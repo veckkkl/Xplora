@@ -80,8 +80,12 @@ final class NotesListViewController: UIViewController {
         view.addSubview(emptyLabel)
         view.addSubview(activityIndicator)
 
+        // Pin to the view edges, not the safe area: the table must sit under
+        // the navigation bar and home indicator so UIKit's automatic
+        // adjustedContentInset keeps the first/last cards visible while
+        // content still scrolls beneath the bars.
         tableView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
+            make.edges.equalToSuperview()
         }
 
         emptyLabel.snp.makeConstraints { make in
