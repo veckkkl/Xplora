@@ -69,6 +69,9 @@ enum AppDependenciesConfigurator {
         locator.register(SaveNoteUseCase.self, instance: saveNoteUseCase)
         locator.register(DeleteNoteUseCase.self, instance: deleteNoteUseCase)
 
+        let notePhotoStore: NotePhotoStore = FileNotePhotoStore()
+        locator.register(NotePhotoStore.self, instance: notePhotoStore)
+
         // Auth use cases
         let getCurrentUserUseCase: GetCurrentUserUseCase =
             GetCurrentUserUseCaseImpl(authRepository: authRepository)

@@ -4,18 +4,12 @@
 //
 
 import Foundation
-import CryptoKit
 import PhotosUI
 import UIKit
 
 enum NoteViewMode {
     case view
     case edit
-}
-
-struct NotePickedPhoto {
-    let image: UIImage
-    let assetIdentifier: String?
 }
 
 struct NoteViewState: Equatable {
@@ -84,6 +78,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
     private let saveNoteUseCase: SaveNoteUseCase
     private let deleteNoteUseCase: DeleteNoteUseCase
     private let photoLibrarySelectionProcessor: NotePhotoLibrarySelectionProcessing
+    private let photoStore: NotePhotoStore
     private weak var output: NoteModuleOutput?
     private weak var router: NoteRouter?
 
@@ -93,6 +88,13 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
     private var isLoading = false
     private let maxPhotoCount = 10
     private var pendingDeletedPhotoPaths = Set<String>()
+    /// Content hashes of stored photos, keyed by `localPath`, so duplicate
+    /// detection doesn't re-read every file on each import.
+    private var photoHashCache: [String: String] = [:]
+    private var isImportingPhotos = false
+    /// Bumped whenever the draft is replaced, so an import that finishes
+    /// after cancel/save doesn't attach photos to the wrong draft.
+    private var draftGeneration = 0
 
     init(
         noteId: String?,
@@ -101,6 +103,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         saveNoteUseCase: SaveNoteUseCase,
         deleteNoteUseCase: DeleteNoteUseCase,
         photoLibrarySelectionProcessor: NotePhotoLibrarySelectionProcessing,
+        photoStore: NotePhotoStore,
         output: NoteModuleOutput?,
         router: NoteRouter
     ) {
@@ -110,6 +113,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         self.saveNoteUseCase = saveNoteUseCase
         self.deleteNoteUseCase = deleteNoteUseCase
         self.photoLibrarySelectionProcessor = photoLibrarySelectionProcessor
+        self.photoStore = photoStore
         self.output = output
         self.router = router
     }
@@ -162,6 +166,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
                 finalizePendingPhotoFileDeletion(with: saved)
                 originalNote = normalizedSaved
                 draft = normalizedSaved
+                draftGeneration += 1
                 mode = .view
                 isLoading = false
                 publish()
@@ -182,8 +187,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         Task {
             do {
                 try await deleteNoteUseCase.execute(noteId: note.id)
-                cleanupFiles(for: note.photos)
-                clearEmptyNotesDirectory(noteId: note.id)
+                deleteAllPhotoFiles(noteId: note.id)
                 pendingDeletedPhotoPaths.removeAll()
                 isLoading = false
                 publish()
@@ -208,11 +212,13 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
             cleanupUnsavedDraftFiles(keeping: originalNote)
             pendingDeletedPhotoPaths.removeAll()
             draft = originalNote
+            draftGeneration += 1
             mode = .view
             publish()
         } else {
             cleanupAllDraftFiles()
             pendingDeletedPhotoPaths.removeAll()
+            draftGeneration += 1
             router?.closeNote()
         }
     }
@@ -252,6 +258,7 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
 
     func didTapAddPhoto() {
         guard mode == .edit else { return }
+        guard !isImportingPhotos else { return }
         guard let current = draft else { return }
         guard current.photos.count < maxPhotoCount else {
             onError?(L10n.Notes.Editor.Photo.limit(maxPhotoCount))
@@ -261,93 +268,120 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
     }
 
     func didCapturePhoto(_ image: UIImage) {
-        didAddPhotos([NotePickedPhoto(image: image, assetIdentifier: nil)])
-    }
+        guard mode == .edit, !isImportingPhotos else { return }
+        isImportingPhotos = true
+        let processor = photoLibrarySelectionProcessor
 
-    func didFinishPhotoLibraryPicking(results: [PHPickerResult]) {
-        guard mode == .edit else { return }
-
-        let existingAssetIdentifiers = Set(draft?.photos.compactMap(\.photoLibraryAssetId) ?? [])
         Task { [weak self] in
+            // Runs off the main actor: downsampling, JPEG encoding, hashing.
+            let prepared = await processor.prepareCapturedPhoto(image)
             guard let self else { return }
-            let selectionResult = await self.photoLibrarySelectionProcessor.process(
-                results: results,
-                existingAssetIdentifiers: existingAssetIdentifiers
-            )
-            self.didCompletePhotoLibrarySelection(
-                selectedAssetIdentifiers: selectionResult.selectedAssetIdentifiers,
-                newlyPickedPhotos: selectionResult.newlyPickedPhotos
+            await self.addPreparedPhotos(
+                prepared.map { [$0] } ?? [],
+                failedCount: prepared == nil ? 1 : 0
             )
         }
     }
 
-    private func didAddPhotos(_ photos: [NotePickedPhoto]) {
-        guard mode == .edit else { return }
-        guard !photos.isEmpty else { return }
-        guard var current = draft else { return }
+    func didFinishPhotoLibraryPicking(results: [PHPickerResult]) {
+        guard mode == .edit, !isImportingPhotos else { return }
+        isImportingPhotos = true
 
-        let normalizedExistingPhotos = normalizePhotos(current.photos)
-        var existingAssetIdentifiers = Set(normalizedExistingPhotos.compactMap(\.photoLibraryAssetId))
-        var existingHashes = Set(normalizedExistingPhotos.compactMap { fileHash(for: NotePhotoFileStorage.absoluteURL(for: $0.localPath)) })
-        var addedHashes = Set<String>()
-        var updatedPhotos = normalizedExistingPhotos
-        let availableSlots = maxPhotoCount - updatedPhotos.count
+        // The library picker is an "add more" workflow only. Existing photos
+        // are passed in as `preselectedAssetIdentifiers` for visual context,
+        // but we never sync deselections back — a cancelled picker returns
+        // an empty results array, which would otherwise wipe the entire
+        // gallery. Removal is exclusively driven by the cross button on the
+        // photo cell (`didRemovePhoto(at:)`).
+        let existingAssetIdentifiers = Set(draft?.photos.compactMap(\.photoLibraryAssetId) ?? [])
+        let processor = photoLibrarySelectionProcessor
+
+        Task { [weak self] in
+            let selectionResult = await processor.process(
+                results: results,
+                existingAssetIdentifiers: existingAssetIdentifiers
+            )
+            guard let self else { return }
+            await self.addPreparedPhotos(
+                selectionResult.preparedPhotos,
+                failedCount: selectionResult.failedCount
+            )
+        }
+    }
+
+    /// Dedupes, writes files (off the main actor via the store) and appends
+    /// the new photos to the draft in the order given.
+    private func addPreparedPhotos(_ preparedPhotos: [NotePreparedPhoto], failedCount initialFailedCount: Int) async {
+        defer { isImportingPhotos = false }
+        guard mode == .edit, let startDraft = draft else { return }
+        let noteId = startDraft.id
+        let generation = draftGeneration
+
+        guard !preparedPhotos.isEmpty else {
+            if initialFailedCount > 0 {
+                onError?(L10n.Notes.Editor.Error.Photo.addFailed)
+            }
+            return
+        }
+
+        let existingPhotos = normalizePhotos(startDraft.photos)
+        let availableSlots = maxPhotoCount - existingPhotos.count
         guard availableSlots > 0 else {
             onError?(L10n.Notes.Editor.Photo.limit(maxPhotoCount))
             return
         }
 
-        var addedCount = 0
+        var knownAssetIdentifiers = Set(existingPhotos.compactMap(\.photoLibraryAssetId))
+        var knownHashes = await storedPhotoHashes(for: existingPhotos)
+
+        var addedPhotos: [NotePhoto] = []
         var duplicateCount = 0
-        var failedCount = 0
+        var failedCount = initialFailedCount
         var limitReached = false
 
-        for pickedPhoto in photos {
-            if updatedPhotos.count >= maxPhotoCount {
+        for prepared in preparedPhotos {
+            if addedPhotos.count >= availableSlots {
                 limitReached = true
                 break
             }
-
-            if let assetIdentifier = pickedPhoto.assetIdentifier,
-               existingAssetIdentifiers.contains(assetIdentifier) {
+            if let assetIdentifier = prepared.assetIdentifier,
+               knownAssetIdentifiers.contains(assetIdentifier) {
                 duplicateCount += 1
                 continue
             }
-
-            let image = pickedPhoto.image
-            guard let data = image.jpegData(compressionQuality: 0.82) else {
-                failedCount += 1
-                continue
-            }
-
-            let hash = sha256Hex(data)
-            if existingHashes.contains(hash) || addedHashes.contains(hash) {
+            if knownHashes.contains(prepared.contentHash) {
                 duplicateCount += 1
                 continue
             }
 
             do {
-                let relativePath = try saveImageData(data, noteId: current.id)
-                let photo = NotePhoto(
-                    id: UUID().uuidString,
-                    localPath: relativePath,
-                    createdAt: Date(),
-                    orderIndex: updatedPhotos.count,
-                    photoLibraryAssetId: pickedPhoto.assetIdentifier
+                let localPath = try await photoStore.savePhoto(prepared.jpegData, noteId: noteId)
+                addedPhotos.append(
+                    NotePhoto(
+                        id: UUID().uuidString,
+                        localPath: localPath,
+                        createdAt: Date(),
+                        orderIndex: existingPhotos.count + addedPhotos.count,
+                        photoLibraryAssetId: prepared.assetIdentifier
+                    )
                 )
-                updatedPhotos.append(photo)
-                existingHashes.insert(hash)
-                addedHashes.insert(hash)
-                if let assetIdentifier = pickedPhoto.assetIdentifier {
-                    existingAssetIdentifiers.insert(assetIdentifier)
+                photoHashCache[localPath] = prepared.contentHash
+                knownHashes.insert(prepared.contentHash)
+                if let assetIdentifier = prepared.assetIdentifier {
+                    knownAssetIdentifiers.insert(assetIdentifier)
                 }
-                addedCount += 1
             } catch {
                 failedCount += 1
             }
         }
 
-        guard addedCount > 0 else {
+        // The draft may have been cancelled or saved while files were written.
+        guard mode == .edit, draftGeneration == generation, var current = draft, current.id == noteId else {
+            deletePhotoFiles(addedPhotos.map(\.localPath))
+            return
+        }
+
+        guard !addedPhotos.isEmpty else {
             if duplicateCount > 0 {
                 onError?(L10n.Notes.Editor.Error.Photo.Duplicate.single)
             } else if failedCount > 0 {
@@ -356,7 +390,8 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
             return
         }
 
-        current.photos = normalizePhotos(updatedPhotos)
+        // Merge into the latest draft so edits made during the import are kept.
+        current.photos = normalizePhotos(normalizePhotos(current.photos) + addedPhotos)
         draft = current
         publish()
 
@@ -369,18 +404,19 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         }
     }
 
-    private func didCompletePhotoLibrarySelection(selectedAssetIdentifiers: Set<String>, newlyPickedPhotos: [NotePickedPhoto]) {
-        guard mode == .edit else { return }
-
-        // The library picker is an "add more" workflow only. Existing photos
-        // are passed in as `preselectedAssetIdentifiers` for visual context,
-        // but we never sync deselections back — a cancelled picker returns
-        // an empty results array, which would otherwise wipe the entire
-        // gallery. Removal is exclusively driven by the cross button on the
-        // photo cell (`didRemovePhoto(at:)`).
-        _ = selectedAssetIdentifiers
-        guard !newlyPickedPhotos.isEmpty else { return }
-        didAddPhotos(newlyPickedPhotos)
+    private func storedPhotoHashes(for photos: [NotePhoto]) async -> Set<String> {
+        var hashes = Set<String>()
+        for photo in photos {
+            if let cached = photoHashCache[photo.localPath] {
+                hashes.insert(cached)
+                continue
+            }
+            // A missing/unreadable file just can't be matched; the store logs it.
+            guard let hash = try? await photoStore.contentHash(ofPhotoAt: photo.localPath) else { continue }
+            photoHashCache[photo.localPath] = hash
+            hashes.insert(hash)
+        }
+        return hashes
     }
 
     func didRemovePhoto(at index: Int) {
@@ -558,78 +594,54 @@ final class NoteViewModel: NoteViewModelInput, NoteViewModelOutput {
         return mutableNote
     }
 
-    private func saveImageData(_ data: Data, noteId: String) throws -> String {
-        let directoryURL = try NotePhotoFileStorage.notesDirectoryURL(noteId: noteId)
-        if !FileManager.default.fileExists(atPath: directoryURL.path) {
-            try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-        }
-
-        let fileURL = directoryURL.appendingPathComponent("\(UUID().uuidString).jpg")
-        try data.write(to: fileURL, options: .atomic)
-        // Persist relative to Application Support so the link survives
-        // container-path changes between launches.
-        return NotePhotoFileStorage.relativePath(for: fileURL)
-    }
-
     private func handleRemovedPhotoFileLifecycle(photo: NotePhoto) {
         let wasPersistedInOriginal = originalNote?.photos.contains(where: { $0.id == photo.id }) ?? false
         if wasPersistedInOriginal {
             pendingDeletedPhotoPaths.insert(photo.localPath)
         } else {
-            removeFile(at: photo.localPath)
+            deletePhotoFiles([photo.localPath])
         }
     }
 
     private func finalizePendingPhotoFileDeletion(with saved: Note) {
         let retainedPaths = Set(saved.photos.map(\.localPath))
-        for path in pendingDeletedPhotoPaths where !retainedPaths.contains(path) {
-            removeFile(at: path)
-        }
+        deletePhotoFiles(pendingDeletedPhotoPaths.filter { !retainedPaths.contains($0) }.sorted())
         pendingDeletedPhotoPaths.removeAll()
     }
 
     private func cleanupUnsavedDraftFiles(keeping original: Note) {
         guard let currentDraft = draft else { return }
         let originalPhotoIDs = Set(original.photos.map(\.id))
-        for photo in currentDraft.photos where !originalPhotoIDs.contains(photo.id) {
-            removeFile(at: photo.localPath)
-        }
+        let unsavedPaths = currentDraft.photos
+            .filter { !originalPhotoIDs.contains($0.id) }
+            .map(\.localPath)
+        deletePhotoFiles(unsavedPaths)
     }
 
     private func cleanupAllDraftFiles() {
         guard let currentDraft = draft else { return }
-        cleanupFiles(for: currentDraft.photos)
-        clearEmptyNotesDirectory(noteId: currentDraft.id)
+        deleteAllPhotoFiles(noteId: currentDraft.id)
     }
 
-    private func cleanupFiles(for photos: [NotePhoto]) {
-        for photo in photos {
-            removeFile(at: photo.localPath)
+    // Deletion is best-effort: a leftover file doesn't affect the note, and
+    // failures are logged by the store.
+    private func deletePhotoFiles(_ localPaths: [String]) {
+        guard !localPaths.isEmpty else { return }
+        for localPath in localPaths {
+            photoHashCache.removeValue(forKey: localPath)
+        }
+        Task { [photoStore] in
+            for localPath in localPaths {
+                try? await photoStore.deletePhoto(at: localPath)
+            }
         }
     }
 
-    private func removeFile(at localPath: String) {
-        let url = NotePhotoFileStorage.absoluteURL(for: localPath)
-        guard FileManager.default.fileExists(atPath: url.path) else { return }
-        try? FileManager.default.removeItem(at: url)
-    }
-
-    private func clearEmptyNotesDirectory(noteId: String) {
-        guard let directoryURL = try? NotePhotoFileStorage.notesDirectoryURL(noteId: noteId) else { return }
-        guard let contents = try? FileManager.default.contentsOfDirectory(atPath: directoryURL.path) else { return }
-        guard contents.isEmpty else { return }
-        try? FileManager.default.removeItem(at: directoryURL)
-    }
-
-    private func fileHash(for url: URL) -> String? {
-        guard url.isFileURL else { return nil }
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        return sha256Hex(data)
-    }
-
-    private func sha256Hex(_ data: Data) -> String {
-        let digest = SHA256.hash(data: data)
-        return digest.map { String(format: "%02x", $0) }.joined()
+    private func deleteAllPhotoFiles(noteId: String) {
+        photoHashCache.removeAll()
+        Task { [photoStore] in
+            try? await photoStore.deleteAllPhotos(noteId: noteId)
+        }
     }
 
     private func normalizePhotos(_ photos: [NotePhoto]) -> [NotePhoto] {

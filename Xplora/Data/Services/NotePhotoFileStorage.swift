@@ -46,14 +46,6 @@ enum NotePhotoFileStorage {
         return trimmed
     }
 
-    /// Directory for a single note's photos, creating intermediates if missing.
-    static func notesDirectoryURL(noteId: String) throws -> URL {
-        let baseURL = try applicationSupportDirectoryURL()
-        return baseURL
-            .appendingPathComponent("Notes", isDirectory: true)
-            .appendingPathComponent(noteId, isDirectory: true)
-    }
-
     static func applicationSupportDirectoryURL() throws -> URL {
         guard let url = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)
