@@ -176,16 +176,32 @@ struct OnboardingViewModelTests {
         #expect(completed == true)
     }
 
-    @Test func didTapContinue_whenSaveFails_doesNotFireCompleted() {
+    @Test func didTapContinue_whenSaveFails_staysAndShowsError() {
         let (sut, useCase) = makeSUT()
         useCase.stubbedError = CocoaError(.fileWriteUnknown)
         var completed = false
+        var saveErrorCount = 0
         sut.onCompleted = { completed = true }
+        sut.onSaveError = { saveErrorCount += 1 }
         sut.didChangeName("Bob")
         sut.didToggleWorldCitizen(true)
         sut.didTapContinue()
         #expect(useCase.callCount == 1)
         #expect(completed == false)
+        #expect(saveErrorCount == 1)
+    }
+
+    @Test func didTapContinue_whenSaveSucceeds_doesNotShowError() {
+        let (sut, _) = makeSUT()
+        var completed = false
+        var saveErrorCount = 0
+        sut.onCompleted = { completed = true }
+        sut.onSaveError = { saveErrorCount += 1 }
+        sut.didChangeName("Bob")
+        sut.didToggleWorldCitizen(true)
+        sut.didTapContinue()
+        #expect(completed == true)
+        #expect(saveErrorCount == 0)
     }
 
     @Test func didTapContinue_emptyName_doesNotCallUseCase() {

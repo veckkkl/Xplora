@@ -17,4 +17,6 @@ protocol NotesRepo {
     func getNote(id: String) async throws -> Note
     func save(note: Note) async throws -> Note
     func delete(noteId: String) async throws
+    /// Deletes every note (and its photo records). Photo files are not touched.
+    func deleteAll() async throws
 }

@@ -45,6 +45,10 @@ extension LocalStorageProtocol {
         try save(trips, forKey: LocalStorageKeys.trips)
     }
 
+    func removeTrips() {
+        removeValue(forKey: LocalStorageKeys.trips)
+    }
+
     func loadSettings() throws -> UserSettings {
         try load(UserSettings.self, forKey: LocalStorageKeys.settings) ?? .default
     }
@@ -53,12 +57,20 @@ extension LocalStorageProtocol {
         try save(settings, forKey: LocalStorageKeys.settings)
     }
 
+    func removeSettings() {
+        removeValue(forKey: LocalStorageKeys.settings)
+    }
+
     func loadWishlistCountries() throws -> [WishlistCountry] {
         try load([WishlistCountry].self, forKey: LocalStorageKeys.wishlistCountries) ?? []
     }
 
     func saveWishlistCountries(_ countries: [WishlistCountry]) throws {
         try save(countries, forKey: LocalStorageKeys.wishlistCountries)
+    }
+
+    func removeWishlistCountries() {
+        removeValue(forKey: LocalStorageKeys.wishlistCountries)
     }
 
     func loadCachedCatalogCodes() throws -> [String]? {

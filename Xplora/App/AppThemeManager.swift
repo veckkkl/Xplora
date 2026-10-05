@@ -62,6 +62,12 @@ struct AppThemeManager: AppThemeManaging {
         defaults.removeObject(forKey: Self.legacyDarkThemeKey)
     }
 
+    /// Forgets the stored choice so the app follows the system appearance.
+    func reset() {
+        defaults.removeObject(forKey: Self.storageKey)
+        defaults.removeObject(forKey: Self.legacyDarkThemeKey)
+    }
+
     @MainActor
     func apply(_ theme: AppTheme) {
         defaults.set(theme.rawValue, forKey: Self.storageKey)

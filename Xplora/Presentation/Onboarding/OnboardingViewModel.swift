@@ -3,6 +3,9 @@
 //  Xplora
 //
 
+import Foundation
+import os
+
 enum CountrySelection {
     case none
     case country(code: String, name: String)
@@ -30,6 +33,8 @@ protocol OnboardingViewModelOutput: AnyObject {
     var onCountrySelectionChanged: ((CountrySelection) -> Void)? { get set }
     var onCountryError: ((String?) -> Void)? { get set }
     var onCompleted: (() -> Void)? { get set }
+    /// Saving the user failed; onboarding is not finished.
+    var onSaveError: (() -> Void)? { get set }
 }
 
 @MainActor
@@ -39,6 +44,7 @@ final class OnboardingViewModel: OnboardingViewModelInput, OnboardingViewModelOu
     var onCountrySelectionChanged: ((CountrySelection) -> Void)?
     var onCountryError: ((String?) -> Void)?
     var onCompleted: (() -> Void)?
+    var onSaveError: (() -> Void)?
 
     private let completeOnboarding: CompleteOnboardingUseCase
     private let validator = ProfileDetailsViewModel()
@@ -109,6 +115,11 @@ final class OnboardingViewModel: OnboardingViewModelInput, OnboardingViewModelOu
                 try completeOnboarding.execute(name: trimmed, residenceCountryCode: code, isWorldCitizen: isWorldCitizen)
             } catch {
                 // The user wasn't saved; stay on onboarding instead of entering the app.
+                let nsError = error as NSError
+                Logger.storage.error(
+                    "Onboarding save failed domain=\(nsError.domain, privacy: .public) code=\(nsError.code, privacy: .public)"
+                )
+                onSaveError?()
                 return
             }
             onCompleted?()

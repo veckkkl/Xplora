@@ -143,6 +143,9 @@ final class ProfileViewController: UIViewController {
     }
 
     var onLogout: (() -> Void)?
+    var onAllDataDeleted: (() -> Void)?
+
+    private let deleteActivityIndicator = UIActivityIndicatorView(style: .large)
 
     init(
         viewModel: ProfileViewModelInput & ProfileViewModelOutput,
@@ -187,11 +190,17 @@ final class ProfileViewController: UIViewController {
         configureCollapsingLargeTitle()
 
         view.addSubview(collectionView)
+
+        deleteActivityIndicator.hidesWhenStopped = true
+        view.addSubview(deleteActivityIndicator)
     }
 
     private func setupConstraints() {
         collectionView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
+        }
+        deleteActivityIndicator.snp.makeConstraints { make in
+            make.center.equalTo(view.safeAreaLayoutGuide)
         }
     }
 
@@ -276,6 +285,14 @@ final class ProfileViewController: UIViewController {
         viewModel.onRoute = { [weak self] route in
             self?.handle(route: route)
         }
+
+        viewModel.onDeleteAllDataInProgress = { [weak self] inProgress in
+            self?.setDeletingAllData(inProgress)
+        }
+
+        viewModel.onDeleteAllDataFailed = { [weak self] message in
+            self?.presentDeleteAllDataError(message)
+        }
     }
 
     private func applySections(_ sections: [ProfileSectionModel]) {
@@ -317,16 +334,18 @@ final class ProfileViewController: UIViewController {
         switch route {
         case .logout:
             onLogout?()
+        case .allDataDeleted:
+            onAllDataDeleted?()
         case .openProfileDetails(let status, let residenceCountryCode):
             let viewController = ProfileDetailsViewController()
             viewController.displayStatus = status
             viewController.residenceCountryCode = residenceCountryCode
             viewController.getCatalogPlaces = getCatalogPlaces
             viewController.onNameSaved = { [weak self] name in
-                self?.viewModel.didUpdateUserName(name)
+                self?.viewModel.didUpdateUserName(name) ?? false
             }
             viewController.onResidenceCountrySelected = { [weak self] code in
-                self?.viewModel.didUpdateResidenceCountry(code)
+                self?.viewModel.didUpdateResidenceCountry(code) ?? false
             }
             viewController.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(viewController, animated: true)
@@ -419,17 +438,27 @@ final class ProfileViewController: UIViewController {
         )
         alert.addAction(UIAlertAction(title: L10n.Common.cancel, style: .cancel))
         alert.addAction(
-            UIAlertAction(title: L10n.Common.delete, style: .destructive) { [weak self] _ in
-                self?.presentDeleteSuccessStub()
+            UIAlertAction(title: L10n.Profile.Delete.confirmAction, style: .destructive) { [weak self] _ in
+                self?.viewModel.didConfirmDeleteAllData()
             }
         )
         present(alert, animated: true)
     }
 
-    private func presentDeleteSuccessStub() {
+    private func setDeletingAllData(_ inProgress: Bool) {
+        // Block the whole tab bar so nothing edits data mid-deletion.
+        (tabBarController?.view ?? view).isUserInteractionEnabled = !inProgress
+        if inProgress {
+            deleteActivityIndicator.startAnimating()
+        } else {
+            deleteActivityIndicator.stopAnimating()
+        }
+    }
+
+    private func presentDeleteAllDataError(_ message: String) {
         let alert = UIAlertController(
-            title: L10n.Profile.Delete.stubTitle,
-            message: L10n.Profile.Delete.stubMessage,
+            title: L10n.Profile.Delete.errorTitle,
+            message: message,
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: L10n.Common.ok, style: .default))

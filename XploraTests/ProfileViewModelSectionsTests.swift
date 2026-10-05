@@ -34,6 +34,7 @@ struct ProfileViewModelSectionsTests {
             updateCurrentUser: updateUser,
             getStatistics: MockGetStatisticsUseCase(),
             getTrips: MockGetTripsUseCase(),
+            deleteAllUserData: MockDeleteAllUserDataUseCase(),
             themeManager: MockAppThemeManager()
         )
         return (sut, getUser, updateUser)

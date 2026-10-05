@@ -87,6 +87,17 @@ enum AppDependenciesConfigurator {
         locator.register(UpdateCurrentUserUseCase.self, instance: updateCurrentUserUseCase)
         locator.register(LogoutUseCase.self, instance: logoutUseCase)
 
+        let deleteAllUserDataUseCase: DeleteAllUserDataUseCase = DeleteAllUserDataUseCaseImpl(
+            notesRepo: notesRepo,
+            photoStore: notePhotoStore,
+            tripsRepo: tripsRepo,
+            wishlistRepo: wishlistRepo,
+            settingsRepo: settingsRepo,
+            profileDataStore: LocalProfileDataStore(),
+            authRepository: authRepository
+        )
+        locator.register(DeleteAllUserDataUseCase.self, instance: deleteAllUserDataUseCase)
+
         // Wishlist
         let getWishlistUseCase: GetWishlistCountriesUseCase = GetWishlistCountriesUseCaseImpl(repo: wishlistRepo)
         let addWishlistUseCase: AddWishlistCountryUseCase = AddWishlistCountryUseCaseImpl(repo: wishlistRepo)

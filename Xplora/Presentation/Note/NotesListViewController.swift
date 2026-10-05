@@ -12,6 +12,7 @@ final class NotesListViewController: UIViewController {
 
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let emptyLabel = UILabel()
+    private let errorStateView = ErrorStateView()
     private let activityIndicator = UIActivityIndicatorView(style: .medium)
     private var items: [NotesListItemViewState] = []
 
@@ -76,8 +77,12 @@ final class NotesListViewController: UIViewController {
 
         activityIndicator.hidesWhenStopped = true
 
+        errorStateView.isHidden = true
+        errorStateView.onRetry = { [weak self] in self?.viewModel.didTapRetry() }
+
         view.addSubview(tableView)
         view.addSubview(emptyLabel)
+        view.addSubview(errorStateView)
         view.addSubview(activityIndicator)
 
         // Pin to the view edges, not the safe area: the table must sit under
@@ -92,6 +97,10 @@ final class NotesListViewController: UIViewController {
             make.center.equalTo(view.safeAreaLayoutGuide)
             make.leading.greaterThanOrEqualToSuperview().offset(24)
             make.trailing.lessThanOrEqualToSuperview().offset(-24)
+        }
+
+        errorStateView.snp.makeConstraints { make in
+            make.edges.equalTo(view.safeAreaLayoutGuide)
         }
 
         activityIndicator.snp.makeConstraints { make in
@@ -114,7 +123,11 @@ final class NotesListViewController: UIViewController {
         tableView.reloadData()
 
         emptyLabel.isHidden = !state.isEmpty
-        tableView.isHidden = state.isEmpty
+        errorStateView.isHidden = state.errorMessage == nil
+        if let message = state.errorMessage {
+            errorStateView.configure(message: message)
+        }
+        tableView.isHidden = state.isEmpty || state.errorMessage != nil
 
         if state.isLoading {
             activityIndicator.startAnimating()

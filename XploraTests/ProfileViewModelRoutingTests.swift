@@ -42,6 +42,7 @@ struct ProfileViewModelRoutingTests {
             updateCurrentUser: updateUser,
             getStatistics: statistics,
             getTrips: trips,
+            deleteAllUserData: MockDeleteAllUserDataUseCase(),
             themeManager: MockAppThemeManager()
         )
         return SUT(viewModel: vm, getUser: getUser, updateUser: updateUser, statistics: statistics, trips: trips)

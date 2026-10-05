@@ -19,4 +19,8 @@ final class SettingsRepoImpl: SettingsRepo {
     func saveSettings(_ settings: UserSettings) async throws {
         try storage.saveSettings(settings)
     }
+
+    func deleteSettings() async throws {
+        storage.removeSettings()
+    }
 }

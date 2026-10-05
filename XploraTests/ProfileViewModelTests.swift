@@ -26,6 +26,7 @@ struct ProfileViewModelTests {
             updateCurrentUser: updateUser,
             getStatistics: MockGetStatisticsUseCase(),
             getTrips: MockGetTripsUseCase(),
+            deleteAllUserData: MockDeleteAllUserDataUseCase(),
             themeManager: MockAppThemeManager()
         )
         return (sut, getUser, updateUser)
@@ -80,6 +81,23 @@ struct ProfileViewModelTests {
         sut.didUpdateUserName("New Name")
         #expect(updateUser.callCount == 1)
         #expect(updateUser.updatedName == "New Name")
+    }
+
+    @Test func didUpdateUserName_success_returnsTrue() {
+        let (sut, _, _) = makeSUT(user: makeUser())
+        #expect(sut.didUpdateUserName("New Name") == true)
+    }
+
+    @Test func didUpdateUserName_whenSaveFails_returnsFalse() {
+        let (sut, _, updateUser) = makeSUT(user: makeUser())
+        updateUser.stubbedError = CocoaError(.fileWriteUnknown)
+        #expect(sut.didUpdateUserName("New Name") == false)
+    }
+
+    @Test func didUpdateResidenceCountry_whenSaveFails_returnsFalse() {
+        let (sut, _, updateUser) = makeSUT(user: makeUser())
+        updateUser.stubbedError = CocoaError(.fileWriteUnknown)
+        #expect(sut.didUpdateResidenceCountry("FR") == false)
     }
 
     @Test func didUpdateUserName_triggersSectionsRefresh() {

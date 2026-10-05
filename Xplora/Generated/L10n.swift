@@ -10,6 +10,18 @@ import Foundation
 // swiftlint:disable explicit_type_interface function_parameter_count identifier_name line_length
 // swiftlint:disable nesting type_body_length type_name vertical_whitespace_opening_braces
 internal enum L10n {
+  internal enum Auth {
+    internal enum Recovery {
+      /// Your data hasn't been deleted. Try again, or reset local data to start over.
+      internal static let message = L10n.tr("Localizable", "auth.recovery.message", fallback: "Your data hasn't been deleted. Try again, or reset local data to start over.")
+      /// Reset Local Data
+      internal static let reset = L10n.tr("Localizable", "auth.recovery.reset", fallback: "Reset Local Data")
+      /// Still couldn't load your profile. Please try again later.
+      internal static let retryFailed = L10n.tr("Localizable", "auth.recovery.retry_failed", fallback: "Still couldn't load your profile. Please try again later.")
+      /// Couldn't load your local profile
+      internal static let title = L10n.tr("Localizable", "auth.recovery.title", fallback: "Couldn't load your local profile")
+    }
+  }
   internal enum City {
     internal enum Ar {
       /// Bariloche
@@ -579,6 +591,8 @@ internal enum L10n {
     internal static let ok = L10n.tr("Localizable", "common.ok", fallback: "OK")
     /// Remove photo
     internal static let removePhoto = L10n.tr("Localizable", "common.remove_photo", fallback: "Remove photo")
+    /// Retry
+    internal static let retry = L10n.tr("Localizable", "common.retry", fallback: "Retry")
     /// Save
     internal static let save = L10n.tr("Localizable", "common.save", fallback: "Save")
   }
@@ -827,6 +841,8 @@ internal enum L10n {
         internal static let title = L10n.tr("Localizable", "notes.list.empty.title", fallback: "No notes yet")
       }
       internal enum Error {
+        /// Couldn't delete the note. Please try again.
+        internal static let delete = L10n.tr("Localizable", "notes.list.error.delete", fallback: "Couldn't delete the note. Please try again.")
         /// Couldn't load notes. Please try again.
         internal static let load = L10n.tr("Localizable", "notes.list.error.load", fallback: "Couldn't load notes. Please try again.")
       }
@@ -876,6 +892,10 @@ internal enum L10n {
     internal enum Error {
       /// Please select a country or choose World Citizen
       internal static let countryRequired = L10n.tr("Localizable", "onboarding.error.country_required", fallback: "Please select a country or choose World Citizen")
+      /// Your details weren't saved, so setup isn't finished yet. Please try again.
+      internal static let saveMessage = L10n.tr("Localizable", "onboarding.error.save_message", fallback: "Your details weren't saved, so setup isn't finished yet. Please try again.")
+      /// Couldn't Save Your Profile
+      internal static let saveTitle = L10n.tr("Localizable", "onboarding.error.save_title", fallback: "Couldn't Save Your Profile")
     }
     internal enum Name {
       /// Your name
@@ -966,14 +986,16 @@ internal enum L10n {
       internal static let footnote = L10n.tr("Localizable", "profile.data.footnote", fallback: "Deleting data is permanent and cannot be undone.")
     }
     internal enum Delete {
-      /// This action cannot be undone.
-      internal static let confirmationMessage = L10n.tr("Localizable", "profile.delete.confirmation_message", fallback: "This action cannot be undone.")
-      /// Delete Data?
-      internal static let confirmationTitle = L10n.tr("Localizable", "profile.delete.confirmation_title", fallback: "Delete Data?")
-      /// Data deletion will be implemented in the next step.
-      internal static let stubMessage = L10n.tr("Localizable", "profile.delete.stub_message", fallback: "Data deletion will be implemented in the next step.")
-      /// Not Available Yet
-      internal static let stubTitle = L10n.tr("Localizable", "profile.delete.stub_title", fallback: "Not Available Yet")
+      /// Delete All
+      internal static let confirmAction = L10n.tr("Localizable", "profile.delete.confirm_action", fallback: "Delete All")
+      /// All your trips, notes, photos, wishlist and profile data will be permanently deleted from this device. This action can't be undone.
+      internal static let confirmationMessage = L10n.tr("Localizable", "profile.delete.confirmation_message", fallback: "All your trips, notes, photos, wishlist and profile data will be permanently deleted from this device. This action can't be undone.")
+      /// Delete All Data?
+      internal static let confirmationTitle = L10n.tr("Localizable", "profile.delete.confirmation_title", fallback: "Delete All Data?")
+      /// Some of your data couldn't be deleted. Please try again.
+      internal static let errorMessage = L10n.tr("Localizable", "profile.delete.error_message", fallback: "Some of your data couldn't be deleted. Please try again.")
+      /// Couldn't Delete All Data
+      internal static let errorTitle = L10n.tr("Localizable", "profile.delete.error_title", fallback: "Couldn't Delete All Data")
     }
     internal enum Details {
       /// About status
@@ -1017,6 +1039,14 @@ internal enum L10n {
         internal static let save = L10n.tr("Localizable", "profile.details.edit_name.save", fallback: "Save")
         /// Edit Name
         internal static let title = L10n.tr("Localizable", "profile.details.edit_name.title", fallback: "Edit Name")
+      }
+      internal enum Error {
+        /// Couldn't save the photo. Please try again.
+        internal static let avatar = L10n.tr("Localizable", "profile.details.error.avatar", fallback: "Couldn't save the photo. Please try again.")
+        /// Couldn't save the name. Please try again.
+        internal static let name = L10n.tr("Localizable", "profile.details.error.name", fallback: "Couldn't save the name. Please try again.")
+        /// Couldn't save the country of residence. Please try again.
+        internal static let residence = L10n.tr("Localizable", "profile.details.error.residence", fallback: "Couldn't save the country of residence. Please try again.")
       }
       internal enum StatusInfo {
         /// Your status is calculated automatically from your travel history: visited countries, number of trips, repeated visits, and world coverage percentage.
@@ -1112,8 +1142,6 @@ internal enum L10n {
     internal enum Stub {
       /// About screen will be implemented in the next step.
       internal static let about = L10n.tr("Localizable", "profile.stub.about", fallback: "About screen will be implemented in the next step.")
-      /// Delete data flow will be implemented in the next step.
-      internal static let deleteData = L10n.tr("Localizable", "profile.stub.delete_data", fallback: "Delete data flow will be implemented in the next step.")
       /// Language selection will be implemented in the next step.
       internal static let language = L10n.tr("Localizable", "profile.stub.language", fallback: "Language selection will be implemented in the next step.")
       /// Privacy Policy screen will be implemented in the next step.
@@ -1340,6 +1368,16 @@ internal enum L10n {
       internal static let subtitle = L10n.tr("Localizable", "wishlist.empty.subtitle", fallback: "Tap + to add a country")
       /// Your wishlist is empty
       internal static let title = L10n.tr("Localizable", "wishlist.empty.title", fallback: "Your wishlist is empty")
+    }
+    internal enum Error {
+      /// Couldn't add the place. Your wishlist wasn't changed. Please try again.
+      internal static let add = L10n.tr("Localizable", "wishlist.error.add", fallback: "Couldn't add the place. Your wishlist wasn't changed. Please try again.")
+      /// Couldn't load your wishlist.
+      internal static let load = L10n.tr("Localizable", "wishlist.error.load", fallback: "Couldn't load your wishlist.")
+      /// Couldn't remove the place. Please try again.
+      internal static let remove = L10n.tr("Localizable", "wishlist.error.remove", fallback: "Couldn't remove the place. Please try again.")
+      /// Couldn't update the place. Please try again.
+      internal static let update = L10n.tr("Localizable", "wishlist.error.update", fallback: "Couldn't update the place. Please try again.")
     }
     internal enum Search {
       /// Search countries

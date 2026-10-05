@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import os
 
 struct NotesListItemViewState: Equatable {
     let id: String
@@ -18,7 +19,11 @@ struct NotesListItemViewState: Equatable {
 struct NotesListViewState: Equatable {
     let isLoading: Bool
     let items: [NotesListItemViewState]
+    /// True only when notes were loaded and there are none.
     let isEmpty: Bool
+    /// Set when notes couldn't be loaded (e.g. the store is unavailable);
+    /// shown instead of the empty state.
+    var errorMessage: String? = nil
 }
 
 enum NotesListRoute {
@@ -42,6 +47,7 @@ protocol NotesListViewModelInput: AnyObject {
     func didTapAdd()
     func didSelectItem(at index: Int)
     func didDeleteItem(at index: Int)
+    func didTapRetry()
 }
 
 @MainActor
@@ -67,6 +73,7 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
     private let filter: NotesListFilter
     private var notes: [Note] = []
     private var isLoading = false
+    private var loadErrorMessage: String?
 
     /// Fires after a note has been removed via swipe-to-delete so the
     /// hosting coordinator can refresh sibling screens (Map markers,
@@ -101,6 +108,10 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
         onRoute?(.addNew)
     }
 
+    func didTapRetry() {
+        loadNotes()
+    }
+
     func didSelectItem(at index: Int) {
         guard notes.indices.contains(index) else { return }
         onRoute?(.open(noteId: notes[index].id))
@@ -129,7 +140,7 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
                     guard let self else { return }
                     self.notes.insert(note, at: min(index, self.notes.count))
                     self.publish()
-                    onError?(L10n.Notes.List.Error.load)
+                    onError?(L10n.Notes.List.Error.delete)
                 }
             }
         }
@@ -140,18 +151,26 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
         publish()
 
         Task {
-            do {
-                let fetched = try await getAllNotesUseCase.execute()
-                notes = apply(filter: filter, to: fetched)
-                isLoading = false
-                publish()
-            } catch {
-                isLoading = false
-                notes = []
-                publish()
-                onError?(L10n.Notes.List.Error.load)
-            }
+            await performLoad()
         }
+    }
+
+    /// Internal so tests can await a load.
+    func performLoad() async {
+        do {
+            let fetched = try await getAllNotesUseCase.execute()
+            notes = apply(filter: filter, to: fetched)
+            loadErrorMessage = nil
+        } catch {
+            let nsError = error as NSError
+            Logger.storage.error(
+                "Notes list load failed domain=\(nsError.domain, privacy: .public) code=\(nsError.code, privacy: .public)"
+            )
+            notes = []
+            loadErrorMessage = L10n.Notes.List.Error.load
+        }
+        isLoading = false
+        publish()
     }
 
     private func apply(filter: NotesListFilter, to notes: [Note]) -> [Note] {
@@ -201,11 +220,13 @@ final class NotesListViewModel: NotesListViewModelInput, NotesListViewModelOutpu
             )
         }
 
+        let errorMessage = isLoading ? nil : loadErrorMessage
         onStateChange?(
             NotesListViewState(
                 isLoading: isLoading,
                 items: items,
-                isEmpty: !isLoading && items.isEmpty
+                isEmpty: !isLoading && errorMessage == nil && items.isEmpty,
+                errorMessage: errorMessage
             )
         )
     }

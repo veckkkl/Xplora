@@ -31,7 +31,12 @@ final class CoreDataStack {
     let container: NSPersistentContainer
 
     /// Set when `loadPersistentStores` reports a failure.
-    private(set) var loadError: Error?
+    var loadError: Error? {
+        lock.withLock { _loadError }
+    }
+
+    private var _loadError: Error?
+    private let lock = NSLock()
 
     init(inMemory: Bool = false, storeURL: URL? = nil) {
         container = NSPersistentContainer(name: Self.modelName, managedObjectModel: Self.model)
@@ -56,16 +61,7 @@ final class CoreDataStack {
             }
         }
 
-        var loadError: Error?
-        container.loadPersistentStores { description, error in
-            guard let error else { return }
-            loadError = error
-            let nsError = error as NSError
-            Logger.storage.fault(
-                "Core Data store load failed type=\(description.type, privacy: .public) domain=\(nsError.domain, privacy: .public) code=\(nsError.code, privacy: .public)"
-            )
-        }
-        self.loadError = loadError
+        _loadError = Self.loadStores(into: container)
 
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.automaticallyMergesChangesFromParent = true
@@ -76,11 +72,34 @@ final class CoreDataStack {
     }
 
     /// The main context, available only when the persistent store loaded.
-    /// Throws `CoreDataStackError.persistentStoreUnavailable` otherwise.
+    ///
+    /// After a failed load, each call retries adding the store once (a failed
+    /// store is never attached to the coordinator, so adding it again is safe).
+    /// This makes a user-triggered Retry real for transient failures; the
+    /// on-disk store is never deleted or migrated destructively.
+    /// Throws `CoreDataStackError.persistentStoreUnavailable` while it still fails.
     func loadedViewContext() throws -> NSManagedObjectContext {
-        if let loadError {
-            throw CoreDataStackError.persistentStoreUnavailable(underlying: loadError)
+        try lock.withLock {
+            if _loadError != nil {
+                _loadError = Self.loadStores(into: container)
+            }
+            if let loadError = _loadError {
+                throw CoreDataStackError.persistentStoreUnavailable(underlying: loadError)
+            }
         }
         return container.viewContext
+    }
+
+    private static func loadStores(into container: NSPersistentContainer) -> Error? {
+        var loadError: Error?
+        container.loadPersistentStores { description, error in
+            guard let error else { return }
+            loadError = error
+            let nsError = error as NSError
+            Logger.storage.fault(
+                "Core Data store load failed type=\(description.type, privacy: .public) domain=\(nsError.domain, privacy: .public) code=\(nsError.code, privacy: .public)"
+            )
+        }
+        return loadError
     }
 }
