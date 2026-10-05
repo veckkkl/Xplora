@@ -5,7 +5,7 @@
 
 protocol CompleteOnboardingUseCase {
     @discardableResult
-    func execute(name: String, residenceCountryCode: String?, isWorldCitizen: Bool) -> AuthUser
+    func execute(name: String, residenceCountryCode: String?, isWorldCitizen: Bool) throws -> AuthUser
 }
 
 final class CompleteOnboardingUseCaseImpl: CompleteOnboardingUseCase {
@@ -16,7 +16,7 @@ final class CompleteOnboardingUseCaseImpl: CompleteOnboardingUseCase {
     }
 
     @discardableResult
-    func execute(name: String, residenceCountryCode: String?, isWorldCitizen: Bool) -> AuthUser {
-        authRepository.completeOnboarding(name: name, residenceCountryCode: residenceCountryCode, isWorldCitizen: isWorldCitizen)
+    func execute(name: String, residenceCountryCode: String?, isWorldCitizen: Bool) throws -> AuthUser {
+        try authRepository.completeOnboarding(name: name, residenceCountryCode: residenceCountryCode, isWorldCitizen: isWorldCitizen)
     }
 }

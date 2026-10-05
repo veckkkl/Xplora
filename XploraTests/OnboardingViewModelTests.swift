@@ -3,6 +3,7 @@
 //  XploraTests
 //
 
+import Foundation
 import Testing
 @testable import Xplora
 
@@ -173,6 +174,18 @@ struct OnboardingViewModelTests {
         sut.didToggleWorldCitizen(true)
         sut.didTapContinue()
         #expect(completed == true)
+    }
+
+    @Test func didTapContinue_whenSaveFails_doesNotFireCompleted() {
+        let (sut, useCase) = makeSUT()
+        useCase.stubbedError = CocoaError(.fileWriteUnknown)
+        var completed = false
+        sut.onCompleted = { completed = true }
+        sut.didChangeName("Bob")
+        sut.didToggleWorldCitizen(true)
+        sut.didTapContinue()
+        #expect(useCase.callCount == 1)
+        #expect(completed == false)
     }
 
     @Test func didTapContinue_emptyName_doesNotCallUseCase() {

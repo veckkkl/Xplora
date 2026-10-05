@@ -17,34 +17,34 @@ final class TripsRepoImpl: TripsRepo {
     }
 
     func getAllTrips() async throws -> [Trip] {
-        storage.trips
+        try storage.loadTrips()
     }
 
     func getTrip(id: UUID) async throws -> Trip {
-        guard let trip = storage.trips.first(where: { $0.id == id }) else {
+        guard let trip = try storage.loadTrips().first(where: { $0.id == id }) else {
             throw TripsRepoError.notFound
         }
         return trip
     }
 
     func save(trip: Trip) async throws {
-        var trips = storage.trips
+        var trips = try storage.loadTrips()
         trips.append(trip)
-        storage.trips = trips
+        try storage.saveTrips(trips)
     }
 
     func update(trip: Trip) async throws {
-        var trips = storage.trips
+        var trips = try storage.loadTrips()
         guard let index = trips.firstIndex(where: { $0.id == trip.id }) else {
             throw TripsRepoError.notFound
         }
         trips[index] = trip
-        storage.trips = trips
+        try storage.saveTrips(trips)
     }
 
     func delete(tripId: UUID) async throws {
-        var trips = storage.trips
+        var trips = try storage.loadTrips()
         trips.removeAll { $0.id == tripId }
-        storage.trips = trips
+        try storage.saveTrips(trips)
     }
 }

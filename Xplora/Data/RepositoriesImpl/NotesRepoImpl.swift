@@ -72,7 +72,9 @@ final class NotesRepoImpl: NotesRepo {
     private func performInViewContext<T>(
         _ work: @escaping (NSManagedObjectContext) throws -> T
     ) async throws -> T {
-        let context = coreDataStack.viewContext
+        // Throws when the persistent store failed to load, instead of
+        // operating on a context with no store behind it.
+        let context = try coreDataStack.loadedViewContext()
 
         return try await withCheckedThrowingContinuation { continuation in
             context.perform {

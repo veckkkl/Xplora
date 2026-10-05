@@ -11,25 +11,25 @@ final class WishlistRepoImpl: WishlistRepo {
     }
 
     func getAll() async throws -> [WishlistCountry] {
-        storage.wishlistCountries
+        try storage.loadWishlistCountries()
     }
 
     func add(_ country: WishlistCountry) async throws {
-        var list = storage.wishlistCountries
+        var list = try storage.loadWishlistCountries()
         list.append(country)
-        storage.wishlistCountries = list
+        try storage.saveWishlistCountries(list)
     }
 
     func remove(id: UUID) async throws {
-        var list = storage.wishlistCountries
+        var list = try storage.loadWishlistCountries()
         list.removeAll { $0.id == id }
-        storage.wishlistCountries = list
+        try storage.saveWishlistCountries(list)
     }
 
     func toggle(id: UUID) async throws {
-        var list = storage.wishlistCountries
+        var list = try storage.loadWishlistCountries()
         guard let index = list.firstIndex(where: { $0.id == id }) else { return }
         list[index].isCompleted.toggle()
-        storage.wishlistCountries = list
+        try storage.saveWishlistCountries(list)
     }
 }

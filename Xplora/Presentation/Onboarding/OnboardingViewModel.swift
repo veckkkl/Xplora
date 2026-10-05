@@ -105,7 +105,12 @@ final class OnboardingViewModel: OnboardingViewModelInput, OnboardingViewModelOu
             case .worldCitizen:      (code, isWorldCitizen) = (nil, true)
             case .none:              return
             }
-            completeOnboarding.execute(name: trimmed, residenceCountryCode: code, isWorldCitizen: isWorldCitizen)
+            do {
+                try completeOnboarding.execute(name: trimmed, residenceCountryCode: code, isWorldCitizen: isWorldCitizen)
+            } catch {
+                // The user wasn't saved; stay on onboarding instead of entering the app.
+                return
+            }
             onCompleted?()
         case .empty:
             onNameError?(L10n.Profile.Details.Validation.emptyName)

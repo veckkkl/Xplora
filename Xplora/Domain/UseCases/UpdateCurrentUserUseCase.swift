@@ -4,8 +4,8 @@
 //
 
 protocol UpdateCurrentUserUseCase {
-    func execute(name: String)
-    func execute(residenceCountryCode: String?)
+    func execute(name: String) throws
+    func execute(residenceCountryCode: String?) throws
 }
 
 final class UpdateCurrentUserUseCaseImpl: UpdateCurrentUserUseCase {
@@ -15,11 +15,11 @@ final class UpdateCurrentUserUseCaseImpl: UpdateCurrentUserUseCase {
         self.authRepository = authRepository
     }
 
-    func execute(name: String) {
-        authRepository.updateName(name)
+    func execute(name: String) throws {
+        try authRepository.updateName(name)
     }
 
-    func execute(residenceCountryCode: String?) {
-        authRepository.updateResidenceCountry(residenceCountryCode)
+    func execute(residenceCountryCode: String?) throws {
+        try authRepository.updateResidenceCountry(residenceCountryCode)
     }
 }

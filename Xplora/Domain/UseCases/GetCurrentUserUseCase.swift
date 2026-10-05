@@ -4,7 +4,7 @@
 //
 
 protocol GetCurrentUserUseCase {
-    func execute() -> AuthUser?
+    func execute() throws -> AuthUser?
 }
 
 final class GetCurrentUserUseCaseImpl: GetCurrentUserUseCase {
@@ -14,7 +14,7 @@ final class GetCurrentUserUseCaseImpl: GetCurrentUserUseCase {
         self.authRepository = authRepository
     }
 
-    func execute() -> AuthUser? {
-        authRepository.getCurrentUser()
+    func execute() throws -> AuthUser? {
+        try authRepository.getCurrentUser()
     }
 }

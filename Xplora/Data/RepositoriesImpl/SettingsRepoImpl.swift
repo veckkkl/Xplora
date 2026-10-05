@@ -13,10 +13,10 @@ final class SettingsRepoImpl: SettingsRepo {
     }
 
     func loadSettings() async throws -> UserSettings {
-        storage.settings
+        try storage.loadSettings()
     }
 
     func saveSettings(_ settings: UserSettings) async throws {
-        storage.settings = settings
+        try storage.saveSettings(settings)
     }
 }
